@@ -8,13 +8,15 @@ from clip import clip
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
 def load_image_dataset(image_dir):
-    """Tải tất cả ảnh từ thư mục `image_dir`."""
+    """Tải tất cả ảnh từ thư mục `image_dir` và các thư mục con, lấy tên lớp từ tên thư mục con."""
     images = []
-    for filename in os.listdir(image_dir):
-        if filename.endswith(('.png', '.jpg', '.jpeg')):
-            img_path = os.path.join(image_dir, filename)
-            image = Image.open(img_path).convert("RGB")
-            images.append((image, filename))
+    for root, _, files in os.walk(image_dir):
+        class_name = os.path.basename(root)  # Lấy tên thư mục con làm tên lớp
+        for filename in files:
+            if filename.endswith(('.png', '.jpg', '.jpeg')):
+                img_path = os.path.join(root, filename)
+                image = Image.open(img_path).convert("RGB")
+                images.append((image, filename, class_name))
     return images
 
 def preprocess_images(images, preprocess):
