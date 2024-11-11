@@ -60,7 +60,7 @@ def CWLoss(output, target, confidence=0):
     return loss
 
 def input_grad(imgs, targets, model, criterion):
-    output = model(imgs)
+    output, _ = model(imgs)
     loss = criterion(output, targets)
     ig = grad(loss, imgs)[0]
     return ig
@@ -225,7 +225,7 @@ if __name__ == '__main__':
         bs = imgs.size(0)
 
         with torch.no_grad():
-            output = model(imgs)
+            output, _ = model(imgs)
 
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
@@ -242,8 +242,18 @@ if __name__ == '__main__':
 
         # Calculate features
         with torch.no_grad():
-            output = model(adv)
+            output, top_images = model(adv)
 
+        print('a')
+        fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Hiển thị 5 ảnh
+        for i, ax in enumerate(axes):
+            ax.imshow(np.transpose(top_images[i], (1, 2, 0)))  # Chuyển từ tensor (C, H, W) thành (H, W, C)
+            ax.axis('off')
+            ax.set_title(f"Class 1")  # Bạn có thể thay "Class {i+1}" bằng tên lớp tương ứng
+            plt.savefig(f'/kaggle/working/top_images_{i}.png')
+            print(f"Saved top images {i} to file.")
+        plt.show()
+        print('b')
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)
         

@@ -57,7 +57,7 @@ def CWLoss(output, target, confidence=0):
     return loss
 
 def input_grad(imgs, targets, model, criterion):
-    output = model(imgs)
+    output, _ = model(imgs)
     loss = criterion(output, targets)
     ig = grad(loss, imgs)[0]
     return ig
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         bs = imgs.size(0)
 
         with torch.no_grad():
-            output = model(imgs)
+            output, _ = model(imgs)
 
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
         # Calculate features
         with torch.no_grad():
-            output = model(adv)
+            output, _ = model(adv)
 
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)

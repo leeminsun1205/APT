@@ -238,7 +238,7 @@ class CustomCLIP(nn.Module):
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-
+        print(image)
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
         class_idx = 0
@@ -247,16 +247,8 @@ class CustomCLIP(nn.Module):
         # Convert ảnh từ tensor thành ảnh để hiển thị
         image_list = image.cpu().numpy()
         top_images = [image_list[i] for i in top_indices]
-
-        # Vẽ ảnh
-        fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Hiển thị 5 ảnh
-        for i, ax in enumerate(axes):
-            ax.imshow(np.transpose(top_images[i], (1, 2, 0)))  # Chuyển từ tensor (C, H, W) thành (H, W, C)
-            ax.axis('off')
-            ax.set_title(f"Class {class_idx+1}")  # Bạn có thể thay "Class {i+1}" bằng tên lớp tương ứng
-        plt.show()
         
-        return logits
+        return logits, top_images
 
 
 @TRAINER_REGISTRY.register()
