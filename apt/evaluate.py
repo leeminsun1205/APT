@@ -57,7 +57,7 @@ def CWLoss(output, target, confidence=0):
     return loss
 
 def input_grad(imgs, targets, model, criterion):
-    output, _ = model(imgs)
+    output = model(imgs)
     loss = criterion(output, targets)
     ig = grad(loss, imgs)[0]
     return ig
