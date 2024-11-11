@@ -1,7 +1,8 @@
 import os.path as osp
 from tqdm import tqdm
 import copy
-
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -239,6 +240,21 @@ class CustomCLIP(nn.Module):
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
 
+        _, top_indices = torch.topk(logits, k=5, dim=0)  # Top 5 ảnh có độ tương quan cao nhất
+    
+        # Convert ảnh từ tensor thành ảnh để hiển thị
+        image_list = image.cpu().numpy()
+        top_images = [image_list[i] for i in top_indices]
+
+        # Vẽ ảnh
+        fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Hiển thị 5 ảnh
+        for i, ax in enumerate(axes):
+            ax.imshow(np.transpose(top_images[i], (1, 2, 0)))  # Chuyển từ tensor (C, H, W) thành (H, W, C)
+            ax.axis('off')
+            ax.set_title(f"Class {i+1}")  # Bạn có thể thay "Class {i+1}" bằng tên lớp tương ứng
+
+        plt.show()
+        
         return logits
 
 

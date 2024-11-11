@@ -5,7 +5,6 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from tqdm import tqdm
-import shutil  # Import for zipping functionality
 
 from statistics import mean
 
