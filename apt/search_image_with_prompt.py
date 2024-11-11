@@ -3,7 +3,8 @@ import torch
 import argparse
 from PIL import Image
 import matplotlib.pyplot as plt
-import clip  # Module clip chứa các hàm đã được cài đặt
+from clip import model as clip_model  # Import module model từ clip
+from clip import clip
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
 def load_image_dataset(image_dir):
@@ -26,7 +27,7 @@ def load_clip_model(backbone, device):
         # Trường hợp backbone là một tệp .pth.tar
         print(f"Loading custom CLIP model from file: {backbone}")
         state_dict = torch.load(backbone, map_location=device)
-        model = clip.build_model(state_dict)  # Sử dụng hàm build_model để tạo mô hình từ state_dict
+        model = clip_model.build_model(state_dict)  # Sử dụng hàm build_model từ clip.model
         input_resolution = model.visual.input_resolution if hasattr(model.visual, 'input_resolution') else 224
         preprocess = clip._transform(input_resolution)  # Sử dụng hàm tiền xử lý mặc định của clip
     else:
