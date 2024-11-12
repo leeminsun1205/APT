@@ -214,7 +214,11 @@ if __name__ == '__main__':
         attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
-        
+    base_dir = '/kaggle/working/top_images_by_class'
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    all_logits = []
+    all_images = []
     for i, data in enumerate(loader, start=1):
         try:
             # few-shot data loader from Dassl
@@ -239,37 +243,35 @@ if __name__ == '__main__':
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
         model.mode = 'classification'
-
+        
         # Calculate features
         with torch.no_grad():
             output = model(adv)
-        for class_idx in range(output.shape[1]):  # output có kích thước [batch_size, num_classes]
-            # Lấy các logits cho lớp cụ thể
-            logits_for_class = output[:, class_idx]  # Độ tương quan của mỗi ảnh trong batch với lớp cụ thể
-
-            # Lấy 5 ảnh có độ tương quan cao nhất với lớp hiện tại
-            _, top_indices = torch.topk(logits_for_class, k=5, dim=0)
-            top_images = [adv[i].cpu().numpy() for i in top_indices]
-
-            # Hiển thị ảnh
-            fig, axes = plt.subplots(1, 5, figsize=(15, 3))
-            for j, ax in enumerate(axes):
-                img = np.transpose(top_images[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
-                ax.imshow(img)
-                ax.axis('off')
-                ax.set_title(f"Class {class_idx + 1}")
-
-            # Lưu ảnh (tùy chọn)
-            plt.savefig(f'/kaggle/working/top_images_class_{class_idx + 1}.png')
-            print(f"Saved top 5 images for class {class_idx + 1} to file.")
-            plt.show()
+            all_logits.append(output.cpu())
+            all_images.append(adv.cpu())
 
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)
         
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
-            
+    all_logits = torch.cat(all_logits, dim = 0)
+    all_images = torch.cat(all_images, dim = 0)
+    num_classes = all_logits.shape[1]
+    for class_idx in range(num_classes):
+        class_dir = os.path.join(base_dir, f'class_{class_idx + 1}')
+        os.makedirs(class_dir, exist_ok=True)
+
+        logits_for_class = all_logits[:, class_idx]  
+
+        _, top_indices = torch.topk(logits_for_class, k=5, dim=0)
+        top_images = [all_images[i].numpy() for i in top_indices]
+
+        # Lưu 5 ảnh khớp nhất cho lớp hiện tại vào thư mục riêng
+        for j, img in enumerate(top_images):
+            img = np.transpose(img, (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
+            plt.imsave(os.path.join(class_dir, f'top_image_{j + 1}.png'), img)
+            print(f"Saved top image {j + 1} for class {class_idx + 1} to {class_dir}")     
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
