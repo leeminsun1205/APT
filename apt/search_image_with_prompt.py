@@ -214,26 +214,34 @@ if __name__ == '__main__':
         attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
-    base_dir = '/kaggle/working/top_images_by_class'
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
-    all_logits = []
-    all_images = []
+    #BEGIN NEW CODE  
+    base_dir = '/kaggle/working'
+    clean_dir = os.path.join(base_dir, 'clean_test')
+    adv_dir = os.path.join(base_dir, 'adv_test')
+    os.makedirs(clean_dir, exist_ok=True)
+    os.makedirs(adv_dir, exist_ok=True)
+
+    all_logits_clean = []
+    all_images_clean = []
+    all_logits_adv = []
+    all_images_adv = []
+
+    # Duyệt qua từng batch và lưu lại logits và ảnh cho clean và adv
     for i, data in enumerate(loader, start=1):
         try:
-            # few-shot data loader from Dassl
             imgs, tgts = data['img'], data['label']
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
 
+        # Tính toán logits và lưu ảnh cho clean
         with torch.no_grad():
-            output = model(imgs)
+            output_clean = model(imgs)
+            all_logits_clean.append(output_clean.cpu())
+            all_images_clean.append(imgs.cpu())
 
-        acc = accuracy(output, tgts)
-        meters.acc.update(acc[0].item(), bs)
-
+        # Áp dụng tấn công để tạo ảnh adversarial
         model.mode = 'attack'
         if args.attack == 'aa':
             adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
@@ -241,38 +249,58 @@ if __name__ == '__main__':
             adv = attack(imgs, tgts)
         else:
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
-            
         model.mode = 'classification'
-        
-        # Calculate features
+
+        # Tính toán logits và lưu ảnh cho adversarial
         with torch.no_grad():
-            output = model(adv)
-            all_logits.append(output.cpu())
-            all_images.append(adv.cpu())
+            output_adv = model(adv)
+            all_logits_adv.append(output_adv.cpu())
+            all_images_adv.append(adv.cpu())
 
-        rob = accuracy(output, tgts)
-        meters.rob.update(rob[0].item(), bs)
-        
-        if i == 1 or i % 10 == 0 or i == len(loader):
-            progress.display(i)
-    all_logits = torch.cat(all_logits, dim = 0)
-    all_images = torch.cat(all_images, dim = 0)
-    num_classes = all_logits.shape[1]
+    # Kết hợp tất cả các logits và ảnh thành tensor
+    all_logits_clean = torch.cat(all_logits_clean, dim=0)
+    print(f'all_logits_clean: {all_logits_clean.shape}')
+    all_images_clean = torch.cat(all_images_clean, dim=0)
+    print(f'all_images_clean: {all_images_clean.shape}')
+    all_logits_adv = torch.cat(all_logits_adv, dim=0)
+    print(f'all_logits_adv: {all_logits_adv.shape}')
+    all_images_adv = torch.cat(all_images_adv, dim=0)
+    print(f'all_images_adv: {all_images_adv.shape}')
+
     for class_idx in range(num_classes):
-        class_dir = os.path.join(base_dir, f'class_{class_idx + 1}')
-        os.makedirs(class_dir, exist_ok=True)
+        # Xử lý ảnh clean
+        logits_for_class_clean = all_logits_clean[:, class_idx]
+        _, top_indices_clean = torch.topk(logits_for_class_clean, k=10, dim=0)
+        top_images_clean = [all_images_clean[i].numpy() for i in top_indices_clean]
 
-        logits_for_class = all_logits[:, class_idx]  
+        # Tạo lưới 2x5 để hiển thị và lưu ảnh
+        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        for j, ax in enumerate(axes.flat):
+            img = np.transpose(top_images_clean[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
+            ax.imshow(img)
+            ax.axis('off')
+            ax.set_title(f"Class {classes[class_idx]}")
+        plt.savefig(os.path.join(clean_dir, f'top_images_class_{classes[class_idx]}_clean.png'))
+        print(f"Saved top 10 clean images for class {classes[class_idx]} to {clean_dir}")
+        plt.show()
 
-        _, top_indices = torch.topk(logits_for_class, k=5, dim=0)
-        top_images = [all_images[i].numpy() for i in top_indices]
+        # Xử lý ảnh adversarial
+        logits_for_class_adv = all_logits_adv[:, class_idx]
+        _, top_indices_adv = torch.topk(logits_for_class_adv, k=10, dim=0)
+        top_images_adv = [all_images_adv[i].numpy() for i in top_indices_adv]
 
-        # Lưu 5 ảnh khớp nhất cho lớp hiện tại vào thư mục riêng
-        for j, img in enumerate(top_images):
-            img = np.transpose(img, (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
-            plt.imsave(os.path.join(class_dir, f'top_image_{j + 1}.png'), img)
-            print(f"Saved top image {j + 1} for class {class_idx + 1} to {class_dir}")     
-    # save result
+        # Tạo lưới 2x5 để hiển thị và lưu ảnh
+        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        for j, ax in enumerate(axes.flat):
+            img = np.transpose(top_images_adv[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
+            ax.imshow(img)
+            ax.axis('off')
+            ax.set_title(f"Class {classes[class_idx]}")
+        plt.savefig(os.path.join(adv_dir, f'top_images_class_{classes[class_idx]}_adv.png'))
+        print(f"Saved top 10 adversarial images for class {classes[class_idx]} to {adv_dir}")
+        plt.show()
+        # save result
+    #END NEW CODE
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
             result = Dict(yaml.safe_load(f))
