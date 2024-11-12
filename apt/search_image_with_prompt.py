@@ -60,7 +60,7 @@ def CWLoss(output, target, confidence=0):
     return loss
 
 def input_grad(imgs, targets, model, criterion):
-    output, _ = model(imgs)
+    output = model(imgs)
     loss = criterion(output, targets)
     ig = grad(loss, imgs)[0]
     return ig
@@ -242,18 +242,28 @@ if __name__ == '__main__':
 
         # Calculate features
         with torch.no_grad():
-            output, top_images = model(adv)
+            output = model(adv)
+        for class_idx in range(output.shape[1]):  # output có kích thước [batch_size, num_classes]
+            # Lấy các logits cho lớp cụ thể
+            logits_for_class = output[:, class_idx]  # Độ tương quan của mỗi ảnh trong batch với lớp cụ thể
 
-        print('a')
-        fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Hiển thị 5 ảnh
-        for i, ax in enumerate(axes):
-            ax.imshow(np.transpose(top_images[i], (1, 2, 0)))  # Chuyển từ tensor (C, H, W) thành (H, W, C)
-            ax.axis('off')
-            ax.set_title(f"Class 1")  # Bạn có thể thay "Class {i+1}" bằng tên lớp tương ứng
-            plt.savefig(f'/kaggle/working/top_images_{i}.png')
-            print(f"Saved top images {i} to file.")
-        plt.show()
-        print('b')
+            # Lấy 5 ảnh có độ tương quan cao nhất với lớp hiện tại
+            _, top_indices = torch.topk(logits_for_class, k=5, dim=0)
+            top_images = [adv[i].cpu().numpy() for i in top_indices]
+
+            # Hiển thị ảnh
+            fig, axes = plt.subplots(1, 5, figsize=(15, 3))
+            for j, ax in enumerate(axes):
+                img = np.transpose(top_images[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
+                ax.imshow(img)
+                ax.axis('off')
+                ax.set_title(f"Class {class_idx + 1}")
+
+            # Lưu ảnh (tùy chọn)
+            plt.savefig(f'/kaggle/working/top_images_class_{class_idx + 1}.png')
+            print(f"Saved top 5 images for class {class_idx + 1} to file.")
+            plt.show()
+
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)
         
