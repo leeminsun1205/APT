@@ -225,6 +225,7 @@ if __name__ == '__main__':
     all_images_clean = []
     all_logits_adv = []
     all_images_adv = []
+    all_labels = []
 
     # Duyệt qua từng batch và lưu lại logits và ảnh cho clean và adv
     for i, data in enumerate(loader, start=1):
@@ -233,6 +234,7 @@ if __name__ == '__main__':
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
+        all_labels.append(tgts.cpu())
         bs = imgs.size(0)
 
         # Tính toán logits và lưu ảnh cho clean
@@ -266,40 +268,58 @@ if __name__ == '__main__':
     print(f'all_logits_adv: {all_logits_adv.shape}')
     all_images_adv = torch.cat(all_images_adv, dim=0)
     print(f'all_images_adv: {all_images_adv.shape}')
-
+    # Kết hợp nhãn
+    all_labels = torch.cat(all_labels, dim=0)
+    print(f'all_labels: {all_labels.shape}')
     for class_idx in range(num_classes):
-        # Xử lý ảnh clean
-        logits_for_class_clean = all_logits_clean[:, class_idx]
-        _, top_indices_clean = torch.topk(logits_for_class_clean, k=10, dim=0)
-        top_images_clean = [all_images_clean[i].numpy() for i in top_indices_clean]
+        # Lấy các chỉ số của ảnh có nhãn thực sự là class_idx
+        indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
 
-        # Tạo lưới 2x5 để hiển thị và lưu ảnh
+        # Kiểm tra nếu không có ảnh nào thuộc lớp này
+        if indices_for_class.numel() == 0:
+            print(f"No images found for class {classes[class_idx]}")
+            continue
+
+        # Lấy logits và ảnh tương ứng cho clean
+        logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
+        images_for_class_clean = all_images_clean[indices_for_class]
+
+        # Chọn top 10 ảnh dựa trên logits
+        k = min(10, logits_for_class_clean.size(0))
+        top_values, top_indices = torch.topk(logits_for_class_clean, k=k, dim=0)
+        top_images_clean = [images_for_class_clean[i].numpy() for i in top_indices]
+
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
-            img = np.transpose(top_images_clean[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
-            ax.imshow(img)
-            ax.axis('off')
-            ax.set_title(f"Class {classes[class_idx]}")
+            if j < len(top_images_clean):
+                img = np.transpose(top_images_clean[j], (1, 2, 0))
+                ax.imshow(img)
+                ax.axis('off')
+                ax.set_title(f"Class {classes[class_idx]}")
+            else:
+                ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'top_images_class_{classes[class_idx]}_clean.png'))
-        print(f"Saved top 10 clean images for class {classes[class_idx]} to {clean_dir}")
-        plt.show()
+        print(f"Saved top {len(top_images_clean)} clean images for class {classes[class_idx]} to {clean_dir}")
 
-        # Xử lý ảnh adversarial
-        logits_for_class_adv = all_logits_adv[:, class_idx]
-        _, top_indices_adv = torch.topk(logits_for_class_adv, k=10, dim=0)
-        top_images_adv = [all_images_adv[i].numpy() for i in top_indices_adv]
+        # Tương tự cho ảnh adversarial
+        logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
+        images_for_class_adv = all_images_adv[indices_for_class]
 
-        # Tạo lưới 2x5 để hiển thị và lưu ảnh
+        k = min(10, logits_for_class_adv.size(0))
+        top_values_adv, top_indices_adv = torch.topk(logits_for_class_adv, k=k, dim=0)
+        top_images_adv = [images_for_class_adv[i].numpy() for i in top_indices_adv]
+
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
-            img = np.transpose(top_images_adv[j], (1, 2, 0))  # Chuyển từ (C, H, W) sang (H, W, C)
-            ax.imshow(img)
-            ax.axis('off')
-            ax.set_title(f"Class {classes[class_idx]}")
+            if j < len(top_images_adv):
+                img = np.transpose(top_images_adv[j], (1, 2, 0))
+                ax.imshow(img)
+                ax.axis('off')
+                ax.set_title(f"Class {classes[class_idx]}")
+            else:
+                ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'top_images_class_{classes[class_idx]}_adv.png'))
-        print(f"Saved top 10 adversarial images for class {classes[class_idx]} to {adv_dir}")
-        plt.show()
-        # save result
+        print(f"Saved top {len(top_images_adv)} adversarial images for class {classes[class_idx]} to {adv_dir}")
     #END NEW CODE
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
