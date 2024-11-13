@@ -212,7 +212,7 @@ if __name__ == '__main__':
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
         
-    for i, data in enumerate(loader, start=1):
+    for i, data in enumerate(tqdm(loader, desc="Processing batches"), start=1):
         try:
             # few-shot data loader from Dassl
             imgs, tgts = data['img'], data['label']
@@ -245,8 +245,9 @@ if __name__ == '__main__':
         meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
-            progress.display(i)
-            
+            progress.display(i) 
+
+
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
