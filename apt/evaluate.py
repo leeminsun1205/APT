@@ -187,8 +187,6 @@ if __name__ == '__main__':
     classify_prompt = prompter_path if args.cls_prompt == 'prompter' else args.cls_prompt
     attack_prompt = prompter_path if args.atk_prompt == 'prompter' else args.atk_prompt
    
-    print(f"Classification prompt: {classify_prompt}")
-    print(f"Attack prompt: {attack_prompt}")
 
     if args.linear_probe:
         from adv_lp import LinearProbe
@@ -201,7 +199,6 @@ if __name__ == '__main__':
                            cls_prompt=classify_prompt,
                            atk_prompt=attack_prompt,
                            cfg=cfg)
-    
     model = model.cuda()
     model.eval()
 
