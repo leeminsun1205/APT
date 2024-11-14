@@ -233,7 +233,7 @@ if __name__ == '__main__':
         attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
-    if args.save_imgs:
+    if args.save_img:
         clean_dir = os.path.join(args.save_path, 'clean_test')
         adv_dir = os.path.join(args.save_path, 'adv_test')
         os.makedirs(clean_dir, exist_ok=True)
@@ -299,13 +299,17 @@ if __name__ == '__main__':
                 continue
             logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
             images_for_class_clean = all_images_clean[indices_for_class]
+            logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
+            images_for_class_adv = all_images_adv[indices_for_class]
                 
             k = min(args.num_imgs, logits_for_class_clean.size(0))
             random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
 
             selected_logits_clean = logits_for_class_clean[random_indices]
             selected_images_clean = images_for_class_clean[random_indices]
-            
+            selected_logits_adv = logits_for_class_adv[random_indices]
+            selected_images_adv = images_for_class_adv[random_indices]
+
             print(f"Selected {k} random images for class {classes[class_idx]}")
 
             fig, axes = plt.subplots(2, 5, figsize=(15, 6))
@@ -321,11 +325,7 @@ if __name__ == '__main__':
                     ax.axis('off')
             plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
 
-            logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
-            images_for_class_adv = all_images_adv[indices_for_class]
-                
-            selected_logits_adv = logits_for_class_adv[random_indices]
-            selected_images_adv = images_for_class_adv[random_indices]
+        
             
             print(f"Selected {k} random images for class {classes[class_idx]}")
             
