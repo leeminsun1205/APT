@@ -253,13 +253,15 @@ if __name__ == '__main__':
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
-        all_labels.append(tgts.cpu())
+        if args.save_img:
+            all_labels.append(tgts.cpu())
         bs = imgs.size(0)
 
         with torch.no_grad():
             output = model(imgs)    
-            all_logits_clean.append(output.cpu())
-            all_images_clean.append(imgs.cpu())
+            if args.save_img:
+                all_logits_clean.append(output.cpu())
+                all_images_clean.append(imgs.cpu())
 
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
@@ -273,80 +275,82 @@ if __name__ == '__main__':
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
         model.mode = 'classification'
-
+        
         # Calculate features
         with torch.no_grad():
             output = model(adv)
-            all_logits_adv.append(output.cpu())
-            all_images_adv.append(adv.cpu())
-    
-        print(f'For batch {i}:')
-        all_logits_clean = torch.cat(all_logits_clean, dim=0)
-        print(f'all_logits_clean: {all_logits_clean.shape}')
-        all_images_clean = torch.cat(all_images_clean, dim=0)
-        print(f'all_images_clean: {all_images_clean.shape}')
-        all_logits_adv = torch.cat(all_logits_adv, dim=0)
-        print(f'all_logits_adv: {all_logits_adv.shape}')
-        all_images_adv = torch.cat(all_images_adv, dim=0)
-        print(f'all_images_adv: {all_images_adv.shape}')
-        all_labels = torch.cat(all_labels, dim=0)
-        print(f'all_labels: {all_labels.shape}')
-
-        for class_idx in range(num_classes):
-            indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
-            if indices_for_class.numel() == 0:
-                print(f"No images found for class {classes[class_idx]}")
-                continue
-            logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
-            images_for_class_clean = all_images_clean[indices_for_class]
-            logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
-            images_for_class_adv = all_images_adv[indices_for_class]
-                
-            k = min(args.num_imgs, logits_for_class_clean.size(0))
-            random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
-
-            selected_logits_clean = logits_for_class_clean[random_indices]
-            selected_images_clean = images_for_class_clean[random_indices]
-            selected_logits_adv = logits_for_class_adv[random_indices]
-            selected_images_adv = images_for_class_adv[random_indices]
-
-            print(f"Selected {k} random images for class {classes[class_idx]}")
-
-            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-            for j, ax in enumerate(axes.flat):
-                if j < len(selected_images_clean):
-                    img = np.transpose(selected_images_clean[j], (1, 2, 0))
-                    ax.imshow(img)
-                    ax.axis('off')
-
-                    predicted_class = selected_logits_clean[j].argmax(dim=0).item()
-                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
-                else:
-                    ax.axis('off')
-            plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
-
+            if args.save_img:
+                all_logits_adv.append(output.cpu())
+                all_images_adv.append(adv.cpu())
         
-            
-            print(f"Selected {k} random images for class {classes[class_idx]}")
-            
-            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-            for j, ax in enumerate(axes.flat):
-                if j < len(selected_images_adv):
-                    img = np.transpose(selected_images_adv[j], (1, 2, 0))
-                    ax.imshow(img)
-                    ax.axis('off')
-
-                    predicted_class = selected_logits_adv[j].argmax(dim=0).item()
-                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
-                else:
-                    ax.axis('off')
-            plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_adv.png'))
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
+
+if args.save_img:
+    print(f'For batch {i}:')
+    all_logits_clean = torch.cat(all_logits_clean, dim=0)
+    print(f'all_logits_clean: {all_logits_clean.shape}')
+    all_images_clean = torch.cat(all_images_clean, dim=0)
+    print(f'all_images_clean: {all_images_clean.shape}')
+    all_logits_adv = torch.cat(all_logits_adv, dim=0)
+    print(f'all_logits_adv: {all_logits_adv.shape}')
+    all_images_adv = torch.cat(all_images_adv, dim=0)
+    print(f'all_images_adv: {all_images_adv.shape}')
+    all_labels = torch.cat(all_labels, dim=0)
+    print(f'all_labels: {all_labels.shape}')
+
+    for class_idx in range(num_classes):
+        indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
+        if indices_for_class.numel() == 0:
+            print(f"No images found for class {classes[class_idx]}")
+            continue
+        logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
+        images_for_class_clean = all_images_clean[indices_for_class]
+        logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
+        images_for_class_adv = all_images_adv[indices_for_class]
             
+        k = min(args.num_imgs, logits_for_class_clean.size(0))
+        random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
+
+        selected_logits_clean = logits_for_class_clean[random_indices]
+        selected_images_clean = images_for_class_clean[random_indices]
+        selected_logits_adv = logits_for_class_adv[random_indices]
+        selected_images_adv = images_for_class_adv[random_indices]
+
+        print(f"Selected {k} random images for class {classes[class_idx]}")
+
+        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        for j, ax in enumerate(axes.flat):
+            if j < len(selected_images_clean):
+                img = np.transpose(selected_images_clean[j], (1, 2, 0))
+                ax.imshow(img)
+                ax.axis('off')
+
+                predicted_class = selected_logits_clean[j].argmax(dim=0).item()
+                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+            else:
+                ax.axis('off')
+        plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
+
+    
+        
+        print(f"Selected {k} random images for class {classes[class_idx]}")
+        
+        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        for j, ax in enumerate(axes.flat):
+            if j < len(selected_images_adv):
+                img = np.transpose(selected_images_adv[j], (1, 2, 0))
+                ax.imshow(img)
+                ax.axis('off')
+
+                predicted_class = selected_logits_adv[j].argmax(dim=0).item()
+                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+            else:
+                ax.axis('off')
+        plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_adv.png'))        
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
