@@ -300,50 +300,61 @@ if args.save_img:
         if indices_for_class.numel() == 0:
             print(f"No images found for class {classes[class_idx]}")
             continue
+        
         logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
         images_for_class_clean = all_images_clean[indices_for_class]
         logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
         images_for_class_adv = all_images_adv[indices_for_class]
-            
+        
+        # Select random images
         k = min(args.num_imgs, logits_for_class_clean.size(0))
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
-
+        
         selected_logits_clean = logits_for_class_clean[random_indices]
         selected_images_clean = images_for_class_clean[random_indices]
         selected_logits_adv = logits_for_class_adv[random_indices]
         selected_images_adv = images_for_class_adv[random_indices]
-
+        
+        # Count correct vs incorrect predictions for clean images
+        correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
+        incorrect_clean_preds = k - correct_clean_preds
+        print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
+        print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
+        
+        # Plot and save clean images
         print(f"Selected {k} random clean images for class {classes[class_idx]}")
-
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_clean):
                 img = np.transpose(selected_images_clean[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
-
-                predicted_class = selected_logits_clean[j].argmax(dim=0).item()
+                predicted_class = classes[selected_logits_clean[j].argmax(dim=0).item()]
                 ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
 
-    
+        # Count correct vs incorrect predictions for adversarial images
+        correct_adv_preds = (selected_logits_adv.argmax(dim=1) == class_idx).sum().item()
+        incorrect_adv_preds = k - correct_adv_preds
+        print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
+        print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
         
+        # Plot and save adversarial images
         print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
-        
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
                 img = np.transpose(selected_images_adv[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
-
                 predicted_class = selected_logits_adv[j].argmax(dim=0).item()
                 ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
-        plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_adv.png'))        
+        plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
+
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:

@@ -61,7 +61,7 @@ class CustomCLIP(nn.Module):
             prompter = PromptLearner(self.cfg, self.classnames, self.model)
             
             state_dict = torch.load(prompter_ckp)["state_dict"]
-
+            
             # Ignore fixed token vectors
             if "token_prefix" in state_dict:
                 del state_dict["token_prefix"]
