@@ -6,6 +6,9 @@ import yaml
 import argparse
 from tqdm import tqdm
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from statistics import mean
 
 from torchvision import transforms
@@ -83,15 +86,34 @@ def pgd(imgs, targets, model, criterion, eps, eps_step, max_iter, pert=None, ig=
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('experiment')
-parser.add_argument('-cp','--cls-prompt', default='a photo of a {}')
-parser.add_argument('-ap','--atk-prompt', default=None)
-parser.add_argument('--best-checkpoint', action='store_true')
+parser.add_argument('experiment', type=str, help="Name or type of experiment to run.")
 
-parser.add_argument('--attack', default='pgd')
-parser.add_argument('--dataset', default=None)
-parser.add_argument('-lp', '--linear-probe', action='store_true')
+parser.add_argument('-cp', '--cls-prompt', type=str, default='a photo of a {}', 
+                    help="Template for class prompt. Default is 'a photo of a {}'.")
 
+parser.add_argument('-ap', '--atk-prompt', type=str, default=None, 
+                    help="Template for attack prompt. If not specified, defaults to None.")
+
+parser.add_argument('--best-checkpoint', action='store_true',
+                    help="Use the best checkpoint if available.")
+
+parser.add_argument('--attack', type=str, default='pgd', 
+                    help="Type of attack to use. Default is 'pgd'.")
+
+parser.add_argument('--dataset', type=str, default=None, 
+                    help="Dataset to use for the experiment. Defaults to None.")
+
+parser.add_argument('-lp', '--linear-probe', action='store_true', 
+                    help="Enable linear probing for the experiment.")
+
+parser.add_argument('--save-img', action='store_true', 
+                    help="Enable save images for the experiment.")
+
+parser.add_argument('--save-path', type=str, default = './',
+                    help="Specific path to save images. Default is ./")
+
+parser.add_argument('--num-imgs', type=int, default = '10',
+                    help="Number of images to save. Default is 10")
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -211,18 +233,33 @@ if __name__ == '__main__':
         attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
-        
-    for i, data in enumerate(tqdm(loader, desc="Processing batches"), start=1):
+    if args.save_imgs:
+        clean_dir = os.path.join(args.save_path, 'clean_test')
+        adv_dir = os.path.join(args.save_path, 'adv_test')
+        os.makedirs(clean_dir, exist_ok=True)
+        os.makedirs(adv_dir, exist_ok=True)
+
+        all_logits_clean = []
+        all_images_clean = []
+        all_logits_adv = []
+        all_images_adv = []
+        all_labels = []
+
+
+    for i, data in enumerate(loader, start=1):
         try:
             # few-shot data loader from Dassl
             imgs, tgts = data['img'], data['label']
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
+        all_labels.append(tgts.cpu())
         bs = imgs.size(0)
 
         with torch.no_grad():
-            output = model(imgs)
+            output = model(imgs)    
+            all_logits_clean.append(output.cpu())
+            all_images_clean.append(imgs.cpu())
 
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
@@ -240,14 +277,76 @@ if __name__ == '__main__':
         # Calculate features
         with torch.no_grad():
             output = model(adv)
+            all_logits_adv.append(output.cpu())
+            all_images_adv.append(adv.cpu())
+    
+        print(f'For batch {i}:')
+        all_logits_clean = torch.cat(all_logits_clean, dim=0)
+        print(f'all_logits_clean: {all_logits_clean.shape}')
+        all_images_clean = torch.cat(all_images_clean, dim=0)
+        print(f'all_images_clean: {all_images_clean.shape}')
+        all_logits_adv = torch.cat(all_logits_adv, dim=0)
+        print(f'all_logits_adv: {all_logits_adv.shape}')
+        all_images_adv = torch.cat(all_images_adv, dim=0)
+        print(f'all_images_adv: {all_images_adv.shape}')
+        all_labels = torch.cat(all_labels, dim=0)
+        print(f'all_labels: {all_labels.shape}')
 
+        for class_idx in range(num_classes):
+            indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
+            if indices_for_class.numel() == 0:
+                print(f"No images found for class {classes[class_idx]}")
+                continue
+            logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
+            images_for_class_clean = all_images_clean[indices_for_class]
+                
+            k = min(args.num_imgs, logits_for_class_clean.size(0))
+            random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
+
+            selected_logits_clean = logits_for_class_clean[random_indices]
+            selected_images_clean = images_for_class_clean[random_indices]
+            
+            print(f"Selected {k} random images for class {classes[class_idx]}")
+
+            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+            for j, ax in enumerate(axes.flat):
+                if j < len(selected_images_clean):
+                    img = np.transpose(selected_images_clean[j], (1, 2, 0))
+                    ax.imshow(img)
+                    ax.axis('off')
+
+                    predicted_class = selected_logits_clean[j].argmax(dim=0).item()
+                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                else:
+                    ax.axis('off')
+            plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
+
+            logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
+            images_for_class_adv = all_images_adv[indices_for_class]
+                
+            selected_logits_adv = logits_for_class_adv[random_indices]
+            selected_images_adv = images_for_class_adv[random_indices]
+            
+            print(f"Selected {k} random images for class {classes[class_idx]}")
+            
+            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+            for j, ax in enumerate(axes.flat):
+                if j < len(selected_images_adv):
+                    img = np.transpose(selected_images_adv[j], (1, 2, 0))
+                    ax.imshow(img)
+                    ax.axis('off')
+
+                    predicted_class = selected_logits_adv[j].argmax(dim=0).item()
+                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                else:
+                    ax.axis('off')
+            plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_adv.png'))
         rob = accuracy(output, tgts)
         meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
-            progress.display(i) 
-
-
+            progress.display(i)
+            
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:

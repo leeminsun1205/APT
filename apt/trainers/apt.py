@@ -238,15 +238,8 @@ class CustomCLIP(nn.Module):
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        # print(image)
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
-        # class_idx = 0
-        # _, top_indices = torch.topk(logits[:, class_idx], k=5, dim=0)  # Top 5 ảnh có độ tương quan cao nhất
-    
-        # # Convert ảnh từ tensor thành ảnh để hiển thị
-        # image_list = image.cpu().numpy()
-        # top_images = [image_list[i] for i in top_indices]
         
         return logits
 
