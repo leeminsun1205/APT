@@ -1,9 +1,9 @@
 import os
 import torch
-from warnings import warn
-from yacs.config import CfgNode
 import yaml
 import argparse
+from warnings import warn
+from yacs.config import CfgNode
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt
@@ -11,31 +11,23 @@ import numpy as np
 
 from statistics import mean
 
+from torch import Tensor
+import torch.nn as nn
+from torch.autograd import grad, Variable
 from torchvision import transforms
 from torchvision.datasets import *
 
-import torch.nn as nn
 from collections import OrderedDict
 from typing import Tuple, TypeVar
-from torch import Tensor
-from torch.autograd import grad, Variable
 
 from addict import Dict
 
 from dassl.data import DataManager
 
-import datasets.oxford_pets
-import datasets.oxford_flowers
-import datasets.fgvc_aircraft
-import datasets.dtd
-import datasets.eurosat
-import datasets.stanford_cars
-import datasets.food101
-import datasets.sun397
-import datasets.caltech101
-import datasets.ucf101
-import datasets.imagenet
-
+from datasets import (
+    oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
+    stanford_cars, food101, sun397, caltech101, ucf101, imagenet
+)
 
 from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
@@ -194,6 +186,9 @@ if __name__ == '__main__':
             
     classify_prompt = prompter_path if args.cls_prompt == 'prompter' else args.cls_prompt
     attack_prompt = prompter_path if args.atk_prompt == 'prompter' else args.atk_prompt
+   
+    print(f"Classification prompt: {classify_prompt}")
+    print(f"Attack prompt: {attack_prompt}")
 
     if args.linear_probe:
         from adv_lp import LinearProbe
@@ -238,7 +233,9 @@ if __name__ == '__main__':
         adv_dir = os.path.join(args.save_path, 'adv_test')
         os.makedirs(clean_dir, exist_ok=True)
         os.makedirs(adv_dir, exist_ok=True)
-
+        print(f'Sucessfully create {clean_dir} for clean image directory!')
+        print(f'Sucessfully create {adv_dir} for adversarial image directory!')
+        
         all_logits_clean = []
         all_images_clean = []
         all_logits_adv = []
@@ -275,7 +272,7 @@ if __name__ == '__main__':
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
         model.mode = 'classification'
-        
+
         # Calculate features
         with torch.no_grad():
             output = model(adv)
@@ -290,7 +287,6 @@ if __name__ == '__main__':
             progress.display(i)
 
 if args.save_img:
-    print(f'For batch {i}:')
     all_logits_clean = torch.cat(all_logits_clean, dim=0)
     print(f'all_logits_clean: {all_logits_clean.shape}')
     all_images_clean = torch.cat(all_images_clean, dim=0)
@@ -320,7 +316,7 @@ if args.save_img:
         selected_logits_adv = logits_for_class_adv[random_indices]
         selected_images_adv = images_for_class_adv[random_indices]
 
-        print(f"Selected {k} random images for class {classes[class_idx]}")
+        print(f"Selected {k} random clean images for class {classes[class_idx]}")
 
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
@@ -337,7 +333,7 @@ if args.save_img:
 
     
         
-        print(f"Selected {k} random images for class {classes[class_idx]}")
+        print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
