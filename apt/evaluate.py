@@ -339,7 +339,7 @@ if args.save_img:
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
 
         # Count correct vs incorrect predictions for adversarial images
-        correct_adv_preds = (selected_logits_adv.argmax(dim=1) == class_idx).sum().item()
+        correct_adv_preds = (selected_logits_adv.argmax(dim=0) == class_idx).sum().item()
         incorrect_adv_preds = k - correct_adv_preds
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
