@@ -352,7 +352,7 @@ if args.save_img:
                 img = np.transpose(selected_images_adv[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
-                predicted_class = selected_logits_adv[j].argmax(dim=0).item()
+                predicted_class = classes[selected_logits_adv[j].argmax(dim=0).item()]
                 ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
