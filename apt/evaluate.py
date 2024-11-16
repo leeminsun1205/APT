@@ -308,6 +308,9 @@ if args.save_img:
         
         # Select random images
         k = min(args.num_imgs, logits_for_class_clean.size(0))
+        if k == 0:
+            print(f"No images available for class {classes[class_idx]}. Skipping.")
+            continue
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
         
         selected_logits_clean = logits_for_class_clean[random_indices]
@@ -316,7 +319,7 @@ if args.save_img:
         selected_images_adv = images_for_class_adv[random_indices]
         
         # Count correct vs incorrect predictions for clean images
-        correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
+        correct_clean_preds = (selected_logits_clean.argmax(dim=0) == class_idx).sum().item()
         incorrect_clean_preds = k - correct_clean_preds
         print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
         print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
