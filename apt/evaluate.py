@@ -319,6 +319,7 @@ if args.save_img:
         
         # Count correct vs incorrect predictions for clean images
         correct_clean_preds = (selected_logits_clean.argmax(dim=0) == class_idx).sum().item()
+        print(f'selected_logits_clean: {selected_logits_clean}')
         print(f'selected_logits_clean.argmax(dim=0): {selected_logits_clean.argmax(dim=0)}')
         print(f'class_idx: {class_idx}')
         print(f'(selected_logits_clean.argmax(dim=0) == class_idx): {(selected_logits_clean.argmax(dim=0) == class_idx)}')
