@@ -282,7 +282,7 @@ if __name__ == '__main__':
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
-
+print(all_logits_clean)
 if args.save_img:
     all_logits_clean = torch.cat(all_logits_clean, dim=0)
     print(f'all_logits_clean: {all_logits_clean.shape}')
@@ -310,6 +310,7 @@ if args.save_img:
         if k == 0:
             print(f"No images available for class {classes[class_idx]}. Skipping.")
             continue
+        print(f"Selected {k} random clean images for class {classes[class_idx]}")
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
         
         selected_logits_clean = logits_for_class_clean[random_indices]
@@ -324,7 +325,6 @@ if args.save_img:
         print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
         
         # Plot and save clean images
-        print(f"Selected {k} random clean images for class {classes[class_idx]}")
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_clean):
@@ -338,13 +338,13 @@ if args.save_img:
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
 
         # Count correct vs incorrect predictions for adversarial images
+        print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         correct_adv_preds = (selected_logits_adv.argmax(dim=0) == class_idx).sum().item()
         incorrect_adv_preds = k - correct_adv_preds
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
         
         # Plot and save adversarial images
-        print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
@@ -356,27 +356,7 @@ if args.save_img:
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
-    print("\nLast logits and images for clean data:")
-    print(f"Last logits (clean): {all_logits_clean[-1]}")
-    print(f"Last image (clean): {all_images_clean[-1]}")
 
-    plt.figure(figsize=(4, 4))
-    clean_image = np.transpose(all_images_clean[-1].cpu().numpy(), (1, 2, 0))
-    plt.imshow(clean_image)
-    plt.title(f"Last Clean Image - Logits: {all_logits_clean[-1]}")
-    plt.axis('off')
-    plt.show()
-
-    print("\nLast logits and images for adversarial data:")
-    print(f"Last logits (adv): {all_logits_adv[-1]}")
-    print(f"Last image (adv): {all_images_adv[-1]}")
-
-    plt.figure(figsize=(4, 4))
-    adv_image = np.transpose(all_images_adv[-1].cpu().numpy(), (1, 2, 0))
-    plt.imshow(adv_image)
-    plt.title(f"Last Adversarial Image - Logits: {all_logits_adv[-1]}")
-    plt.axis('off')
-    plt.show()
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
