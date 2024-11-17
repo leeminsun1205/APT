@@ -282,17 +282,17 @@ if __name__ == '__main__':
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
-print(all_logits_clean.shape)
+
 if args.save_img:
-    all_logits_clean = torch.cat(all_logits_clean, dim=0)
-    print(f'all_logits_clean: {all_logits_clean.shape}')
-    all_images_clean = torch.cat(all_images_clean, dim=0)
-    print(f'all_images_clean: {all_images_clean.shape}')
-    all_logits_adv = torch.cat(all_logits_adv, dim=0)
-    print(f'all_logits_adv: {all_logits_adv.shape}')
-    all_images_adv = torch.cat(all_images_adv, dim=0)
-    print(f'all_images_adv: {all_images_adv.shape}')
-    all_labels = torch.cat(all_labels, dim=0)
+    # all_logits_clean = torch.cat(all_logits_clean, dim=0)
+    # print(f'all_logits_clean: {all_logits_clean.shape}')
+    # all_images_clean = torch.cat(all_images_clean, dim=0)
+    # print(f'all_images_clean: {all_images_clean.shape}')
+    # all_logits_adv = torch.cat(all_logits_adv, dim=0)
+    # print(f'all_logits_adv: {all_logits_adv.shape}')
+    # all_images_adv = torch.cat(all_images_adv, dim=0)
+    # print(f'all_images_adv: {all_images_adv.shape}')
+    # all_labels = torch.cat(all_labels, dim=0)
     print(f'all_labels: {all_labels.shape}')
     for class_idx in range(num_classes):    
         indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
