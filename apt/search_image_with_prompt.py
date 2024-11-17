@@ -14,10 +14,6 @@ from statistics import mean
 from torchvision import transforms
 from torchvision.datasets import *
 
-import torch.nn as nn
-from collections import OrderedDict
-from typing import Tuple, TypeVar
-from torch import Tensor
 from torch.autograd import grad, Variable
 
 from addict import Dict
@@ -191,15 +187,6 @@ if __name__ == '__main__':
     model = model.cuda()
     model.eval()
 
-    meters = Dict()
-    meters.acc = AverageMeter('Clean Acc@1', ':6.2f')
-    meters.rob = AverageMeter('Robust Acc@1', ':6.2f')
-    
-    progress = ProgressMeter(
-        len(loader),
-        [meters.acc, meters.rob],
-        prefix=cfg.DATASET.NAME)
-
     eps = cfg.AT.EPS
     alpha = eps / 4.0
     steps = 100
@@ -221,11 +208,8 @@ if __name__ == '__main__':
     os.makedirs(clean_dir, exist_ok=True)
     os.makedirs(adv_dir, exist_ok=True)
 
-    all_logits_clean = []
     all_images_clean = []
-    all_logits_adv = []
     all_images_adv = []
-    all_labels = []
 
     # Duyệt qua từng batch và lưu lại logits và ảnh cho clean và adv
     for i, data in enumerate(loader, start=1):
@@ -234,14 +218,9 @@ if __name__ == '__main__':
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
-        all_labels.append(tgts.cpu())
         bs = imgs.size(0)
 
-        # Tính toán logits và lưu ảnh cho clean
-        with torch.no_grad():
-            output_clean = model(imgs)
-            all_logits_clean.append(output_clean.cpu())
-            all_images_clean.append(imgs.cpu())
+        all_images_clean.append(imgs.cpu())
 
         # Áp dụng tấn công để tạo ảnh adversarial
         model.mode = 'attack'
@@ -251,44 +230,40 @@ if __name__ == '__main__':
             adv = attack(imgs, tgts)
         else:
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
-        model.mode = 'classification'
-
-        # Tính toán logits và lưu ảnh cho adversarial
-        with torch.no_grad():
-            output_adv = model(adv)
-            all_logits_adv.append(output_adv.cpu())
-            all_images_adv.append(adv.cpu())
-
-    # Kết hợp tất cả các logits và ảnh thành tensor
-    all_logits_clean = torch.cat(all_logits_clean, dim=0)
-    print(f'all_logits_clean: {all_logits_clean.shape}')
+        all_images_adv.append(adv.cpu())
+    
+    # Kết hợp tất cả các ảnh thành tensor
     all_images_clean = torch.cat(all_images_clean, dim=0)
-    print(f'all_images_clean: {all_images_clean.shape}')
-    all_logits_adv = torch.cat(all_logits_adv, dim=0)
-    print(f'all_logits_adv: {all_logits_adv.shape}')
     all_images_adv = torch.cat(all_images_adv, dim=0)
-    print(f'all_images_adv: {all_images_adv.shape}')
-    # Kết hợp nhãn
-    all_labels = torch.cat(all_labels, dim=0)
-    print(f'all_labels: {all_labels.shape}')
+
+    # Chuẩn bị text features cho classification và attack
+    cls_tfeatures = model._prompt_text_features(classify_prompt).cuda()  # Mã hóa text features
+    if attack_prompt is None or classify_prompt == attack_prompt:
+        atk_tfeatures = cls_tfeatures
+    else:
+        atk_tfeatures = model._prompt_text_features(attack_prompt).cuda()
+
+    # Chuẩn hóa ảnh và mã hóa image features
+    normalize = ImageNormalizer(mu, std).cuda()
+    image_features_clean = model.encode_image(normalize(all_images_clean))
+    image_features_clean = image_features_clean / image_features_clean.norm(dim=-1, keepdim=True)
+    
+    image_features_adv = model.encode_image(normalize(all_images_adv))
+    image_features_adv = image_features_adv / image_features_adv.norm(dim=-1, keepdim=True)
+
+    # Duyệt qua từng lớp
     for class_idx in range(num_classes):
-        # Lấy các chỉ số của ảnh có nhãn thực sự là class_idx
-        indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
+        # Lấy text feature của lớp hiện tại
+        text_feature = cls_tfeatures[class_idx].unsqueeze(0)  # Lấy vector nhúng của lớp hiện tại (1xD)
 
-        # Kiểm tra nếu không có ảnh nào thuộc lớp này
-        if indices_for_class.numel() == 0:
-            print(f"No images found for class {classes[class_idx]}")
-            continue
+        # Tính độ tương đồng cosine với tất cả ảnh sạch
+        similarities_clean = (image_features_clean @ text_feature.T).squeeze(1)
+        top_values_clean, top_indices_clean = torch.topk(similarities_clean, k=10)  # Lấy top 10
 
-        # Lấy logits và ảnh tương ứng cho clean
-        logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
-        images_for_class_clean = all_images_clean[indices_for_class]
+        # Lấy các ảnh top 10 cho clean
+        top_images_clean = [all_images_clean[i].cpu().numpy() for i in top_indices_clean]
 
-        # Chọn top 10 ảnh dựa trên logits
-        k = min(10, logits_for_class_clean.size(0))
-        top_values, top_indices = torch.topk(logits_for_class_clean, k=k, dim=0)
-        top_images_clean = [images_for_class_clean[i].numpy() for i in top_indices]
-
+        # Hiển thị và lưu kết quả top 10 ảnh sạch
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(top_images_clean):
@@ -301,14 +276,14 @@ if __name__ == '__main__':
         plt.savefig(os.path.join(clean_dir, f'top_images_class_{classes[class_idx]}_clean.png'))
         print(f"Saved top {len(top_images_clean)} clean images for class {classes[class_idx]} to {clean_dir}")
 
-        # Tương tự cho ảnh adversarial
-        logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
-        images_for_class_adv = all_images_adv[indices_for_class]
+        # Tính độ tương đồng cosine với tất cả ảnh đối nghịch
+        similarities_adv = (image_features_adv @ text_feature.T).squeeze(1)
+        top_values_adv, top_indices_adv = torch.topk(similarities_adv, k=10)  # Lấy top 10
 
-        k = min(10, logits_for_class_adv.size(0))
-        top_values_adv, top_indices_adv = torch.topk(logits_for_class_adv, k=k, dim=0)
-        top_images_adv = [images_for_class_adv[i].numpy() for i in top_indices_adv]
+        # Lấy các ảnh top 10 cho adversarial
+        top_images_adv = [all_images_adv[i].cpu().numpy() for i in top_indices_adv]
 
+        # Hiển thị và lưu kết quả top 10 ảnh đối nghịch
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(top_images_adv):
@@ -320,19 +295,6 @@ if __name__ == '__main__':
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'top_images_class_{classes[class_idx]}_adv.png'))
         print(f"Saved top {len(top_images_adv)} adversarial images for class {classes[class_idx]} to {adv_dir}")
-    #END NEW CODE
-    if os.path.isfile(save_path):
-        with open(save_path, 'r') as f:
-            result = Dict(yaml.safe_load(f))
-    else:
-        result = Dict()
-        
-    _result = result if args.dataset is None or args.dataset==train_dataset else result[args.dataset]
-    tune = 'linear_probe' if args.linear_probe else args.cls_prompt
-    _result[tune].clean = meters.acc.avg
-    _result[tune][args.attack] = meters.rob.avg
 
-    with open(save_path, 'w+') as f:
-        yaml.dump(result.to_dict(), f)
-    
-    print(f'result saved at: {save_path}')
+    #END NEW CODE
+   
