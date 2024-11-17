@@ -312,7 +312,6 @@ if args.save_img:
             continue
         print(f"Selected {k} random clean images for class {classes[class_idx]}")
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
-        print(random_indices)
         selected_logits_clean = logits_for_class_clean[random_indices]
         selected_images_clean = images_for_class_clean[random_indices]
         selected_logits_adv = logits_for_class_adv[random_indices]
@@ -320,6 +319,12 @@ if args.save_img:
         
         # Count correct vs incorrect predictions for clean images
         correct_clean_preds = (selected_logits_clean.argmax(dim=0) == class_idx).sum().item()
+        print(f'selected_logits_clean.argmax(dim=0): {selected_logits_clean.argmax(dim=0)}')
+        print(f'class_idx: {class_idx}')
+        print(f'(selected_logits_clean.argmax(dim=0) == class_idx): {(selected_logits_clean.argmax(dim=0) == class_idx)}')
+        print(f'(selected_logits_clean.argmax(dim=0) == class_idx).sum(): {(selected_logits_clean.argmax(dim=0) == class_idx).sum()}')
+        print(f'(selected_logits_clean.argmax(dim=0) == class_idx).sum().item(): {(selected_logits_clean.argmax(dim=0) == class_idx).sum().item()}')
+
         incorrect_clean_preds = k - correct_clean_preds
         print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
         print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
