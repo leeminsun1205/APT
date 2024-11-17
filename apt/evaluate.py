@@ -293,7 +293,7 @@ if args.save_img:
     # all_images_adv = torch.cat(all_images_adv, dim=0)
     # print(f'all_images_adv: {all_images_adv.shape}')
     # all_labels = torch.cat(all_labels, dim=0)
-    print(f'all_labels: {all_labels.shape}')
+    # print(f'all_labels: {all_labels.shape}')
     for class_idx in range(num_classes):    
         indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
         if indices_for_class.numel() == 0:
