@@ -304,10 +304,6 @@ if args.save_img:
         images_for_class_clean = all_images_clean[indices_for_class]
         logits_for_class_adv = all_logits_adv[indices_for_class]
         images_for_class_adv = all_images_adv[indices_for_class]
-        print(f"logits_for_class_clean: {logits_for_class_clean.shape}")
-        print(f"images_for_class_clean: {images_for_class_clean.shape}")
-        print(f"logits_for_class_adv: {logits_for_class_adv.shape}")
-        print(f"images_for_class_adv: {images_for_class_adv.shape}")
 
         # Select random images
         k = min(args.num_imgs, logits_for_class_clean.size(0))
@@ -316,7 +312,7 @@ if args.save_img:
             continue
         print(f"Selected {k} random clean images for class {classes[class_idx]}")
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
-        
+        print(random_indices)
         selected_logits_clean = logits_for_class_clean[random_indices]
         selected_images_clean = images_for_class_clean[random_indices]
         selected_logits_adv = logits_for_class_adv[random_indices]
