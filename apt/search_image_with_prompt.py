@@ -221,7 +221,7 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
 
-        all_images_clean.append(imgs.cpu())
+        all_images_clean.append(imgs)
         # Áp dụng tấn công để tạo ảnh adversarial
         model.mode = 'attack'
         if args.attack == 'aa':
@@ -230,11 +230,11 @@ if __name__ == '__main__':
             adv = attack(imgs, tgts)
         else:
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
-        all_images_adv.append(adv.cpu())
+        all_images_adv.append(adv)
     print('Attack done!')
     # Kết hợp tất cả các ảnh thành tensor và chuyển sang GPU
-    all_images_clean = torch.cat(all_images_clean, dim=0).cuda()
-    all_images_adv = torch.cat(all_images_adv, dim=0).cuda()
+    all_images_clean = torch.cat(all_images_clean, dim=0)
+    all_images_adv = torch.cat(all_images_adv, dim=0)
 
     # Chuẩn bị text features cho classification và attack
     cls_tfeatures = model._prompt_text_features(classify_prompt).cuda()  # Mã hóa text features
