@@ -284,16 +284,16 @@ if __name__ == '__main__':
             progress.display(i)
 
 if args.save_img:
-    # all_logits_clean = torch.cat(all_logits_clean, dim=0)
-    # print(f'all_logits_clean: {all_logits_clean.shape}')
-    # all_images_clean = torch.cat(all_images_clean, dim=0)
-    # print(f'all_images_clean: {all_images_clean.shape}')
-    # all_logits_adv = torch.cat(all_logits_adv, dim=0)
-    # print(f'all_logits_adv: {all_logits_adv.shape}')
-    # all_images_adv = torch.cat(all_images_adv, dim=0)
-    # print(f'all_images_adv: {all_images_adv.shape}')
-    # all_labels = torch.cat(all_labels, dim=0)
-    # print(f'all_labels: {all_labels.shape}')
+    all_logits_clean = torch.cat(all_logits_clean, dim=0)
+    print(f'all_logits_clean: {all_logits_clean.shape}')
+    all_images_clean = torch.cat(all_images_clean, dim=0)
+    print(f'all_images_clean: {all_images_clean.shape}')
+    all_logits_adv = torch.cat(all_logits_adv, dim=0)
+    print(f'all_logits_adv: {all_logits_adv.shape}')
+    all_images_adv = torch.cat(all_images_adv, dim=0)
+    print(f'all_images_adv: {all_images_adv.shape}')
+    all_labels = torch.cat(all_labels, dim=0)
+    print(f'all_labels: {all_labels.shape}')
     for class_idx in range(num_classes):    
         indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
         if indices_for_class.numel() == 0:
@@ -304,7 +304,11 @@ if args.save_img:
         images_for_class_clean = all_images_clean[indices_for_class]
         logits_for_class_adv = all_logits_adv[indices_for_class]
         images_for_class_adv = all_images_adv[indices_for_class]
-        
+        print(f"logits_for_class_clean: {logits_for_class_clean.shape}")
+        print(f"images_for_class_clean: {images_for_class_clean.shape}")
+        print(f"logits_for_class_adv: {logits_for_class_adv.shape}")
+        print(f"images_for_class_adv: {images_for_class_adv.shape}")
+
         # Select random images
         k = min(args.num_imgs, logits_for_class_clean.size(0))
         if k == 0:
