@@ -282,7 +282,7 @@ if __name__ == '__main__':
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
-print(all_logits_clean)
+print(all_logits_clean.shape)
 if args.save_img:
     all_logits_clean = torch.cat(all_logits_clean, dim=0)
     print(f'all_logits_clean: {all_logits_clean.shape}')
