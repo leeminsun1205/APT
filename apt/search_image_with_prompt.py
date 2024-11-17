@@ -79,22 +79,34 @@ def pgd(imgs, targets, model, criterion, eps, eps_step, max_iter, pert=None, ig=
         ig = None
     return adv, pert
 
-
+PROMPT_PRESETS = {
+    "default": "a photo of a {}",
+    "special": "a special picture of a {}",
+    "drawing": "a drawing of a {}",
+    "adversarial": "an adversarial example of a {}"
+}
 
 parser = argparse.ArgumentParser()
 parser.add_argument('experiment')
-parser.add_argument('-cp','--cls-prompt', default='a photo of a {}')
+parser.add_argument('-cp','--cls-prompt', default='default')
 parser.add_argument('-ap','--atk-prompt', default=None)
 parser.add_argument('--best-checkpoint', action='store_true')
 
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
+def get_prompt(preset_or_custom, default="default"):
+    if preset_or_custom in PROMPT_PRESETS:
+        return PROMPT_PRESETS[preset_or_custom]
+    return preset_or_custom
+
+# Lấy prompt từ preset hoặc custom
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
-
+    cls_prompt = get_prompt(args.cls_prompt)
+    atk_prompt = get_prompt(args.atk_prompt) if args.atk_prompt else None
     cfg = CfgNode()
     cfg.set_new_allowed(True)
     cfg_path = os.path.join(args.experiment, 'cfg.yaml')
