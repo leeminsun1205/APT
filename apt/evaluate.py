@@ -294,16 +294,15 @@ if args.save_img:
     print(f'all_images_adv: {all_images_adv.shape}')
     all_labels = torch.cat(all_labels, dim=0)
     print(f'all_labels: {all_labels.shape}')
-
-    for class_idx in range(num_classes):
+    for class_idx in range(num_classes):    
         indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
         if indices_for_class.numel() == 0:
             print(f"No images found for class {classes[class_idx]}")
             continue
         
-        logits_for_class_clean = all_logits_clean[indices_for_class, class_idx]
+        logits_for_class_clean = all_logits_clean[indices_for_class]
         images_for_class_clean = all_images_clean[indices_for_class]
-        logits_for_class_adv = all_logits_adv[indices_for_class, class_idx]
+        logits_for_class_adv = all_logits_adv[indices_for_class]
         images_for_class_adv = all_images_adv[indices_for_class]
         
         # Select random images
@@ -357,7 +356,27 @@ if args.save_img:
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
+    print("\nLast logits and images for clean data:")
+    print(f"Last logits (clean): {all_logits_clean[-1]}")
+    print(f"Last image (clean): {all_images_clean[-1]}")
 
+    plt.figure(figsize=(4, 4))
+    clean_image = np.transpose(all_images_clean[-1].cpu().numpy(), (1, 2, 0))
+    plt.imshow(clean_image)
+    plt.title(f"Last Clean Image - Logits: {all_logits_clean[-1]}")
+    plt.axis('off')
+    plt.show()
+
+    print("\nLast logits and images for adversarial data:")
+    print(f"Last logits (adv): {all_logits_adv[-1]}")
+    print(f"Last image (adv): {all_images_adv[-1]}")
+
+    plt.figure(figsize=(4, 4))
+    adv_image = np.transpose(all_images_adv[-1].cpu().numpy(), (1, 2, 0))
+    plt.imshow(adv_image)
+    plt.title(f"Last Adversarial Image - Logits: {all_logits_adv[-1]}")
+    plt.axis('off')
+    plt.show()
     # save result
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
