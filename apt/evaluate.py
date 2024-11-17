@@ -337,7 +337,7 @@ if args.save_img:
                 ax.imshow(img)
                 ax.axis('off')
                 predicted_class = classes[selected_logits_clean[j].argmax(dim=0).item()]
-                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
@@ -357,7 +357,7 @@ if args.save_img:
                 ax.imshow(img)
                 ax.axis('off')
                 predicted_class = classes[selected_logits_adv[j].argmax(dim=0).item()]
-                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
