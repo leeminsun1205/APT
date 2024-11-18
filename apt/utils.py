@@ -42,8 +42,10 @@ class CustomCLIP(nn.Module):
         self.classnames = classnames
         self.model = model
         self.mode = 'classification'
-        
         self.normalize = ImageNormalizer(mu, std).cuda()
+
+        self.cls_prompt = cls_prompt 
+        self.atk_prompt = atk_prompt
         
         self.set_prompts(cls_prompt, atk_prompt)
         
@@ -75,18 +77,18 @@ class CustomCLIP(nn.Module):
             text_features = text_encoder(prompts, prompter.tokenized_prompts)
             
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        return text_features.detach()
+        return text_features.detach(), prompts
         
     def set_prompts(self, cls_prompt, atk_prompt=None):
         print(f'classification prompt: {cls_prompt}')
-        self.cls_tfeatures = self._prompt_text_features(cls_prompt).cuda()
+        self.cls_tfeatures, self.cls_prompt = self._prompt_text_features(cls_prompt).cuda()
         
         if atk_prompt is None or cls_prompt == atk_prompt:
             print(f'attack prompt: {cls_prompt}')
-            self.atk_tfeatures = self.cls_tfeatures
+            self.atk_tfeatures, self.atk_prompt = self.cls_tfeatures, self.atk_prompt
         else:
             print(f'attack prompt: {atk_prompt}')
-            self.atk_tfeatures = self._prompt_text_features(atk_prompt).cuda()
+            self.atk_tfeatures, self.atk_prompt = self._prompt_text_features(atk_prompt).cuda()
             
     def forward(self, image):
         image_features = self.model.encode_image(self.normalize(image))        
@@ -98,7 +100,12 @@ class CustomCLIP(nn.Module):
         logits = logit_scale * image_features @ text_features.t()
         
         return logits
-
+    
+    def _get_prompts(self):
+        return {
+            'classification_prompt': self.cls_prompt,
+            'attack_prompt': self.atk_prompt
+        }
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
