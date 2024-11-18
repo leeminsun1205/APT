@@ -33,7 +33,6 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 
 from utils import *
-from interpret_prompt import load_clip_to_cpu
 from trainers.apt import SimpleTokenizer
 
 def CWLoss(output, target, confidence=0):
