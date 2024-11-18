@@ -319,12 +319,6 @@ if args.save_img:
         
         # Count correct vs incorrect predictions for clean images
         correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
-        print(f'selected_logits_clean: {selected_logits_clean}')
-        print(f'selected_logits_clean.argmax(dim=1): {selected_logits_clean.argmax(dim=1)}')
-        print(f'class_idx: {class_idx}')
-        print(f'(selected_logits_clean.argmax(dim=1) == class_idx): {(selected_logits_clean.argmax(dim=1) == class_idx)}')
-        print(f'(selected_logits_clean.argmax(dim=1) == class_idx).sum(): {(selected_logits_clean.argmax(dim=1) == class_idx).sum()}')
-        print(f'(selected_logits_clean.argmax(dim=1) == class_idx).sum().item(): {(selected_logits_clean.argmax(dim=1) == class_idx).sum().item()}')
         incorrect_clean_preds = k - correct_clean_preds
         print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
         print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
@@ -336,7 +330,7 @@ if args.save_img:
                 img = np.transpose(selected_images_clean[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
-                predicted_class = classes[selected_logits_clean[j].argmax(dim=0).item()]
+                predicted_class = classes[selected_logits_clean.argmax(dim=1)[j].item()]
                 ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
@@ -356,7 +350,7 @@ if args.save_img:
                 img = np.transpose(selected_images_adv[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
-                predicted_class = classes[selected_logits_adv[j].argmax(dim=0).item()]
+                predicted_class = classes[selected_logits_adv.argmax(dim=1)[j].item()]
                 ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
