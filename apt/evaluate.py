@@ -76,6 +76,22 @@ def pgd(imgs, targets, model, criterion, eps, eps_step, max_iter, pert=None, ig=
         ig = None
     return adv, pert
 
+def load_clip_to_cpu(backbone_name="RN50"):
+    url = clip._MODELS[backbone_name]
+    model_path = clip._download(url)
+
+    try:
+        # loading JIT archive
+        model = torch.jit.load(model_path, map_location="cpu").eval()
+        state_dict = None
+
+    except RuntimeError:
+        state_dict = torch.load(model_path, map_location="cpu")
+
+    model = clip.build_model(state_dict or model.state_dict())
+
+    return model
+
 parser = argparse.ArgumentParser()
 parser.add_argument('experiment', type=str, help="Name or type of experiment to run.")
 
@@ -218,8 +234,7 @@ if __name__ == '__main__':
         token_embedding = clip_model.token_embedding.weight
         print(f"Size of token embedding: {token_embedding.shape}")
 
-        topk = 1  # Number of top words to extract
-
+        topk = 1 
         if ctx.dim() == 2:
             # Generic context
             distance = torch.cdist(ctx, token_embedding)
