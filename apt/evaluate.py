@@ -325,7 +325,6 @@ if args.save_img:
         print(f'(selected_logits_clean.argmax(dim=0) == class_idx): {(selected_logits_clean.argmax(dim=0) == class_idx)}')
         print(f'(selected_logits_clean.argmax(dim=0) == class_idx).sum(): {(selected_logits_clean.argmax(dim=0) == class_idx).sum()}')
         print(f'(selected_logits_clean.argmax(dim=0) == class_idx).sum().item(): {(selected_logits_clean.argmax(dim=0) == class_idx).sum().item()}')
-)
         incorrect_clean_preds = k - correct_clean_preds
         print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
         print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
