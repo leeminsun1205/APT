@@ -272,7 +272,6 @@ if __name__ == '__main__':
         else:
             raise ValueError("Unsupported context dimension.")
     else:
-	    # If not using prompter, generate titles using the provided prompt format
 	    class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
 
     meters = Dict()
@@ -397,7 +396,7 @@ if args.save_img:
         
         # Plot and save clean images
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-        fig.suptitle(class_raw_titles, fontsize=16)
+        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_clean):
                 img = np.transpose(selected_images_clean[j], (1, 2, 0))
@@ -415,7 +414,7 @@ if args.save_img:
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
 
-        fig.suptitle(class_raw_titles, fontsize=16)
+        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
