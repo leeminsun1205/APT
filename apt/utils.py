@@ -81,15 +81,20 @@ class CustomCLIP(nn.Module):
         
     def set_prompts(self, cls_prompt, atk_prompt=None):
         print(f'classification prompt: {cls_prompt}')
-        self.cls_tfeatures, self.cls_prompt = self._prompt_text_features(cls_prompt).cuda()
-        
+        cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
+        self.cls_tfeatures = cls_tfeatures.cuda()
+        self.cls_prompt = cls_prompts
+
         if atk_prompt is None or cls_prompt == atk_prompt:
             print(f'attack prompt: {cls_prompt}')
-            self.atk_tfeatures, self.atk_prompt = self.cls_tfeatures, self.atk_prompt
+            self.atk_tfeatures = self.cls_tfeatures
+            self.atk_prompt = self.cls_prompt
         else:
             print(f'attack prompt: {atk_prompt}')
-            self.atk_tfeatures, self.atk_prompt = self._prompt_text_features(atk_prompt).cuda()
-            
+            atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
+            self.atk_tfeatures = atk_tfeatures.cuda()
+            self.atk_prompt = atk_prompts
+                
     def forward(self, image):
         image_features = self.model.encode_image(self.normalize(image))        
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
