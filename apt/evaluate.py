@@ -33,7 +33,7 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 
 from utils import *
-
+from ..apt import SimpleTokenizer
 
 def CWLoss(output, target, confidence=0):
     """
@@ -205,6 +205,77 @@ if __name__ == '__main__':
     print("[TEST] Attack Prompt:", prompts['attack_prompt'])
     model.eval()
 
+    # Function to load CLIP model to CPU
+    def load_clip_to_cpu(backbone_name="RN50"):
+        url = clip._MODELS[backbone_name]
+        model_path = clip._download(url)
+
+        try:
+            # loading JIT archive
+            model = torch.jit.load(model_path, map_location="cpu").eval()
+            state_dict = None
+        except RuntimeError:
+            state_dict = torch.load(model_path, map_location="cpu")
+
+        model = clip.build_model(state_dict or model.state_dict())
+        return model
+
+    # Load the prompt learner and extract raw words
+    if args.cls_prompt == 'prompter':
+        prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
+        ctx = prompt_learner_state["ctx"]
+        ctx = ctx.float()
+        print(f"Size of context: {ctx.shape}")
+
+        # Load tokenizer and token embeddings
+        tokenizer = SimpleTokenizer()
+        clip_model = load_clip_to_cpu()
+        token_embedding = clip_model.token_embedding.weight
+        print(f"Size of token embedding: {token_embedding.shape}")
+
+        topk = 1  # Number of top words to extract
+
+        if ctx.dim() == 2:
+            # Generic context
+            distance = torch.cdist(ctx, token_embedding)
+            print(f"Size of distance matrix: {distance.shape}")
+            sorted_idxs = torch.argsort(distance, dim=1)
+            sorted_idxs = sorted_idxs[:, :topk]
+            raw_words = []
+            for m, idxs in enumerate(sorted_idxs):
+                words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
+                print(f"Context {m+1}: {' '.join(words)}")
+                raw_words.extend(words)
+            raw_phrase = ' '.join(raw_words)
+            class_raw_titles = [f"{raw_phrase} {classes[class_idx]}." for class_idx in range(num_classes)]
+        elif ctx.dim() == 3:
+            # Class-specific context
+            print("Processing class-specific context...")
+            n_classes, n_ctx, dim = ctx.shape
+            print(f"Number of classes: {n_classes}, Context tokens per class: {n_ctx}, Dimension: {dim}")
+
+            class_raw_words = []
+            for class_idx, class_ctx in enumerate(ctx):  # class_ctx: [n_ctx, dim]
+                print(f"\nClass {class_idx + 1}:")
+                distance = torch.cdist(class_ctx, token_embedding)  # [n_ctx, vocab_size]
+                print(f"Size of distance matrix: {distance.shape}")
+
+                sorted_idxs = torch.argsort(distance, dim=1)[:, :topk]
+                words_per_class = []
+                for m, idxs in enumerate(sorted_idxs):
+                    words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
+                    print(f"  Context token {m+1}: {' '.join(words)}")
+                    words_per_class.append(words[0])  # Take top-1 word
+                sentence = ' '.join(words_per_class)
+                print(f"Generated sentence for Class {class_idx + 1}: {sentence} class")
+                class_raw_words.append(sentence)
+            class_raw_titles = [f"{class_raw_words[class_idx]} {classes[class_idx]}" for class_idx in range(num_classes)]
+        else:
+            raise ValueError("Unsupported context dimension.")
+    else:
+	    # If not using prompter, generate titles using the provided prompt format
+	    class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
+
     meters = Dict()
     meters.acc = AverageMeter('Clean Acc@1', ':6.2f')
     meters.rob = AverageMeter('Robust Acc@1', ':6.2f')
@@ -320,7 +391,6 @@ if args.save_img:
         selected_logits_adv = logits_for_class_adv[random_indices]
         selected_images_adv = images_for_class_adv[random_indices]
         
-        # Count correct vs incorrect predictions for clean images
         correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
         incorrect_clean_preds = k - correct_clean_preds
         print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
@@ -328,23 +398,25 @@ if args.save_img:
         
         # Plot and save clean images
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        fig.suptitle(class_raw_titles, fontsize=16)
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_clean):
                 img = np.transpose(selected_images_clean[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
                 predicted_class = classes[selected_logits_clean.argmax(dim=1)[j].item()]
-                ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
+                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
-
+        plt.close(fig)
         print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         correct_adv_preds = (selected_logits_adv.argmax(dim=0) == class_idx).sum().item()
         incorrect_adv_preds = k - correct_adv_preds
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
-        
+
+        fig.suptitle(class_raw_titles, fontsize=16)
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
@@ -352,10 +424,11 @@ if args.save_img:
                 ax.imshow(img)
                 ax.axis('off')
                 predicted_class = classes[selected_logits_adv.argmax(dim=1)[j].item()]
-                ax.set_title(f"Classification prompt: {args.cls_prompt}\nTrue class {classes[class_idx]}\nPredicted class {predicted_class}")
+                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
+        plt.close(fig)
 
     # save result
     if os.path.isfile(save_path):
