@@ -124,7 +124,7 @@ parser.add_argument('--num-imgs', type=int, default = '10',
 parser.add_argument('--seed', type=int, default = '42',
                     help="Seed for torch random")
 
-parser.add_argument("topk", type=int, default = '1',
+parser.add_argument("--topk", type=int, default = '1',
                     help="Select top-k similar words")
 
 if __name__ == '__main__':
