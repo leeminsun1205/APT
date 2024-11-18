@@ -121,8 +121,16 @@ parser.add_argument('--save-path', type=str, default = './',
 parser.add_argument('--num-imgs', type=int, default = '10',
                     help="Number of images to save. Default is 10")
 
+parser.add_argument('--seed', type=int, default = '42',
+                    help="Seed for torch random")
+
+parser.add_argument("topk", type=int, default = '1',
+                    help="Select top-k similar words")
+
 if __name__ == '__main__':
     args = parser.parse_args()
+
+    torch.manual_seed(args.seed)
 
     cfg = CfgNode()
     cfg.set_new_allowed(True)
@@ -220,20 +228,18 @@ if __name__ == '__main__':
     model.eval()
 
 
-    # Load the prompt learner and extract raw words
     if args.cls_prompt == 'prompter':
         prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
         ctx = prompt_learner_state["ctx"]
         ctx = ctx.float()
         print(f"Size of context: {ctx.shape}")
 
-        # Load tokenizer and token embeddings
         tokenizer = SimpleTokenizer()
         clip_model = load_clip_to_cpu()
         token_embedding = clip_model.token_embedding.weight
         print(f"Size of token embedding: {token_embedding.shape}")
 
-        topk = 1 
+        topk = args.topk
         if ctx.dim() == 2:
             # Generic context
             distance = torch.cdist(ctx, token_embedding)
@@ -254,9 +260,9 @@ if __name__ == '__main__':
             print(f"Number of classes: {n_classes}, Context tokens per class: {n_ctx}, Dimension: {dim}")
 
             class_raw_words = []
-            for class_idx, class_ctx in enumerate(ctx):  # class_ctx: [n_ctx, dim]
+            for class_idx, class_ctx in enumerate(ctx):
                 print(f"\nClass {class_idx + 1}:")
-                distance = torch.cdist(class_ctx, token_embedding)  # [n_ctx, vocab_size]
+                distance = torch.cdist(class_ctx, token_embedding)
                 print(f"Size of distance matrix: {distance.shape}")
 
                 sorted_idxs = torch.argsort(distance, dim=1)[:, :topk]
@@ -264,7 +270,7 @@ if __name__ == '__main__':
                 for m, idxs in enumerate(sorted_idxs):
                     words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
                     print(f"  Context token {m+1}: {' '.join(words)}")
-                    words_per_class.append(words[0])  # Take top-1 word
+                    words_per_class.append(words[0])
                 sentence = ' '.join(words_per_class)
                 print(f"Generated sentence for Class {class_idx + 1}: {sentence} class")
                 class_raw_words.append(sentence)
