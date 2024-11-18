@@ -33,7 +33,7 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 
 from utils import *
-from trainers.apt import SimpleTokenizer
+from clip.simple_tokenizer import SimpleTokenizer
 
 def CWLoss(output, target, confidence=0):
     """
