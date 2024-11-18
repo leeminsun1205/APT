@@ -200,7 +200,7 @@ if __name__ == '__main__':
                            atk_prompt=attack_prompt,
                            cfg=cfg)
     model = model.cuda()
-    prompts = model.get_prompts()
+    prompts = model._get_prompts()
     print("[TEST] Classification Prompt:", prompts['classification_prompt'])
     print("[TEST] Attack Prompt:", prompts['attack_prompt'])
     model.eval()
@@ -339,14 +339,12 @@ if args.save_img:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
 
-        # Count correct vs incorrect predictions for adversarial images
         print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         correct_adv_preds = (selected_logits_adv.argmax(dim=0) == class_idx).sum().item()
         incorrect_adv_preds = k - correct_adv_preds
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
         
-        # Plot and save adversarial images
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
