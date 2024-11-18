@@ -33,7 +33,8 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 
 from utils import *
-from ..apt import SimpleTokenizer
+from interpret_prompt import load_clip_to_cpu
+from trainers.apt import SimpleTokenizer
 
 def CWLoss(output, target, confidence=0):
     """
@@ -74,8 +75,6 @@ def pgd(imgs, targets, model, criterion, eps, eps_step, max_iter, pert=None, ig=
         adv, pert = perturb(imgs, targets, model, criterion, eps, eps_step, pert, ig)
         ig = None
     return adv, pert
-
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('experiment', type=str, help="Name or type of experiment to run.")
@@ -205,20 +204,6 @@ if __name__ == '__main__':
     print("[TEST] Attack Prompt:", prompts['attack_prompt'])
     model.eval()
 
-    # Function to load CLIP model to CPU
-    def load_clip_to_cpu(backbone_name="RN50"):
-        url = clip._MODELS[backbone_name]
-        model_path = clip._download(url)
-
-        try:
-            # loading JIT archive
-            model = torch.jit.load(model_path, map_location="cpu").eval()
-            state_dict = None
-        except RuntimeError:
-            state_dict = torch.load(model_path, map_location="cpu")
-
-        model = clip.build_model(state_dict or model.state_dict())
-        return model
 
     # Load the prompt learner and extract raw words
     if args.cls_prompt == 'prompter':
