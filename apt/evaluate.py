@@ -129,9 +129,6 @@ parser.add_argument("--topk", type=int, default = '1',
 
 if __name__ == '__main__':
     args = parser.parse_args()
-
-    torch.manual_seed(args.seed)
-
     cfg = CfgNode()
     cfg.set_new_allowed(True)
     cfg_path = os.path.join(args.experiment, 'cfg.yaml')
@@ -372,6 +369,8 @@ if args.save_img:
     print(f'all_images_adv: {all_images_adv.shape}')
     all_labels = torch.cat(all_labels, dim=0)
     print(f'all_labels: {all_labels.shape}')
+    torch.manual_seed(args.seed)
+    
     for class_idx in range(num_classes):    
         indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
         if indices_for_class.numel() == 0:
@@ -388,8 +387,9 @@ if args.save_img:
         if k == 0:
             print(f"No images available for class {classes[class_idx]}. Skipping.")
             continue
-        print(f"Selected {k} random clean images for class {classes[class_idx]}")
         random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
+        print(f"Selected {k} random clean images for class {classes[class_idx]}: {random_indices}")
+        
         selected_logits_clean = logits_for_class_clean[random_indices]
         selected_images_clean = images_for_class_clean[random_indices]
         selected_logits_adv = logits_for_class_adv[random_indices]
@@ -414,6 +414,7 @@ if args.save_img:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
         plt.close(fig)
+
         print(f"Selected {k} random adversarial images for class {classes[class_idx]}")
         correct_adv_preds = (selected_logits_adv.argmax(dim=1) == class_idx).sum().item()
         incorrect_adv_preds = k - correct_adv_preds
