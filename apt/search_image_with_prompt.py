@@ -174,46 +174,56 @@ if __name__ == '__main__':
 
     if args.linear_probe:
         from adv_lp import LinearProbe
-        model = LinearProbe(model, 512, num_classes, False)
+        new_model = LinearProbe(model, 512, num_classes, False)
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
-        model.linear.load_state_dict(ckp)
+        new_model.linear.load_state_dict(ckp)
     else:
-        model = CustomCLIP(model,
+        new_model = CustomCLIP(model,
                            classes,
                            cls_prompt=classify_prompt,
                            atk_prompt=attack_prompt,
                            cfg=cfg)
-    
-    model = model.cuda()
-    model.eval()
+    # Chuẩn bị text features cho classification và attack
+    cls_tfeatures = new_model._prompt_text_features(classify_prompt).cuda()
+    if attack_prompt is None or classify_prompt == attack_prompt:
+        atk_tfeatures = cls_tfeatures
+    else:
+        atk_tfeatures = new_model._prompt_text_features(attack_prompt).cuda()
+    logit_scale = model.logit_scale.exp()
+    new_model = new_model.cuda()
+    new_model.eval()
 
     eps = cfg.AT.EPS
     alpha = eps / 4.0
     steps = 100
     
     if args.attack == 'aa':
-        attack = AutoAttack(model,
+        attack = AutoAttack(new_model,
                             norm='Linf',
                             eps=eps,
                             version='standard',
                             verbose=False)
     elif args.attack == 'pgd':
-        attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
+        attack = PGD(new_model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
-        attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
+        attack = TPGD(new_model, eps=eps, alpha=alpha, steps=steps)
     #BEGIN NEW CODE  
-    base_dir = '/kaggle/working'
+    import heapq
+    base_dir = '/home/khoahocmaytinh2022/Desktop/MinhNhut'
     clean_dir = os.path.join(base_dir, 'clean_test')
     adv_dir = os.path.join(base_dir, 'adv_test')
     os.makedirs(clean_dir, exist_ok=True)
     os.makedirs(adv_dir, exist_ok=True)
 
-    all_images_clean = []
-    all_images_adv = []
-
-    # Duyệt qua từng batch và lưu lại logits và ảnh cho clean và adv
+    # Khởi tạo cấu trúc dữ liệu để lưu trữ top 10 ảnh cho mỗi lớp
+    top_images_clean = {class_idx: [] for class_idx in range(num_classes)}
+    top_images_adv = {class_idx: [] for class_idx in range(num_classes)}
+    mu = (0.48145466, 0.4578275, 0.40821073)
+    std = (0.26862954, 0.26130258, 0.27577711)
+    normalize = ImageNormalizer(mu, std).cuda()
+    # Duyệt qua từng batch
     for i, data in enumerate(loader, start=1):
-        print(f'Batch {i} of loader!')
+        print(f'Batch {i} của loader!')
         try:
             imgs, tgts = data['img'], data['label']
         except:
@@ -221,81 +231,90 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
 
-        all_images_clean.append(imgs)
         # Áp dụng tấn công để tạo ảnh adversarial
-        model.mode = 'attack'
+        new_model.mode = 'attack'
         if args.attack == 'aa':
             adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
         elif args.attack in ['pgd', 'tpgd']:
             adv = attack(imgs, tgts)
         else:
-            adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
-        all_images_adv.append(adv)
-    print('Attack done!')
-    # Kết hợp tất cả các ảnh thành tensor và chuyển sang GPU
-    all_images_clean = torch.cat(all_images_clean, dim=0)
-    all_images_adv = torch.cat(all_images_adv, dim=0)
+            adv, _ = pgd(imgs, tgts, new_model, CWLoss, eps, alpha, steps)
+        new_model.mode = 'classification'
+        with torch.no_grad():
+            # Mã hóa đặc trưng ảnh
+            image_features_clean = model.encode_image(normalize(imgs))
+            image_features_clean = image_features_clean / image_features_clean.norm(dim=-1, keepdim=True)
 
-    # Chuẩn bị text features cho classification và attack
-    cls_tfeatures = model._prompt_text_features(classify_prompt).cuda()  # Mã hóa text features
-    if attack_prompt is None or classify_prompt == attack_prompt:
-        atk_tfeatures = cls_tfeatures
-    else:
-        atk_tfeatures = model._prompt_text_features(attack_prompt).cuda()
+            image_features_adv = model.encode_image(normalize(adv))
+            image_features_adv = image_features_adv / image_features_adv.norm(dim=-1, keepdim=True)
 
-    # Chuẩn hóa ảnh và mã hóa image features
-    normalize = ImageNormalizer(mu, std).cuda()
-    image_features_clean = model.encode_image(normalize(all_images_clean))
-    image_features_clean = image_features_clean / image_features_clean.norm(dim=-1, keepdim=True)
+            # Chuyển ảnh về CPU để tiết kiệm bộ nhớ GPU
+            imgs_cpu = imgs.detach().cpu().numpy()
+            adv_cpu = adv.detach().cpu().numpy()
 
-    image_features_adv = model.encode_image(normalize(all_images_adv))
-    image_features_adv = image_features_adv / image_features_adv.norm(dim=-1, keepdim=True)
+        # Duyệt qua từng lớp
+        for class_idx in range(num_classes):
+            text_feature = cls_tfeatures[class_idx].cuda()
+            
+            # Tính độ tương đồng cosine với ảnh sạch
+            similarities_clean = (logit_scale * image_features_clean @ text_feature).detach().cpu().numpy()
 
-    # Duyệt qua từng lớp
+            # Cập nhật top 10 ảnh sạch cho mỗi lớp
+            for sim, img in zip(similarities_clean, imgs_cpu):
+                # Sử dụng heapq để duy trì top 10 ảnh có độ tương đồng cao nhất
+                heapq.heappush(top_images_clean[class_idx], (sim, img))
+                if len(top_images_clean[class_idx]) > 10:
+                    heapq.heappop(top_images_clean[class_idx])
+
+            # Tính độ tương đồng cosine với ảnh đối nghịch
+            similarities_adv = (logit_scale * image_features_adv @ text_feature).detach().cpu().numpy()
+
+            # Cập nhật top 10 ảnh đối nghịch cho mỗi lớp
+            for sim, img in zip(similarities_adv, adv_cpu):
+                heapq.heappush(top_images_adv[class_idx], (sim, img))
+                if len(top_images_adv[class_idx]) > 10:
+                    heapq.heappop(top_images_adv[class_idx])
+
+    print('Hoàn thành xử lý!')
+
+    # Sau khi duyệt qua tất cả các batch, lưu lại kết quả
     for class_idx in range(num_classes):
         print(f'{class_idx}-Class {classes[class_idx]}:')
-        # Lấy text feature của lớp hiện tại
-        text_feature = cls_tfeatures[class_idx].unsqueeze(0).cuda()  # Đồng bộ hóa text feature trên GPU
-
-        # Tính độ tương đồng cosine với tất cả ảnh sạch
-        similarities_clean = (image_features_clean @ text_feature.T).squeeze(1)
-        top_values_clean, top_indices_clean = torch.topk(similarities_clean, k=10)  # Lấy top 10
-
-        # Lấy các ảnh top 10 cho clean
-        top_images_clean = [all_images_clean[i].cpu().numpy() for i in top_indices_clean]
+        
+        # Sắp xếp lại danh sách top ảnh sạch theo độ tương đồng giảm dần
+        top_images_clean[class_idx].sort(key=lambda x: x[0], reverse=True)
+        imgs_clean = [img for sim, img in top_images_clean[class_idx]]
 
         # Hiển thị và lưu kết quả top 10 ảnh sạch
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
-            if j < len(top_images_clean):
-                img = np.transpose(top_images_clean[j], (1, 2, 0))
+            if j < len(imgs_clean):
+                img = np.transpose(imgs_clean[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
                 ax.set_title(f"Class {classes[class_idx]}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(clean_dir, f'top_images_class_{classes[class_idx]}_clean.png'))
-        print(f"Saved top {len(top_images_clean)} clean images for class {classes[class_idx]} to {clean_dir}")
+        plt.close(fig)
+        print(f"Đã lưu {len(imgs_clean)} ảnh sạch cho lớp {classes[class_idx]} vào {clean_dir}")
 
-        # Tính độ tương đồng cosine với tất cả ảnh đối nghịch
-        similarities_adv = (image_features_adv @ text_feature.T).squeeze(1)
-        top_values_adv, top_indices_adv = torch.topk(similarities_adv, k=10)  # Lấy top 10
-
-        # Lấy các ảnh top 10 cho adversarial
-        top_images_adv = [all_images_adv[i].cpu().numpy() for i in top_indices_adv]
+        # Sắp xếp lại danh sách top ảnh đối nghịch theo độ tương đồng giảm dần
+        top_images_adv[class_idx].sort(key=lambda x: x[0], reverse=True)
+        imgs_adv = [img for sim, img in top_images_adv[class_idx]]
 
         # Hiển thị và lưu kết quả top 10 ảnh đối nghịch
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
         for j, ax in enumerate(axes.flat):
-            if j < len(top_images_adv):
-                img = np.transpose(top_images_adv[j], (1, 2, 0))
+            if j < len(imgs_adv):
+                img = np.transpose(imgs_adv[j], (1, 2, 0))
                 ax.imshow(img)
                 ax.axis('off')
                 ax.set_title(f"Class {classes[class_idx]}")
             else:
                 ax.axis('off')
         plt.savefig(os.path.join(adv_dir, f'top_images_class_{classes[class_idx]}_adv.png'))
-        print(f"Saved top {len(top_images_adv)} adversarial images for class {classes[class_idx]} to {adv_dir}")
-
+        plt.close(fig)
+        print(f"Đã lưu {len(imgs_adv)} ảnh đối nghịch cho lớp {classes[class_idx]} vào {adv_dir}")
     #END NEW CODE
    
