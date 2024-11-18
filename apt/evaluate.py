@@ -414,8 +414,8 @@ if args.save_img:
         print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
         print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
 
-        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
         fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
         for j, ax in enumerate(axes.flat):
             if j < len(selected_images_adv):
                 img = np.transpose(selected_images_adv[j], (1, 2, 0))
