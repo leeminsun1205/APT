@@ -220,8 +220,6 @@ if __name__ == '__main__':
                            cfg=cfg)
     model = model.cuda()
     prompts = model._get_prompts()
-    print("[TEST] Classification Prompt:", prompts['classification_prompt'])
-    print("[TEST] Attack Prompt:", prompts['attack_prompt'])
     model.eval()
 
 
