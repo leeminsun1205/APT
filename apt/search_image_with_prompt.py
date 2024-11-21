@@ -264,8 +264,7 @@ if __name__ == '__main__':
             raise ValueError("Unsupported context dimension.")
     else:
 	    # If not using prompter, generate titles using the provided prompt format
-	    class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
-
+        class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
     # Proceed with the rest of the code
     eps = cfg.AT.EPS
     alpha = eps / 4.0

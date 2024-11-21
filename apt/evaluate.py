@@ -273,8 +273,8 @@ if __name__ == '__main__':
         else:
             raise ValueError("Unsupported context dimension.")
     else:
-	    class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
-
+        class_raw_titles = [args.cls_prompt.format(classes[class_idx]) for class_idx in range(num_classes)]
+    
     meters = Dict()
     meters.acc = AverageMeter('Clean Acc@1', ':6.2f')
     meters.rob = AverageMeter('Robust Acc@1', ':6.2f')
