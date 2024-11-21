@@ -185,7 +185,7 @@ if __name__ == '__main__':
                                              pin_memory=True)
     
     model, _ = clip.load(cfg.MODEL.BACKBONE.NAME, device='cpu')
-
+    
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     eps = int(cfg.AT.EPS * 255)
