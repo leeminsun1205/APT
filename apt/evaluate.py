@@ -37,7 +37,7 @@ from clip.simple_tokenizer import SimpleTokenizer
 
 def CWLoss(output, target, confidence=0):
     """
-    CW loss (Marging loss).
+    CW loss (Margin loss).
     """
     num_classes = output.shape[-1]
     target = target.data
@@ -135,15 +135,15 @@ if __name__ == '__main__':
     cfg.merge_from_file(cfg_path)
 
     train_dataset = cfg.DATASET.NAME
-    
+
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
         else:
             cfg.DATASET.NAME = args.dataset
-        save_path = os.path.join(cfg.OUTPUT_DIR, 'dist_shift.yaml')
+        save_path = os.path.join(args.save_path, 'dist_shift.yaml')  # Modified to use args.save_path
     else:
-        save_path = os.path.join(cfg.OUTPUT_DIR, 'evaluation.yaml')
+        save_path = os.path.join(args.save_path, 'evaluation.yaml')  # Modified to use args.save_path
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
             result = Dict(yaml.safe_load(f))
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     classes = dm.dataset.classnames
     loader = dm.test_loader
     num_classes = dm.num_classes
-    
+
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
         if args.dataset == 'ImageNetV2':
@@ -183,9 +183,9 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
-    
+
     model, _ = clip.load(cfg.MODEL.BACKBONE.NAME, device='cpu')
-    
+
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     eps = int(cfg.AT.EPS * 255)
@@ -206,7 +206,6 @@ if __name__ == '__main__':
     classify_prompt = prompter_path if args.cls_prompt == 'prompter' else args.cls_prompt
     attack_prompt = prompter_path if args.atk_prompt == 'prompter' else args.atk_prompt
    
-
     if args.linear_probe:
         from adv_lp import LinearProbe
         model = LinearProbe(model, 512, num_classes, False)
@@ -287,7 +286,7 @@ if __name__ == '__main__':
     eps = cfg.AT.EPS
     alpha = eps / 4.0
     steps = 100
-    
+
     if args.attack == 'aa':
         attack = AutoAttack(model,
                             norm='Linf',
@@ -356,82 +355,82 @@ if __name__ == '__main__':
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
 
-if args.save_img:
-    all_logits_clean = torch.cat(all_logits_clean, dim=0)
-    print(f'all_logits_clean: {all_logits_clean.shape}')
-    all_images_clean = torch.cat(all_images_clean, dim=0)
-    print(f'all_images_clean: {all_images_clean.shape}')
-    all_logits_adv = torch.cat(all_logits_adv, dim=0)
-    print(f'all_logits_adv: {all_logits_adv.shape}')
-    all_images_adv = torch.cat(all_images_adv, dim=0)
-    print(f'all_images_adv: {all_images_adv.shape}')
-    all_labels = torch.cat(all_labels, dim=0)
-    print(f'all_labels: {all_labels.shape}')
-    torch.manual_seed(args.seed)
-    
-    for class_idx in range(num_classes):    
-        indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
-        if indices_for_class.numel() == 0:
-            print(f"No images found for class {classes[class_idx]}")
-            continue
+    if args.save_img:
+        all_logits_clean = torch.cat(all_logits_clean, dim=0)
+        print(f'all_logits_clean: {all_logits_clean.shape}')
+        all_images_clean = torch.cat(all_images_clean, dim=0)
+        print(f'all_images_clean: {all_images_clean.shape}')
+        all_logits_adv = torch.cat(all_logits_adv, dim=0)
+        print(f'all_logits_adv: {all_logits_adv.shape}')
+        all_images_adv = torch.cat(all_images_adv, dim=0)
+        print(f'all_images_adv: {all_images_adv.shape}')
+        all_labels = torch.cat(all_labels, dim=0)
+        print(f'all_labels: {all_labels.shape}')
+        torch.manual_seed(args.seed)
         
-        logits_for_class_clean = all_logits_clean[indices_for_class]
-        images_for_class_clean = all_images_clean[indices_for_class]
-        logits_for_class_adv = all_logits_adv[indices_for_class]
-        images_for_class_adv = all_images_adv[indices_for_class]
+        for class_idx in range(num_classes):    
+            indices_for_class = (all_labels == class_idx).nonzero(as_tuple=False).squeeze()
+            if indices_for_class.numel() == 0:
+                print(f"No images found for class {classes[class_idx]}")
+                continue
+            
+            logits_for_class_clean = all_logits_clean[indices_for_class]
+            images_for_class_clean = all_images_clean[indices_for_class]
+            logits_for_class_adv = all_logits_adv[indices_for_class]
+            images_for_class_adv = all_images_adv[indices_for_class]
 
-        # Select random images
-        k = min(args.num_imgs, logits_for_class_clean.size(0))
-        if k == 0:
-            print(f"No images available for class {classes[class_idx]}. Skipping.")
-            continue
-        random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
-        print(f"Selected {k} random clean images for class {classes[class_idx]}: {random_indices}")
-        
-        selected_logits_clean = logits_for_class_clean[random_indices]
-        selected_images_clean = images_for_class_clean[random_indices]
-        selected_logits_adv = logits_for_class_adv[random_indices]
-        selected_images_adv = images_for_class_adv[random_indices]
-        
-        correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
-        incorrect_clean_preds = k - correct_clean_preds
-        print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
-        print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
-        
-        # Plot and save clean images
-        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
-        for j, ax in enumerate(axes.flat):
-            if j < len(selected_images_clean):
-                img = np.transpose(selected_images_clean[j], (1, 2, 0))
-                ax.imshow(img)
-                ax.axis('off')
-                predicted_class = classes[selected_logits_clean.argmax(dim=1)[j].item()]
-                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
-            else:
-                ax.axis('off')
-        plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
-        plt.close(fig)
+            # Select random images
+            k = min(args.num_imgs, logits_for_class_clean.size(0))
+            if k == 0:
+                print(f"No images available for class {classes[class_idx]}. Skipping.")
+                continue
+            random_indices = torch.randperm(logits_for_class_clean.size(0))[:k]
+            print(f"Selected {k} random clean images for class {classes[class_idx]}: {random_indices}")
+            
+            selected_logits_clean = logits_for_class_clean[random_indices]
+            selected_images_clean = images_for_class_clean[random_indices]
+            selected_logits_adv = logits_for_class_adv[random_indices]
+            selected_images_adv = images_for_class_adv[random_indices]
+            
+            correct_clean_preds = (selected_logits_clean.argmax(dim=1) == class_idx).sum().item()
+            incorrect_clean_preds = k - correct_clean_preds
+            print(f"Correct predictions for clean images: {correct_clean_preds}/{k}")
+            print(f"Incorrect predictions for clean images: {incorrect_clean_preds}/{k}")
+            
+            # Plot and save clean images
+            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+            fig.suptitle(class_raw_titles[class_idx], fontsize=16)
+            for j, ax in enumerate(axes.flat):
+                if j < len(selected_images_clean):
+                    img = np.transpose(selected_images_clean[j], (1, 2, 0))
+                    ax.imshow(img)
+                    ax.axis('off')
+                    predicted_class = classes[selected_logits_clean.argmax(dim=1)[j].item()]
+                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                else:
+                    ax.axis('off')
+            plt.savefig(os.path.join(clean_dir, f'class_{classes[class_idx]}_clean.png'))
+            plt.close(fig)
 
-        print(f"Selected {k} random adversarial images for class {classes[class_idx]}: {random_indices}")
-        correct_adv_preds = (selected_logits_adv.argmax(dim=1) == class_idx).sum().item()
-        incorrect_adv_preds = k - correct_adv_preds
-        print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
-        print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
+            print(f"Selected {k} random adversarial images for class {classes[class_idx]}: {random_indices}")
+            correct_adv_preds = (selected_logits_adv.argmax(dim=1) == class_idx).sum().item()
+            incorrect_adv_preds = k - correct_adv_preds
+            print(f"Correct predictions for adversarial images: {correct_adv_preds}/{k}")
+            print(f"Incorrect predictions for adversarial images: {incorrect_adv_preds}/{k}")
 
-        fig, axes = plt.subplots(2, 5, figsize=(15, 6))
-        fig.suptitle(class_raw_titles[class_idx], fontsize=16)
-        for j, ax in enumerate(axes.flat):
-            if j < len(selected_images_adv):
-                img = np.transpose(selected_images_adv[j], (1, 2, 0))
-                ax.imshow(img)
-                ax.axis('off')
-                predicted_class = classes[selected_logits_adv.argmax(dim=1)[j].item()]
-                ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
-            else:
-                ax.axis('off')
-        plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
-        plt.close(fig)
+            fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+            fig.suptitle(class_raw_titles[class_idx], fontsize=16)
+            for j, ax in enumerate(axes.flat):
+                if j < len(selected_images_adv):
+                    img = np.transpose(selected_images_adv[j], (1, 2, 0))
+                    ax.imshow(img)
+                    ax.axis('off')
+                    predicted_class = classes[selected_logits_adv.argmax(dim=1)[j].item()]
+                    ax.set_title(f"True class {classes[class_idx]}\nPredicted class {predicted_class}")
+                else:
+                    ax.axis('off')
+            plt.savefig(os.path.join(adv_dir, f'class_{classes[class_idx]}_adv.png'))
+            plt.close(fig)
 
     # save result
     if os.path.isfile(save_path):
