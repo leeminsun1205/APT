@@ -237,13 +237,13 @@ if __name__ == '__main__':
         if ctx.dim() == 2:
             # Generic context
             distance = torch.cdist(ctx, token_embedding)
-            print(f"Size of distance matrix: {distance.shape}")
+            # print(f"Size of distance matrix: {distance.shape}")
             sorted_idxs = torch.argsort(distance, dim=1)
             sorted_idxs = sorted_idxs[:, :topk]
             raw_words = []
             for m, idxs in enumerate(sorted_idxs):
                 words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
-                print(f"Context {m+1}: {' '.join(words)}")
+                # print(f"Context {m+1}: {' '.join(words)}")
                 raw_words.extend(words)
             raw_phrase = ' '.join(raw_words)
             class_raw_titles = [f"{raw_phrase} {classes[class_idx]}." for class_idx in range(num_classes)]
@@ -251,22 +251,22 @@ if __name__ == '__main__':
             # Class-specific context
             print("Processing class-specific context...")
             n_classes, n_ctx, dim = ctx.shape
-            print(f"Number of classes: {n_classes}, Context tokens per class: {n_ctx}, Dimension: {dim}")
+            # print(f"Number of classes: {n_classes}, Context tokens per class: {n_ctx}, Dimension: {dim}")
 
             class_raw_words = []
             for class_idx, class_ctx in enumerate(ctx):
-                print(f"\nClass {class_idx + 1}:")
+                # print(f"\nClass {class_idx + 1}:")
                 distance = torch.cdist(class_ctx, token_embedding)
-                print(f"Size of distance matrix: {distance.shape}")
+                # print(f"Size of distance matrix: {distance.shape}")
 
                 sorted_idxs = torch.argsort(distance, dim=1)[:, :topk]
                 words_per_class = []
                 for m, idxs in enumerate(sorted_idxs):
                     words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
-                    print(f"  Context token {m+1}: {' '.join(words)}")
+                    # print(f"  Context token {m+1}: {' '.join(words)}")
                     words_per_class.append(words[0])
                 sentence = ' '.join(words_per_class)
-                print(f"Generated sentence for Class {class_idx + 1}: {sentence} class")
+                # print(f"Generated sentence for Class {class_idx + 1}: {sentence} class")
                 class_raw_words.append(sentence)
             class_raw_titles = [f"{class_raw_words[class_idx]} {classes[class_idx]}" for class_idx in range(num_classes)]
         else:
@@ -357,15 +357,15 @@ if __name__ == '__main__':
 
     if args.save_img:
         all_logits_clean = torch.cat(all_logits_clean, dim=0)
-        print(f'all_logits_clean: {all_logits_clean.shape}')
+        # print(f'all_logits_clean: {all_logits_clean.shape}')
         all_images_clean = torch.cat(all_images_clean, dim=0)
-        print(f'all_images_clean: {all_images_clean.shape}')
+        # print(f'all_images_clean: {all_images_clean.shape}')
         all_logits_adv = torch.cat(all_logits_adv, dim=0)
-        print(f'all_logits_adv: {all_logits_adv.shape}')
+        # print(f'all_logits_adv: {all_logits_adv.shape}')
         all_images_adv = torch.cat(all_images_adv, dim=0)
-        print(f'all_images_adv: {all_images_adv.shape}')
+        # print(f'all_images_adv: {all_images_adv.shape}')
         all_labels = torch.cat(all_labels, dim=0)
-        print(f'all_labels: {all_labels.shape}')
+        # print(f'all_labels: {all_labels.shape}')
         torch.manual_seed(args.seed)
         
         for class_idx in range(num_classes):    
