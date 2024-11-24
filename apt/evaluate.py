@@ -135,7 +135,7 @@ if __name__ == '__main__':
     cfg.merge_from_file(cfg_path)
 
     train_dataset = cfg.DATASET.NAME
-
+    os.makedirs(args.save_path, exist_ok=True)
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
