@@ -282,7 +282,7 @@ if __name__ == '__main__':
         attack = TPGD(new_model, eps=eps, alpha=alpha, steps=steps)
 
     import heapq
-    base_dir = '/home/khoahocmaytinh2022/Desktop/MinhNhut'
+    base_dir = '/kaggle/working/'
     clean_dir = os.path.join(base_dir, 'clean_test')
     adv_dir = os.path.join(base_dir, 'adv_test_wo_lw')
     os.makedirs(clean_dir, exist_ok=True)
