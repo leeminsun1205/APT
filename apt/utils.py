@@ -112,6 +112,65 @@ class CustomCLIP(nn.Module):
             'attack_prompt': self.atk_prompt
         }
 
+import torch
+import torch.nn as nn
+from transformers import BlipProcessor, BlipForConditionalGeneration
+
+class CustomBLIP(nn.Module):
+    def __init__(self, model_name, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
+        super().__init__()
+
+        self.cfg = cfg
+        self.classnames = classnames
+        self.model_name = model_name
+        self.model = BlipForConditionalGeneration.from_pretrained(model_name).cuda()
+        self.processor = BlipProcessor.from_pretrained(model_name)
+        self.mode = 'classification'
+
+        self.cls_prompt = cls_prompt 
+        self.atk_prompt = atk_prompt
+        self.set_prompts(cls_prompt, atk_prompt)
+
+    def _prompt_text_features(self, prompt):
+        if '{}' in prompt:
+            prompts = [prompt.format(c) for c in self.classnames]
+            inputs = self.processor(text=prompts, return_tensors="pt", padding=True).to('cuda')
+            text_features = self.model.get_text_features(**inputs)
+        else:
+            raise ValueError("CustomBCLIP currently supports manual prompt templates only.")
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        return text_features.detach(), prompts
+
+    def set_prompts(self, cls_prompt, atk_prompt=None):
+        print(f'classification prompt: {cls_prompt}')
+        cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
+        self.cls_tfeatures = cls_tfeatures
+        self.cls_prompt = cls_prompts
+
+        if atk_prompt is None or cls_prompt == atk_prompt:
+            print(f'attack prompt: {cls_prompt}')
+            self.atk_tfeatures = self.cls_tfeatures
+            self.atk_prompt = self.cls_prompt
+        else:
+            print(f'attack prompt: {atk_prompt}')
+            atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
+            self.atk_tfeatures = atk_tfeatures
+            self.atk_prompt = atk_prompts
+
+    def forward(self, image):
+        inputs = self.processor(images=image, return_tensors="pt").to('cuda')
+        image_features = self.model.get_image_features(**inputs)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        logits = image_features @ self.cls_tfeatures.t()
+        return logits
+
+    def _get_prompts(self):
+        return {
+            'classification_prompt': self.cls_prompt,
+            'attack_prompt': self.atk_prompt
+        }
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self, name, fmt=':f'):
