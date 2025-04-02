@@ -141,7 +141,7 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
     pretrained = "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base.pth"
-    model = blip_feature_extractor(pretrained=pretrained, vit='base')
+    model = blip_feature_extractor()
 
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
