@@ -11,7 +11,7 @@ from torch.autograd import grad, Variable
 from addict import Dict
 
 from dassl.data import DataManager
-from blip import blip_feature_extractor
+from blip.blip import blip_feature_extractor
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
 import datasets.dtd
