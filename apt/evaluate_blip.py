@@ -140,8 +140,8 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
-    vitb32 = "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt"
-    model = blip_feature_extractor(vitb32) #?????????
+    pretrained = "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base.pth"
+    model = blip_feature_extractor(pretrained=pretrained, vit='base')
 
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
