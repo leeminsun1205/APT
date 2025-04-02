@@ -11,8 +11,7 @@ from torch.autograd import grad, Variable
 from addict import Dict
 
 from dassl.data import DataManager
-from blip import blip
-
+from blip import blip_feature_extractor
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
 import datasets.dtd
@@ -142,7 +141,7 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
     vitb32 = "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt"
-    model, _ = blip.load_checkpoint() #?????????
+    model = blip_feature_extractor(vitb32) #?????????
 
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
