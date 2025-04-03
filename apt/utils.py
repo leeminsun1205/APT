@@ -199,6 +199,7 @@ class CustomBLIP(nn.Module):
                 text_features = self.model.get_text_features(**text_inputs)
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
+            print(prompts_list)
             text_inputs = self.processor(text=prompts_list,
                                          return_tensors="pt",
                                          padding=True,
