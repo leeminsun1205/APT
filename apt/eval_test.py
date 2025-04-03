@@ -154,20 +154,12 @@ if __name__ == '__main__':
     model_name = "Salesforce/blip-image-captioning-base"
     processor = BlipProcessor.from_pretrained(model_name)
     model = BlipModel.from_pretrained(model_name)
-
-    # Load pretrained adversarially robust backbone models
+    # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     eps = int(cfg.AT.EPS * 255)
     ckp_name += f'_eps{eps}.pth.tar'
     ckp = torch.load(os.path.join('backbone', ckp_name))
-
-    # Thay thế trực tiếp backbone bên trong mô hình BLIP
-    if hasattr(model.vision_model, 'encoder'):
-        model.vision_model.encoder.load_state_dict(ckp['vision_encoder_state_dict'])
-    elif hasattr(model.vision_model, 'model'):
-        model.vision_model.model.load_state_dict(ckp['vision_encoder_state_dict'])
-    else:
-        raise ValueError("Không tìm thấy thành phần vision encoder trong mô hình BLIP")
+    model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'])
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
