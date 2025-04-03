@@ -11,4 +11,4 @@ text = "an image of a accordion"
 
 inputs = processor(images=image, text=text, return_tensors="pt")
 outputs = model(**inputs)
-print(outputs.logits_per_image)  # this is the image-text similarity score
+print(outputs)  # this is the image-text similarity score
