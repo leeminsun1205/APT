@@ -32,7 +32,8 @@ import datasets.sun397
 import datasets.caltech101
 import datasets.ucf101
 import datasets.imagenet
-
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from torchattacks import PGD, TPGD
 from autoattack import AutoAttack

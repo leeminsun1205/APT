@@ -228,7 +228,7 @@ class CustomBLIP(nn.Module):
                 
     def forward(self, image):
         inputs = self.processor(images=image, return_tensors="pt", padding=True)
-        pixel_values = inputs.pixel_values.to(self.device)
+        pixel_values = inputs.pixel_values
         image_features = self.model.get_image_features(pixel_values=pixel_values)      
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
