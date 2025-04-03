@@ -160,7 +160,9 @@ if __name__ == '__main__':
     ckp_name += f'_eps{eps}.pth.tar'
     ckp = torch.load(os.path.join('backbone', ckp_name))
     print(model)
+    print(ckp)
     exit()
+    
     model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
