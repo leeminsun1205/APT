@@ -113,7 +113,7 @@ class CustomCLIP(nn.Module):
         }
 
 def convert_to_raw(classify_prompt, classes, num_classes):
-    prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
+    prompt_learner_state = torch.load(classify_prompt, map_location='cpu', weights_only=True)["state_dict"]
     ctx = prompt_learner_state["ctx"]
     ctx = ctx.float()
     print(f"Size of context: {ctx.shape}")
@@ -199,7 +199,7 @@ class CustomBLIP(nn.Module):
                 text_features = self.model.get_text_features(**text_inputs)
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-            print(prompts_list)
+            print(prompts_list[:5])
             text_inputs = self.processor(text=prompts_list,
                                          return_tensors="pt",
                                          padding=True,
