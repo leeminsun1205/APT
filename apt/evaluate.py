@@ -188,7 +188,8 @@ if __name__ == '__main__':
 
     # load pretrained adversarially robust backbone models
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
-    eps = int(cfg.AT.EPS * 255)
+    # eps = int(cfg.AT.EPS * 255)
+    eps = 1
     ckp_name += f'_eps{eps}.pth.tar'
     ckp = torch.load(os.path.join('backbone', ckp_name))
     model.visual.load_state_dict(ckp['vision_encoder_state_dict'])
