@@ -7,8 +7,8 @@ from torch import Tensor
 
 from clip import clip
 from trainers.apt import PromptLearner, TextEncoder
-
-
+from clip.simple_tokenizer import SimpleTokenizer 
+from evaluate import load_clip_to_cpu
 mu = (0.48145466, 0.4578275, 0.40821073)
 std = (0.26862954, 0.26130258, 0.27577711)
 
@@ -112,39 +112,108 @@ class CustomCLIP(nn.Module):
             'attack_prompt': self.atk_prompt
         }
 
-import torch
-import torch.nn as nn
-from transformers import BlipProcessor, BlipForConditionalGeneration
+def convert_to_raw(classify_prompt, classes, num_classes):
+    prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
+    ctx = prompt_learner_state["ctx"]
+    ctx = ctx.float()
+    print(f"Size of context: {ctx.shape}")
+
+    tokenizer = SimpleTokenizer()
+    clip_model = load_clip_to_cpu()
+    token_embedding = clip_model.token_embedding.weight
+    print(f"Size of token embedding: {token_embedding.shape}")
+
+    if ctx.dim() == 2:
+        # Generic context
+        distance = torch.cdist(ctx, token_embedding)
+        # print(f"Size of distance matrix: {distance.shape}")
+        sorted_idxs = torch.argsort(distance, dim=1)
+        sorted_idxs = sorted_idxs[:, :1]
+        raw_words = []
+        for m, idxs in enumerate(sorted_idxs):
+            words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
+            # print(f"Context {m+1}: {' '.join(words)}")
+            raw_words.extend(words)
+        raw_phrase = ' '.join(raw_words)
+        class_raw_titles = [f"{raw_phrase} {classes[class_idx]}." for class_idx in range(num_classes)]
+        return class_raw_titles
+    elif ctx.dim() == 3:
+        # Class-specific context
+        print("Processing class-specific context...")
+        n_classes, n_ctx, dim = ctx.shape
+        # print(f"Number of classes: {n_classes}, Context tokens per class: {n_ctx}, Dimension: {dim}")
+
+        class_raw_words = []
+        for class_idx, class_ctx in enumerate(ctx):
+            # print(f"\nClass {class_idx + 1}:")
+            distance = torch.cdist(class_ctx, token_embedding)
+            # print(f"Size of distance matrix: {distance.shape}")
+
+            sorted_idxs = torch.argsort(distance, dim=1)[:, :1]
+            words_per_class = []
+            for m, idxs in enumerate(sorted_idxs):
+                words = [tokenizer.decoder[idx.item()].replace('</w>', '') for idx in idxs]
+                # print(f"  Context token {m+1}: {' '.join(words)}")
+                words_per_class.append(words[0])
+            sentence = ' '.join(words_per_class)
+            # print(f"Generated sentence for Class {class_idx + 1}: {sentence} class")
+            class_raw_words.append(sentence)
+        class_raw_titles = [f"{class_raw_words[class_idx]} {classes[class_idx]}" for class_idx in range(num_classes)]
+        return class_raw_titles
+    else:
+        raise ValueError("Unsupported context dimension.")
 
 class CustomBLIP(nn.Module):
-    def __init__(self, model_name, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
+    def __init__(self,
+                 model,
+                 processcor,
+                 classnames,
+                 cls_prompt='a photo of a {}',
+                 atk_prompt=None,
+                 cfg=None):
         super().__init__()
 
         self.cfg = cfg
+        self.logit_scale = model.logit_scale
         self.classnames = classnames
-        self.model_name = model_name
-        self.model = BlipForConditionalGeneration.from_pretrained(model_name).cuda()
-        self.processor = BlipProcessor.from_pretrained(model_name)
+        self.processor = processcor
+        self.model = model
         self.mode = 'classification'
+        self.normalize = ImageNormalizer(mu, std).cuda()
 
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
+        
         self.set_prompts(cls_prompt, atk_prompt)
-
+        
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
-            prompts = [prompt.format(c) for c in self.classnames]
-            inputs = self.processor(text=prompts, return_tensors="pt", padding=True).to('cuda')
-            text_features = self.model.get_text_features(**inputs)
-        else:
-            raise ValueError("CustomBCLIP currently supports manual prompt templates only.")
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        return text_features.detach(), prompts
+            prompts_list = [prompt.format(c) for c in self.classnames]
+            text_inputs = self.processor(text=prompts_list,
+                                         return_tensors="pt",
+                                         padding=True,
+                                         truncation=True)
+            text_inputs = {k: v for k, v in text_inputs.items()}
 
+            with torch.no_grad():
+                text_features = self.model.get_text_features(**text_inputs)
+        else:
+            prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
+            text_inputs = self.processor(text=prompts_list,
+                                         return_tensors="pt",
+                                         padding=True,
+                                         truncation=True)
+            text_inputs = {k: v for k, v in text_inputs.items()}
+            with torch.no_grad():
+                text_features = self.model.get_text_features(**text_inputs)
+            
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        return text_features.detach(), text_inputs
+        
     def set_prompts(self, cls_prompt, atk_prompt=None):
         print(f'classification prompt: {cls_prompt}')
         cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
-        self.cls_tfeatures = cls_tfeatures
+        self.cls_tfeatures = cls_tfeatures.cuda()
         self.cls_prompt = cls_prompts
 
         if atk_prompt is None or cls_prompt == atk_prompt:
@@ -154,22 +223,25 @@ class CustomBLIP(nn.Module):
         else:
             print(f'attack prompt: {atk_prompt}')
             atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
-            self.atk_tfeatures = atk_tfeatures
+            self.atk_tfeatures = atk_tfeatures.cuda()
             self.atk_prompt = atk_prompts
-
+                
     def forward(self, image):
-        inputs = self.processor(images=image, return_tensors="pt").to('cuda')
-        image_features = self.model.get_image_features(**inputs)
+        image_features = self.model.encode_image(self.normalize(image))        
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        logits = image_features @ self.cls_tfeatures.t()
-        return logits
 
+        logit_scale = self.logit_scale.exp()
+
+        text_features = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
+        logits = logit_scale * image_features @ text_features.t()
+        
+        return logits
+    
     def _get_prompts(self):
         return {
             'classification_prompt': self.cls_prompt,
             'attack_prompt': self.atk_prompt
         }
-
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

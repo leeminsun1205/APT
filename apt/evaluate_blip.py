@@ -23,6 +23,113 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 from utils import *
 
+### DIFF HERE
+import os
+import torch
+import torch.nn as nn
+from transformers import BlipProcessor, BlipModel
+from PIL import Image
+
+class CustomBLIP(nn.Module):
+    def __init__(self,
+                 processor: BlipProcessor,
+                 model: BlipModel,
+                 classnames: list,
+                 cls_prompt: str = 'a photo of a {}',
+                 atk_prompt: str = None,
+                 cfg=None):
+        super().__init__()
+
+        self.cfg = cfg
+        self.processor = processor
+        self.model = model
+        self.classnames = classnames
+        self.device = next(model.parameters()).device
+        self.logit_scale = 1.0
+        self.mode = 'classification'
+
+        self._original_cls_prompt = cls_prompt
+        self._original_atk_prompt = atk_prompt
+
+        self.set_prompts(cls_prompt, atk_prompt)
+
+    def _prompt_text_features(self, prompt_input):
+        prompts_representation = None
+        text_features = None
+
+        if isinstance(prompt_input, str) and '{}' in prompt_input:
+            # print(f"Generating text features for template: '{prompt_input[:30]}...'") # Commented out print
+            prompts_list = [prompt_input.format(c) for c in self.classnames]
+            prompts_representation = prompts_list
+
+            text_inputs = self.processor(text=prompts_list,
+                                         return_tensors="pt",
+                                         padding=True,
+                                         truncation=True)
+            text_inputs = {k: v.to(self.device) for k, v in text_inputs.items()}
+
+            with torch.no_grad():
+                text_features = self.model.get_text_features(**text_inputs)
+
+        elif isinstance(prompt_input, str) and os.path.isfile(prompt_input):
+            print(f"Attempting to load optimized prompts from: {prompt_input}")
+            print("WARNING: PromptLearner logic for BLIP needs specific implementation.")
+            # Placeholder: Fallback or raise error
+            print(f"ERROR: Non-template prompt '{prompt_input}' provided, but optimized prompt loading for BLIP is not fully implemented.")
+            print("Falling back to default template prompt.")
+            return self._prompt_text_features('a photo of a {}')
+
+        else:
+            raise ValueError(f"Invalid prompt input type or format: {prompt_input}")
+
+        if text_features is None:
+             raise RuntimeError("Failed to generate text features.")
+
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+        return text_features.detach(), prompts_representation
+
+    def set_prompts(self, cls_prompt, atk_prompt=None):
+        cls_tfeatures, cls_prompts_repr = self._prompt_text_features(cls_prompt)
+        self.cls_tfeatures = cls_tfeatures.to(self.device)
+        self.cls_prompts = cls_prompts_repr
+
+        if atk_prompt is None or atk_prompt == cls_prompt:
+            print(f'attack prompt: {cls_prompt}')
+            self.atk_tfeatures = self.cls_tfeatures
+            self.atk_prompts = self.cls_prompts
+        else:
+            print(f'attack prompt: {atk_prompt}')
+            atk_tfeatures, atk_prompts_repr = self._prompt_text_features(atk_prompt)
+            self.atk_tfeatures = atk_tfeatures.to(self.device)
+            self.atk_prompts = atk_prompts_repr
+
+    def forward(self, image):
+        try:
+             inputs = self.processor(images=image, return_tensors="pt", padding=True)
+             pixel_values = inputs.pixel_values.to(self.device)
+        except Exception as e:
+             if isinstance(image, torch.Tensor):
+                 pixel_values = image.to(self.device)
+             else:
+                 raise ValueError(f"Failed to process input image with BlipProcessor: {e}")
+
+        image_features = self.model.get_image_features(pixel_values=pixel_values)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+        text_features = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
+        logits = self.logit_scale * image_features @ text_features.t()
+
+        return logits
+
+    def _get_prompts(self):
+        return {
+            'classification_prompt_repr': self.cls_prompts,
+            'attack_prompt_repr': self.atk_prompts,
+            'original_cls_prompt': self._original_cls_prompt,
+            'original_atk_prompt': self._original_atk_prompt
+        }
+### DIFF HERE
 
 def CWLoss(output, target, confidence=0):
     num_classes = output.shape[-1]
@@ -36,27 +143,7 @@ def CWLoss(output, target, confidence=0):
     loss = - torch.clamp(real - other + confidence, min=0.)
     loss = torch.sum(loss)
     return loss
-#####################################################################################################
-class CustomBLIP(torch.nn.Module):
-    def __init__(self, processor, model, classnames, cls_prompt_template="a photo of a {}"):
-        super().__init__()
-        self.processor = processor
-        self.model = model
-        self.classnames = classnames
-        self.cls_prompt_template = cls_prompt_template
-        self.device = next(model.parameters()).device
-        self.text_prompts = [self.cls_prompt_template.format(c) for c in self.classnames]
-        text_inputs = self.processor(text=self.text_prompts, return_tensors="pt", padding=True)
-        text_inputs = {k: v.to(self.device) for k, v in text_inputs.items()}
-        with torch.no_grad():
-            self.text_features = self.model.get_text_features(**text_inputs)
 
-    def forward(self, image):
-        pixel_values = image.to(self.device)
-        image_features = self.model.get_image_features(pixel_values=pixel_values)
-        logits_per_image = image_features @ self.text_features.t()
-        return logits_per_image
-#####################################################################################################
 def input_grad(imgs, targets, model, criterion):
     imgs.requires_grad_(True)
     output = model(imgs)
@@ -228,7 +315,6 @@ if __name__ == '__main__':
         exit("Linear Probe adaptation required. Exiting.")
     else:
         print(classify_prompt)
-        exit()
         model = CustomBLIP(processor,
                            hf_blip_model,
                            classes,
