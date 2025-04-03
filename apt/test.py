@@ -5,7 +5,7 @@ from transformers import AutoProcessor, BlipForImageTextRetrieval
 model = BlipForImageTextRetrieval.from_pretrained("Salesforce/blip-itm-base-coco")
 processor = AutoProcessor.from_pretrained("Salesforce/blip-itm-base-coco")
 
-url = "/home/khoahocmaytinh2022/Desktop/MinhNhut/DATA/caltech-101/101_ObjectCategories/accordion/image_0001.jpg"
+url = "./DATA/caltech-101/101_ObjectCategories/accordion/image_0001.jpg"
 image = Image.open(requests.get(url, stream=True).raw)
 text = "an image of a accordion"
 
