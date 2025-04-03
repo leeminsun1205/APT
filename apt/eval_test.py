@@ -159,7 +159,7 @@ if __name__ == '__main__':
     eps = int(cfg.AT.EPS * 255)
     ckp_name += f'_eps{eps}.pth.tar'
     ckp = torch.load(os.path.join('backbone', ckp_name))
-    model.visual.load_state_dict(ckp['vision_encoder_state_dict'])
+    model.visual_encoder.load_state_dict(ckp['vision_encoder_state_dict'])
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
