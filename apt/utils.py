@@ -227,7 +227,9 @@ class CustomBLIP(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        image_features = self.model.encode_image(self.normalize(image))        
+        inputs = self.processor(images=image, return_tensors="pt", padding=True)
+        pixel_values = inputs.pixel_values.to(self.device)
+        image_features = self.model.get_image_features(pixel_values=pixel_values)      
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
