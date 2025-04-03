@@ -180,7 +180,8 @@ if __name__ == '__main__':
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
     else:
-        model = CustomCLIP(model,
+        model = CustomBLIP(model,
+                           processor,
                            classes,
                            cls_prompt=classify_prompt,
                            atk_prompt=attack_prompt,
