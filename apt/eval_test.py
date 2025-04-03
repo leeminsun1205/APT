@@ -142,9 +142,12 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
     
-    model_name = "Salesforce/blip-image-captioning-base"
-    processor = BlipProcessor.from_pretrained(model_name)
-    model = BlipModel.from_pretrained(model_name)
+    # model_name = "Salesforce/blip-image-captioning-base"
+    # processor = BlipProcessor.from_pretrained(model_name)
+    # model = BlipModel.from_pretrained(model_name)
+    from transformers import AutoProcessor, BlipForImageTextRetrieval
+    model = BlipForImageTextRetrieval.from_pretrained("Salesforce/blip-itm-base-coco")
+    processor = AutoProcessor.from_pretrained("Salesforce/blip-itm-base-coco")
 
     ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     eps = int(cfg.AT.EPS * 255)
