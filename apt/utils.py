@@ -113,7 +113,7 @@ class CustomCLIP(nn.Module):
         }
 
 def convert_to_raw(classify_prompt, classes, num_classes):
-    prompt_learner_state = torch.load(classify_prompt, map_location='cpu', weights_only=True)["state_dict"]
+    prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
     ctx = prompt_learner_state["ctx"]
     ctx = ctx.float()
     print(f"Size of context: {ctx.shape}")
