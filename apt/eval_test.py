@@ -1,20 +1,10 @@
 import os
 import torch
-from warnings import warn
 from yacs.config import CfgNode
 import yaml
 import argparse
-from tqdm import tqdm
-
-from statistics import mean
-
-from torchvision import transforms
 from torchvision.datasets import *
 from transformers import BlipProcessor, BlipModel
-import torch.nn as nn
-from collections import OrderedDict
-from typing import Tuple, TypeVar
-from torch import Tensor
 from torch.autograd import grad, Variable
 
 from addict import Dict
@@ -155,12 +145,12 @@ if __name__ == '__main__':
     model_name = "Salesforce/blip-image-captioning-base"
     processor = BlipProcessor.from_pretrained(model_name)
     model = BlipModel.from_pretrained(model_name)
-    # load pretrained adversarially robust backbone models
-    # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
-    # eps = int(cfg.AT.EPS * 255)
-    # ckp_name += f'_eps{eps}.pth.tar'
-    # ckp = torch.load(os.path.join('backbone', ckp_name))
-    # model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
+
+    ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
+    eps = int(cfg.AT.EPS * 255)
+    ckp_name += f'_eps{eps}.pth.tar'
+    ckp = torch.load(os.path.join('backbone', ckp_name))
+    model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
