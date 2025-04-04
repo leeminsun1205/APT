@@ -198,7 +198,7 @@ class CustomBLIP(nn.Module):
             **input_ids
         )
         text_embeds = text_embeds.last_hidden_state
-        text_feat = normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
+        text_feat = normalize(self.model.text_proj(text_embeds[:, 0, :]), dim=-1)
         return text_feat, input_ids
         
     def set_prompts(self, cls_prompt, atk_prompt=None):
