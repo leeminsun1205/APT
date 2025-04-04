@@ -220,9 +220,10 @@ class CustomBLIP(nn.Module):
                 
     def forward(self, image):
         inputs = self.processor(images=image, return_tensors="pt", padding=True)
-        pixel_values = inputs.pixel_values.cuda()
+        # pixel_values = inputs.pixel_values.cuda()
         vision_outputs = self.model.vision_model(
-            pixel_values=pixel_values,
+            **inputs,
+            # pixel_values=pixel_values,
             # output_attentions=output_attentions,
             # output_hidden_states=output_hidden_states,
             # return_dict=return_dict,
