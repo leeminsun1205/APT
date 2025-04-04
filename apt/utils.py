@@ -4,7 +4,7 @@ import torch.nn as nn
 from collections import OrderedDict
 from typing import Tuple, TypeVar
 from torch import Tensor
-
+from torch.nn.functional import normalize
 from clip import clip
 from trainers.apt import PromptLearner, TextEncoder
 from clip.simple_tokenizer import SimpleTokenizer 
@@ -174,42 +174,34 @@ class CustomBLIP(nn.Module):
         super().__init__()
 
         self.cfg = cfg
-        self.logit_scale = model.logit_scale
         self.classnames = classnames
         self.processor = processcor
         self.model = model
         self.mode = 'classification'
-        self.normalize = ImageNormalizer(mu, std).cuda()
-
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
         
         self.set_prompts(cls_prompt, atk_prompt)
         
     def _prompt_text_features(self, prompt):
+        prompts_list = []
         if '{}' in prompt:
             prompts_list = [prompt.format(c) for c in self.classnames]
-            text_inputs = self.processor(text=prompts_list,
-                                         return_tensors="pt",
-                                         padding=True,
-                                         truncation=True)
-            text_inputs = {k: v for k, v in text_inputs.items()}
-
-            with torch.no_grad():
-                text_features = self.model.get_text_features(**text_inputs)
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-            print(prompts_list[:5])
-            text_inputs = self.processor(text=prompts_list,
-                                         return_tensors="pt",
-                                         padding=True,
-                                         truncation=True)
-            text_inputs = {k: v for k, v in text_inputs.items()}
-            with torch.no_grad():
-                text_features = self.model.get_text_features(**text_inputs)
-            
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        return text_features.detach(), text_inputs
+        input_ids = self.processor(text=prompts_list,
+                                        return_tensors="pt",
+                                        padding=True,
+                                        truncation=True)
+        input_ids = {k: v for k, v in input_ids.items()}
+        text_embeds = self.model.text_encoder(
+            input_ids=input_ids,
+            # attention_mask=attention_mask,
+            # return_dict=return_dict,
+        )
+        text_embeds = text_embeds.last_hidden_state
+        text_feat = normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
+        return text_feat, input_ids
         
     def set_prompts(self, cls_prompt, atk_prompt=None):
         print(f'classification prompt: {cls_prompt}')
@@ -219,7 +211,7 @@ class CustomBLIP(nn.Module):
 
         if atk_prompt is None or cls_prompt == atk_prompt:
             print(f'attack prompt: {cls_prompt}')
-            self.atk_tfeatures = self.cls_tfeatures
+            self.atk_tfeatures = self.cls_tfeatures.cuda()
             self.atk_prompt = self.cls_prompt
         else:
             print(f'attack prompt: {atk_prompt}')
@@ -230,14 +222,18 @@ class CustomBLIP(nn.Module):
     def forward(self, image):
         inputs = self.processor(images=image, return_tensors="pt", padding=True)
         pixel_values = inputs.pixel_values.cuda()
-        image_features = self.model.get_image_features(pixel_values=pixel_values)      
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        vision_outputs = self.model.vision_model(
+            pixel_values=pixel_values,
+            # output_attentions=output_attentions,
+            # output_hidden_states=output_hidden_states,
+            # return_dict=return_dict,
+            # interpolate_pos_encoding=interpolate_pos_encoding,
+        )
 
-        logit_scale = self.logit_scale.exp()
-
-        text_features = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-        logits = logit_scale * image_features @ text_features.t()
-        
+        image_embeds = vision_outputs[0]   
+        image_feat = normalize(self.model.vision_proj(image_embeds[:, 0, :]), dim=-1)
+        text_feat = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
+        logits = image_feat @ text_feat.t()
         return logits
     
     def _get_prompts(self):
