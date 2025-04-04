@@ -231,6 +231,7 @@ class CustomBLIP(nn.Module):
         text_feat = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
         # logit_scale = self.logit_scale.exp()
         logits = image_feat @ text_feat.t()
+        # print(logits)
         return logits
     
     def _get_prompts(self):
