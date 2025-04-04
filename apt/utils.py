@@ -224,11 +224,6 @@ class CustomBLIP(nn.Module):
         inputs = {k: v.cuda() for k, v in inputs.items()}
         vision_outputs = self.model.vision_model(
             **inputs,
-            # pixel_values=pixel_values,
-            # output_attentions=output_attentions,
-            # output_hidden_states=output_hidden_states,
-            # return_dict=return_dict,
-            # interpolate_pos_encoding=interpolate_pos_encoding,
         )
 
         image_embeds = vision_outputs[0]   
