@@ -177,6 +177,7 @@ class CustomBLIP(nn.Module):
         self.classnames = classnames
         self.processor = processcor
         self.model = model
+        self.logit_scale = model.logit_scale
         self.mode = 'classification'
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
@@ -231,7 +232,8 @@ class CustomBLIP(nn.Module):
         image_embeds = vision_outputs[0]   
         image_feat = normalize(self.model.vision_proj(image_embeds[:, 0, :]), dim=-1)
         text_feat = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-        logits = image_feat @ text_feat.t()
+        logit_scale = self.logit_scale.exp()
+        logits = logit_scale * image_feat @ text_feat.t()
         return logits
     
     def _get_prompts(self):
