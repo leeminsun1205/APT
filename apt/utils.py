@@ -193,11 +193,9 @@ class CustomBLIP(nn.Module):
                                         return_tensors="pt",
                                         padding=True,
                                         truncation=True)
-        input_ids = {k: v for k, v in input_ids.items()}
+        # input_ids = {k: v for k, v in input_ids.items()}
         text_embeds = self.model.text_encoder(
-            input_ids=input_ids,
-            # attention_mask=attention_mask,
-            # return_dict=return_dict,
+            **input_ids
         )
         text_embeds = text_embeds.last_hidden_state
         text_feat = normalize(self.text_proj(text_embeds[:, 0, :]), dim=-1)
