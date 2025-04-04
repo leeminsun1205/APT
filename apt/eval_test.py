@@ -220,7 +220,7 @@ if __name__ == '__main__':
 
         with torch.no_grad():
             output = model(imgs)
-        print(f'output: {output}')
+        # print(f'output: {output}')
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
 
