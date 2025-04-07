@@ -190,10 +190,7 @@ class CustomBLIP(nn.Module):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        input_ids = self.processor(text=prompts_list,
-                                        return_tensors="pt",
-                                        padding=True,
-                                        truncation=True)
+        input_ids = self.processor(text=prompts_list, return_tensors="pt",)
         # input_ids = {k: v for k, v in input_ids.items()}
         text_embeds = self.model.text_encoder(
             **input_ids
@@ -219,8 +216,7 @@ class CustomBLIP(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        inputs = self.processor(images=image, return_tensors="pt", padding=True)
-        # pixel_values = inputs.pixel_values.cuda()
+        inputs = self.processor(images=image, return_tensors="pt",)
         inputs = {k: v.cuda() for k, v in inputs.items()}
         vision_outputs = self.model.vision_model(
             **inputs,
