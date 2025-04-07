@@ -300,7 +300,7 @@ class CustomALIGN(nn.Module):
         image_feats = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
         # logit_scale = self.logit_scale.exp()
-        logits = torch.matmul(text_feats, image_feats.t()) / self.model.temperature
+        logits = text_feats @ image_feats.t() / self.model.temperature
         # print(logits)
         return logits
     
