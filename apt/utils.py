@@ -262,7 +262,7 @@ class CustomALIGN(nn.Module):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        text_inputs = self.processor(text=prompts_list, return_tensors="pt", padding=True)
+        text_inputs = self.processor(text=prompts_list, return_tensors="pt", padding=True, truncation=True)
         # input_ids = {k: v for k, v in input_ids.items()}
         text_outputs = self.model.text_model(
             **text_inputs
