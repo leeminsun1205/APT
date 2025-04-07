@@ -247,22 +247,22 @@ if __name__ == '__main__':
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
 
-        # model.mode = 'attack'
-        # if args.attack == 'aa':
-        #     adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
-        # elif args.attack in ['pgd', 'tpgd']:
-        #     adv = attack(imgs, tgts)
-        # else:
-        #     adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
+        model.mode = 'attack'
+        if args.attack == 'aa':
+            adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
+        elif args.attack in ['pgd', 'tpgd']:
+            adv = attack(imgs, tgts)
+        else:
+            adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
-        # model.mode = 'classification'
+        model.mode = 'classification'
 
-        # # Calculate features
-        # with torch.no_grad():
-        #     output = model(adv)
+        # Calculate features
+        with torch.no_grad():
+            output = model(adv)
 
-        # rob = accuracy(output, tgts)
-        # meters.rob.update(rob[0].item(), bs)
+        rob = accuracy(output, tgts)
+        meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
