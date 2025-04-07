@@ -332,7 +332,7 @@ if __name__ == '__main__':
 
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
-
+        imgs.requires_grad_()
         model.mode = 'attack'
         if args.attack == 'aa':
             adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
