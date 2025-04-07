@@ -262,7 +262,7 @@ class CustomALIGN(nn.Module):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        text_inputs = self.processor(text=prompts_list, return_tensors="pt",)
+        text_inputs = self.processor(text=prompts_list, return_tensors="pt", padding=True)
         # input_ids = {k: v for k, v in input_ids.items()}
         text_outputs = self.model.text_model(
             **text_inputs
@@ -289,7 +289,9 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        inputs = self.processor(images=image, return_tensors="pt",)
+        inputs = self.processor(images=image, return_tensors="pt", padding=True)
+        inputs["input_ids"] = self.cls_prompt["input_ids"].expand(inputs["pixel_values"].size(0), -1).cuda()
+        inputs["attention_mask"] = self.cls_prompt["attention_mask"].expand(inputs["pixel_values"].size(0), -1).cuda()
         vision_inputs = {k: v.cuda() for k, v in inputs.items()}
         vision_outputs = self.model.vision_model(
             **vision_inputs,
