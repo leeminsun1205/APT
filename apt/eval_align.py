@@ -138,7 +138,7 @@ if __name__ == '__main__':
                        batch_size=100,
                        num_workers=8,
                        sampler=SequentialSampler(testset),
-                       k_transform=1,
+                       k_transforms=1,
                        return_img0=False)
 
     else:    
