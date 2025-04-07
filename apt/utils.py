@@ -279,14 +279,14 @@ class CustomALIGN(nn.Module):
             return_tensors="pt",
             padding=True
         ).to(images.device)
-        if self.mode == 'classification':
-            # Get model outputs
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                logits = outputs.logits_per_image
-        else:
+        # if self.mode == 'classification':
+        # Get model outputs
+        with torch.no_grad():
             outputs = self.model(**inputs)
             logits = outputs.logits_per_image
+        # else:
+        #     outputs = self.model(**inputs)
+        #     logits = outputs.logits_per_image
             
         return logits
 
