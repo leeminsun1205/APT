@@ -4,7 +4,7 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import BlipProcessor, BlipModel
+from transformers import AlignProcessor, AlignModel
 from torch.autograd import grad, Variable
 
 from addict import Dict
@@ -142,12 +142,8 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
     
-    # model_name = "Salesforce/blip-image-captioning-base"
-    # processor = BlipProcessor.from_pretrained(model_name)
-    # model = BlipModel.from_pretrained(model_name)
-    from transformers import AutoProcessor, BlipForImageTextRetrieval
-    model = BlipForImageTextRetrieval.from_pretrained("Salesforce/blip-itm-base-coco")
-    processor = AutoProcessor.from_pretrained("Salesforce/blip-itm-base-coco")
+    model = AlignModel.from_pretrained("kakaobrain/align-base")
+    processor = AlignProcessor.from_pretrained("kakaobrain/align-base")
 
     # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     # eps = int(cfg.AT.EPS * 255)
@@ -175,7 +171,7 @@ if __name__ == '__main__':
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
     else:
-        model = CustomBLIP(model,
+        model = CustomALIGN(model,
                            processor,
                            classes,
                            cls_prompt=classify_prompt,

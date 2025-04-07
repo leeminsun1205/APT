@@ -235,6 +235,80 @@ class CustomBLIP(nn.Module):
             'classification_prompt': self.cls_prompt,
             'attack_prompt': self.atk_prompt
         }
+    
+class CustomALIGN(nn.Module):
+    def __init__(self,
+                 model,
+                 processcor,
+                 classnames,
+                 cls_prompt='a photo of a {}',
+                 atk_prompt=None,
+                 cfg=None):
+        super().__init__()
+
+        self.cfg = cfg
+        self.classnames = classnames
+        self.processor = processcor
+        self.model = model
+        # self.logit_scale = model.logit_scale
+        self.mode = 'classification'
+        self.cls_prompt = cls_prompt 
+        self.atk_prompt = atk_prompt
+        
+        self.set_prompts(cls_prompt, atk_prompt)
+        
+    def _prompt_text_features(self, prompt):
+        prompts_list = []
+        if '{}' in prompt:
+            prompts_list = [prompt.format(c) for c in self.classnames]
+        else:
+            prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
+        text_inputs = self.processor(text=prompts_list, return_tensors="pt",)
+        # input_ids = {k: v for k, v in input_ids.items()}
+        text_outputs = self.model.text_model(
+            **text_inputs
+        )
+        text_embeds = text_outputs[0][:, 0, :]
+        text_embeds = self.model.text_projection(text_embeds)
+        text_feats = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
+        return text_feats, text_inputs
+        
+    def set_prompts(self, cls_prompt, atk_prompt=None):
+        print(f'classification prompt: {cls_prompt}')
+        cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
+        self.cls_tfeatures = cls_tfeatures.cuda()
+        self.cls_prompt = cls_prompts
+
+        if atk_prompt is None or cls_prompt == atk_prompt:
+            print(f'attack prompt: {cls_prompt}')
+            self.atk_tfeatures = self.cls_tfeatures.cuda()
+            self.atk_prompt = self.cls_prompt
+        else:
+            print(f'attack prompt: {atk_prompt}')
+            atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
+            self.atk_tfeatures = atk_tfeatures.cuda()
+            self.atk_prompt = atk_prompts
+                
+    def forward(self, image):
+        inputs = self.processor(images=image, return_tensors="pt",)
+        vision_inputs = {k: v.cuda() for k, v in inputs.items()}
+        vision_outputs = self.model.vision_model(
+            **vision_inputs,
+        )
+
+        image_embeds = vision_outputs[1]   
+        image_feats = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
+        text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
+        # logit_scale = self.logit_scale.exp()
+        logits = torch.matmul(text_feats, image_feats.t()) / self.model.temperature
+        # print(logits)
+        return logits
+    
+    def _get_prompts(self):
+        return {
+            'classification_prompt': self.cls_prompt,
+            'attack_prompt': self.atk_prompt
+        }
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
