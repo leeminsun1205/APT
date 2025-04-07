@@ -250,7 +250,6 @@ class CustomALIGN(nn.Module):
         self.classnames = classnames
         self.processor = processcor
         self.model = model
-        # self.logit_scale = model.logit_scale
         self.mode = 'classification'
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
@@ -300,7 +299,7 @@ class CustomALIGN(nn.Module):
         image_feats = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
         # logit_scale = self.logit_scale.exp()
-        logits = text_feats @ image_feats.t() / self.model.temperature
+        logits = image_feats @ text_feats.t() / self.model.temperature
         # print(logits)
         return logits
     
