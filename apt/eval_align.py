@@ -175,8 +175,7 @@ if __name__ == '__main__':
                            processor,
                            classes,
                            cls_prompt=classify_prompt,
-                           atk_prompt=attack_prompt,
-                           cfg=cfg)
+                           atk_prompt=attack_prompt,)
     
     model = model.cuda()
     model.eval()
