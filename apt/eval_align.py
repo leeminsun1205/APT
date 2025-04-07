@@ -11,7 +11,7 @@ from addict import Dict
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from dassl.data import DataManager
-
+from torch.utils.data import SequentialSampler
 import datasets.oxford_pets
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
@@ -137,7 +137,9 @@ if __name__ == '__main__':
         loader = DataLoader(testset,
                        batch_size=100,
                        num_workers=8,
-                       sampler='SequentialSampler',)
+                       sampler=SequentialSampler(testset),
+                       k_transform=1,
+                       return_img0=False)
 
     else:    
         dm = DataManager(cfg)
