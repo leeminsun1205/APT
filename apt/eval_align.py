@@ -137,9 +137,7 @@ if __name__ == '__main__':
         loader = DataLoader(testset,
                        batch_size=100,
                        num_workers=8,
-                       sampler=SequentialSampler(testset),
-                       k_transforms=1,
-                       return_img0=False)
+                       sampler=SequentialSampler(testset),)
 
     else:    
         dm = DataManager(cfg)
