@@ -6,9 +6,10 @@ import argparse
 from torchvision.datasets import *
 from transformers import AlignProcessor, AlignModel
 from torch.autograd import grad, Variable
-
+from torchvision.datasets import CIFAR10
 from addict import Dict
-
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 from dassl.data import DataManager
 
 import datasets.oxford_pets
@@ -111,11 +112,38 @@ if __name__ == '__main__':
         if result[tune][args.attack] != {}:
             print(f'eval result already exists at: {save_path}')
             exit()
-            
-    dm = DataManager(cfg)
-    classes = dm.dataset.classnames
-    loader = dm.test_loader
-    num_classes = dm.num_classes
+    num_classes = None
+    classes = None
+    loader = None
+    if args.dataset == 'Cifar10':     
+        # DATA = 'CIFAR10'
+        num_classes = 10
+        classes = [
+            'airplanes',
+            'cars',
+            'birds',
+            'cats',
+            'deers',
+            'dogs',
+            'frogs',
+            'horses',
+            'ships',
+            'trucks',
+        ]
+        transformer = transforms.Compose([
+            transforms.PILToTensor()
+        ])
+        testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
+        loader = DataLoader(testset,
+                       batch_size=100,
+                       num_workers=8,
+                       sampler='SequentialSampler',)
+
+    else:    
+        dm = DataManager(cfg)
+        classes = dm.dataset.classnames
+        loader = dm.test_loader
+        num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
