@@ -236,57 +236,6 @@ class CustomBLIP(nn.Module):
             'attack_prompt': self.atk_prompt
         }
 
-# class CustomALIGN(nn.Module):
-#     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
-#         super().__init__()
-        
-#         self.model = model
-#         self.processor = processor
-#         self.classnames = classnames
-#         self.mode = 'classification'
-#         # Freeze model parameters
-#         self.model.requires_grad_(False)
-        
-#         # Pre-cache text embeddings
-#         self._init_prompts(cls_prompt, atk_prompt)
-
-#     def _init_prompts(self, cls_prompt, atk_prompt):
-#         # Precompute classification embeddings
-#         self.cls_embeds = self._encode_prompts(cls_prompt)
-        
-#         # Precompute attack embeddings 
-#         if atk_prompt is None or atk_prompt == cls_prompt:
-#             self.atk_embeds = self.cls_embeds
-#         else:
-#             self.atk_embeds = self._encode_prompts(atk_prompt)
-
-#     def _encode_prompts(self, prompt_template):
-#         prompts = [prompt_template.format(c) if '{}' in prompt_template else c 
-#                   for c in self.classnames]
-        
-#         inputs = self.processor(
-#             text=prompts,
-#             return_tensors="pt",
-#             padding=True
-#         ).to(self.model.device)
-#         return self.model.get_text_features(**inputs).detach()
-
-#     def forward(self, images):
-#         if self.mode == 'classification':
-#             return self._classification_forward(images)
-#         return self._attack_forward(images)
-
-#     def _classification_forward(self, images):
-#         # No gradient for classification
-#         with torch.no_grad():
-#             image_embeds = self.model.get_image_features(images)
-#             return image_embeds @ self.cls_embeds.T.cuda()
-
-#     def _attack_forward(self, images):
-#         # Only need gradient for images
-#         image_embeds = self.model.get_image_features(images)
-#         return image_embeds @ self.atk_embeds.T.cuda()
-
 class CustomALIGN(nn.Module):
     def __init__(self,
                  model,
@@ -341,7 +290,12 @@ class CustomALIGN(nn.Module):
                 
     def forward(self, image):
         # print(image)
-        image_feats = self.model.get_image_features(self.normalizer(image))
+        image_inputs = self.processor(
+            image = image,
+            return_tensors="pt",
+            padding=True
+        ).to(self.model.device)
+        image_feats = self.model.get_image_features(image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         # image_feats = self.model.encode_image(self.normalize(image))
         # image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
