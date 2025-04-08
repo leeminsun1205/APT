@@ -236,129 +236,124 @@ class CustomBLIP(nn.Module):
             'attack_prompt': self.atk_prompt
         }
 
+# class CustomALIGN(nn.Module):
+#     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
+#         super().__init__()
+        
+#         self.model = model
+#         self.processor = processor
+#         self.classnames = classnames
+#         self.mode = 'classification'
+#         # Freeze model parameters
+#         self.model.requires_grad_(False)
+        
+#         # Pre-cache text embeddings
+#         self._init_prompts(cls_prompt, atk_prompt)
+
+#     def _init_prompts(self, cls_prompt, atk_prompt):
+#         # Precompute classification embeddings
+#         self.cls_embeds = self._encode_prompts(cls_prompt)
+        
+#         # Precompute attack embeddings 
+#         if atk_prompt is None or atk_prompt == cls_prompt:
+#             self.atk_embeds = self.cls_embeds
+#         else:
+#             self.atk_embeds = self._encode_prompts(atk_prompt)
+
+#     def _encode_prompts(self, prompt_template):
+#         prompts = [prompt_template.format(c) if '{}' in prompt_template else c 
+#                   for c in self.classnames]
+        
+#         inputs = self.processor(
+#             text=prompts,
+#             return_tensors="pt",
+#             padding=True
+#         ).to(self.model.device)
+#         return self.model.get_text_features(**inputs).detach()
+
+#     def forward(self, images):
+#         if self.mode == 'classification':
+#             return self._classification_forward(images)
+#         return self._attack_forward(images)
+
+#     def _classification_forward(self, images):
+#         # No gradient for classification
+#         with torch.no_grad():
+#             image_embeds = self.model.get_image_features(images)
+#             return image_embeds @ self.cls_embeds.T.cuda()
+
+#     def _attack_forward(self, images):
+#         # Only need gradient for images
+#         image_embeds = self.model.get_image_features(images)
+#         return image_embeds @ self.atk_embeds.T.cuda()
+
 class CustomALIGN(nn.Module):
-    def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
+    def __init__(self,
+                 model,
+                 processcor,
+                 classnames,
+                 cls_prompt='a photo of a {}',
+                 atk_prompt=None,
+                 cfg=None):
         super().__init__()
-        
-        self.model = model
-        self.processor = processor
+
+        self.cfg = cfg
         self.classnames = classnames
+        self.processor = processcor
+        self.model = model
         self.mode = 'classification'
-        # Freeze model parameters
-        self.model.requires_grad_(False)
+        self.cls_prompt = cls_prompt 
+        self.atk_prompt = atk_prompt
         
-        # Pre-cache text embeddings
-        self._init_prompts(cls_prompt, atk_prompt)
-
-    def _init_prompts(self, cls_prompt, atk_prompt):
-        # Precompute classification embeddings
-        self.cls_embeds = self._encode_prompts(cls_prompt)
+        self.set_prompts(cls_prompt, atk_prompt)
         
-        # Precompute attack embeddings 
-        if atk_prompt is None or atk_prompt == cls_prompt:
-            self.atk_embeds = self.cls_embeds
+    def _prompt_text_features(self, prompt):
+        prompts_list = []
+        if '{}' in prompt:
+            prompts_list = [prompt.format(c) for c in self.classnames]
         else:
-            self.atk_embeds = self._encode_prompts(atk_prompt)
-
-    def _encode_prompts(self, prompt_template):
-        prompts = [prompt_template.format(c) if '{}' in prompt_template else c 
-                  for c in self.classnames]
-        
-        inputs = self.processor(
-            text=prompts,
+            prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
+        text_inputs = self.processor(
+            text=prompts_list,
             return_tensors="pt",
             padding=True
         ).to(self.model.device)
-        return self.model.get_text_features(**inputs).detach()
-
-    def forward(self, images):
-        if self.mode == 'classification':
-            return self._classification_forward(images)
-        return self._attack_forward(images)
-
-    def _classification_forward(self, images):
-        # No gradient for classification
-        with torch.no_grad():
-            image_embeds = self.model.get_image_features(images)
-            return image_embeds @ self.cls_embeds.T.cuda()
-
-    def _attack_forward(self, images):
-        # Only need gradient for images
-        image_embeds = self.model.get_image_features(images)
-        return image_embeds @ self.atk_embeds.T.cuda()
-
-# class CustomALIGN(nn.Module):
-#     def __init__(self,
-#                  model,
-#                  processcor,
-#                  classnames,
-#                  cls_prompt='a photo of a {}',
-#                  atk_prompt=None,
-#                  cfg=None):
-#         super().__init__()
-
-#         self.cfg = cfg
-#         self.classnames = classnames
-#         self.processor = processcor
-#         self.model = model
-#         self.mode = 'classification'
-#         self.cls_prompt = cls_prompt 
-#         self.atk_prompt = atk_prompt
+        text_feats = self.model.get_text_features(**text_inputs)
+        text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
+        return text_feats.detach(), text_inputs
         
-#         self.set_prompts(cls_prompt, atk_prompt)
-        
-#     def _prompt_text_features(self, prompt):
-#         prompts_list = []
-#         if '{}' in prompt:
-#             prompts_list = [prompt.format(c) for c in self.classnames]
-#         else:
-#             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-#         text_inputs = self.processor(text=prompts_list, return_tensors="pt", padding=True, truncation=True)
-#         # input_ids = {k: v for k, v in input_ids.items()}
-#         text_outputs = self.model.text_model(
-#             **text_inputs
-#         )
-#         text_embeds = text_outputs[0][:, 0, :]
-#         text_embeds = self.model.text_projection(text_embeds)
-#         text_feats = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
-#         return text_feats, text_inputs
-        
-#     def set_prompts(self, cls_prompt, atk_prompt=None):
-#         print(f'classification prompt: {cls_prompt}')
-#         cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
-#         self.cls_tfeatures = cls_tfeatures.cuda()
-#         self.cls_prompt = cls_prompts
+    def set_prompts(self, cls_prompt, atk_prompt=None):
+        print(f'classification prompt: {cls_prompt}')
+        cls_tfeatures, cls_prompts = self._prompt_text_features(cls_prompt)
+        self.cls_tfeatures = cls_tfeatures.cuda()
+        self.cls_prompt = cls_prompts
 
-#         if atk_prompt is None or cls_prompt == atk_prompt:
-#             print(f'attack prompt: {cls_prompt}')
-#             self.atk_tfeatures = self.cls_tfeatures.cuda()
-#             self.atk_prompt = self.cls_prompt
-#         else:
-#             print(f'attack prompt: {atk_prompt}')
-#             atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
-#             self.atk_tfeatures = atk_tfeatures.cuda()
-#             self.atk_prompt = atk_prompts
+        if atk_prompt is None or cls_prompt == atk_prompt:
+            print(f'attack prompt: {cls_prompt}')
+            self.atk_tfeatures = self.cls_tfeatures.cuda()
+            self.atk_prompt = self.cls_prompt
+        else:
+            print(f'attack prompt: {atk_prompt}')
+            atk_tfeatures, atk_prompts = self._prompt_text_features(atk_prompt)
+            self.atk_tfeatures = atk_tfeatures.cuda()
+            self.atk_prompt = atk_prompts
                 
-#     def forward(self, image):
-#         inputs = self.processor(images=image, return_tensors="pt", padding=True)
-#         vision_inputs = {k: v.cuda() for k, v in inputs.items()}
-#         vision_outputs = self.model.vision_model(
-#             **vision_inputs,
-#         )
-
-#         image_embeds = vision_outputs[1]   
-#         image_feats = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
-#         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-#         # logit_scale = self.logit_scale.exp()
-#         logits = image_feats @ text_feats.t() / self.model.temperature
-#         # print(logits)
-#         return logits
+    def forward(self, image):
+        image_feats = self.model.get_image_features(image)
+        image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
+        # image_feats = self.model.encode_image(self.normalize(image))
+        # image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
+        text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
+        # logit_scale = self.logit_scale.exp()
+        logits = image_feats @ text_feats.T.cuda()
+        # print(logits)
+        return logits
     
-#     def _get_prompts(self):
-#         return {
-#             'classification_prompt': self.cls_prompt,
-#             'attack_prompt': self.atk_prompt
-#         }
+    def _get_prompts(self):
+        return {
+            'classification_prompt': self.cls_prompt,
+            'attack_prompt': self.atk_prompt
+        }
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
