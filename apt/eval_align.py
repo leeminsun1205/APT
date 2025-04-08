@@ -241,7 +241,8 @@ if __name__ == '__main__':
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
-        bs = imgs.size(0)
+        # bs = imgs.size(0)
+        bs = 32
         imgs = [ToPILImage()(img.float()) for img in imgs]
         image_inputs = processor(images=imgs, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
@@ -251,24 +252,24 @@ if __name__ == '__main__':
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
 
-        # model.mode = 'attack'
-        # if args.attack == 'aa':
-        #     adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
-        # elif args.attack in ['pgd', 'tpgd']:
-        #     pixel_values = image_inputs["pixel_values"]
-        #     pixel_values.requires_grad_()
-        #     adv = attack(pixel_values, tgts)
-        # else:
-        #     adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
+        model.mode = 'attack'
+        if args.attack == 'aa':
+            adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
+        elif args.attack in ['pgd', 'tpgd']:
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            adv = attack(pixel_values, tgts)
+        else:
+            adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
-        # model.mode = 'classification'
+        model.mode = 'classification'
 
-        # # Calculate features
-        # with torch.no_grad():
-        #     output = model(adv)
+        # Calculate features
+        with torch.no_grad():
+            output = model(adv)
 
-        # rob = accuracy(output, tgts)
-        # meters.rob.update(rob[0].item(), bs)
+        rob = accuracy(output, tgts)
+        meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
