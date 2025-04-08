@@ -160,7 +160,7 @@ class CustomBLIP(BaseCustomModel):
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
         
-        text_inputs = self.processor(prompts_list, padding=True, return_tensors="pt").to(self.model.device)
+        text_inputs = self.processor(text = prompts_list, padding=True, return_tensors="pt").to(self.model.device)
         text_feats = self.model.get_text_features(**text_inputs)
         text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
         return text_feats.detach(), text_inputs
