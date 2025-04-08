@@ -288,6 +288,7 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, images):
+        image_inputs = images
         if self.mode == 'attack': 
             image_inputs = {"pixel_values": images}
         image_feats = self.model.get_image_features(**image_inputs)
