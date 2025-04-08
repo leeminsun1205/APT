@@ -246,7 +246,7 @@ if __name__ == '__main__':
         image_inputs = processor(images=imgs, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         with torch.no_grad():
-            output = model(imgs)
+            output = model(image_inputs)
         # print(f'output: {output}')
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
