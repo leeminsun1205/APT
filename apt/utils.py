@@ -240,6 +240,7 @@ class CustomALIGN(nn.Module):
     def __init__(self,
                  model,
                  processcor,
+                 tokenizer,
                  classnames,
                  cls_prompt='a photo of a {}',
                  atk_prompt=None,
@@ -249,9 +250,10 @@ class CustomALIGN(nn.Module):
         self.cfg = cfg
         self.classnames = classnames
         self.processor = processcor
+        self.tokenizer = tokenizer
         self.model = model
         self.mode = 'classification'
-        self.normalizer = ImageNormalizer(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+        # self.normalizer = ImageNormalizer(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
         
@@ -263,11 +265,7 @@ class CustomALIGN(nn.Module):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        text_inputs = self.processor(
-            text=prompts_list,
-            return_tensors="pt",
-            padding=True
-        ).to(self.model.device)
+        text_inputs = self.tokenizer(["a photo of a cat", "a photo of a dog"], padding=True, return_tensors="pt").to(self.model.device)
         text_feats = self.model.get_text_features(**text_inputs)
         text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
         return text_feats.detach(), text_inputs
@@ -289,20 +287,11 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        # print(image)
-        image_inputs = self.processor(
-            images = image,
-            return_tensors="pt",
-            padding=True
-        ).to(self.model.device)
-        image_feats = self.model.get_image_features(image_inputs)
+        image_inputs = self.processor(images=image, return_tensors="pt")
+        image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
-        # image_feats = self.model.encode_image(self.normalize(image))
-        # image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-        # logit_scale = self.logit_scale.exp()
         logits = image_feats @ text_feats.T
-        # print(logits)
         return logits
     
     def _get_prompts(self):

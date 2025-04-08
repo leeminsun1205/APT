@@ -4,7 +4,7 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import AlignProcessor, AlignModel
+from transformers import AutoTokenizer, AutoProcessor, AlignModel
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict
@@ -171,7 +171,8 @@ if __name__ == '__main__':
                                              pin_memory=True)
     
     model = AlignModel.from_pretrained("kakaobrain/align-base")
-    processor = AlignProcessor.from_pretrained("kakaobrain/align-base")
+    processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
+    tokenizer = AutoTokenizer.from_pretrained("kakaobrain/align-base")
 
     # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     # eps = int(cfg.AT.EPS * 255)
@@ -201,6 +202,7 @@ if __name__ == '__main__':
     else:
         model = CustomALIGN(model,
                            processor,
+                           tokenizer,
                            classes,
                            cls_prompt=classify_prompt,
                            atk_prompt=attack_prompt,)
