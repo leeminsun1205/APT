@@ -253,7 +253,11 @@ if __name__ == '__main__':
         if args.attack == 'aa':
             adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
         elif args.attack in ['pgd', 'tpgd']:
-            adv = attack(imgs, tgts)
+            images = [ToPILImage()(img.float().cpu()) for img in imgs]  # từ batch ảnh raw
+            processed = model.processor(images=images, return_tensors="pt")
+            pixel_values = processed["pixel_values"].cuda()
+            pixel_values.requires_grad_()
+            adv = attack(pixel_values, tgts)
         else:
             adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
