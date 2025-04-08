@@ -171,6 +171,7 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
+    model, processor, tokenizer = None, None, None
     if args.model == 'ALIGN':
         model = AlignModel.from_pretrained("kakaobrain/align-base")
         processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
