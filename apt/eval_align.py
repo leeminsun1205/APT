@@ -135,7 +135,7 @@ if __name__ == '__main__':
         ])
         testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
         loader = DataLoader(testset,
-                       batch_size=100,
+                       batch_size=8,
                        num_workers=8,
                        sampler=SequentialSampler(testset),)
 
