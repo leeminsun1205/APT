@@ -7,7 +7,7 @@ from torch import Tensor
 from clip import clip
 from trainers.apt import PromptLearner, TextEncoder
 from clip.simple_tokenizer import SimpleTokenizer 
-from apt.eval_clip import load_clip_to_cpu
+from eval_clip import load_clip_to_cpu
 from torchvision.transforms import ToPILImage
 mu = (0.48145466, 0.4578275, 0.40821073)
 std = (0.26862954, 0.26130258, 0.27577711)
@@ -70,12 +70,6 @@ class ImageNormalizer(nn.Module):
 
     def __repr__(self):
         return f'ImageNormalizer(mean={self.mean.squeeze()}, std={self.std.squeeze()})'  # type: ignore
-
-
-import os
-import torch
-import clip
-from torch import nn
 
 class BaseCustomModel(nn.Module):
     def __init__(self, model, classnames, cls_prompt, atk_prompt, cfg):
