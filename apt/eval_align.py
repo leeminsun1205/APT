@@ -131,7 +131,7 @@ if __name__ == '__main__':
             'trucks',
         ]
         transformer = transforms.Compose([
-            transforms.PILToTensor()
+            transforms.ToTensor()
         ])
         testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
         loader = DataLoader(testset,
