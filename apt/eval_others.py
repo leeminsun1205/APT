@@ -213,7 +213,7 @@ if __name__ == '__main__':
         model.linear.load_state_dict(ckp)
     else:
         if args.model == 'BLIP':
-            model = CustomALIGN(model,
+            model = CustomBLIP(model,
                             tokenizer,
                             classes,
                             cls_prompt=classify_prompt,
