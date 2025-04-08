@@ -140,7 +140,7 @@ if __name__ == '__main__':
                        sampler=SequentialSampler(testset),)
 
     else:    
-        cfg.DATALOADER.TEST.BATCH_SIZE = 8
+        cfg.DATALOADER.TEST.BATCH_SIZE = 16
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
         loader = dm.test_loader
@@ -254,17 +254,18 @@ if __name__ == '__main__':
 
         model.mode = 'attack'
         if args.attack == 'aa':
-            adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
+            advs = attack.run_standard_evaluation(imgs, tgts, bs=bs)
         elif args.attack in ['pgd', 'tpgd']:
             pixel_values = image_inputs["pixel_values"]
             pixel_values.requires_grad_()
             advs = attack(pixel_values, tgts)
-            advs = [ToPILImage()(adv.float()) for adv in advs]
-            adv_inputs = processor(images=advs, return_tensors="pt")
-            adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
-        else:
-            adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
             
+        else:
+            advs, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
+        advs = [ToPILImage()(adv.float()) for adv in advs]
+        adv_inputs = processor(images=advs, return_tensors="pt")
+        adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
+
         model.mode = 'classification'
 
         # Calculate features
