@@ -4,7 +4,7 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import AutoTokenizer, AutoProcessor, AlignModel
+from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict
@@ -79,6 +79,7 @@ parser.add_argument('experiment')
 parser.add_argument('-cp','--cls-prompt', default='a photo of a {}')
 parser.add_argument('-ap','--atk-prompt', default=None)
 parser.add_argument('--best-checkpoint', action='store_true')
+parser.add_argument('--model', default='ALIGN')
 
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
@@ -170,10 +171,14 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
-    
-    model = AlignModel.from_pretrained("kakaobrain/align-base")
-    processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
-    tokenizer = AutoTokenizer.from_pretrained("kakaobrain/align-base")
+    if args.model == 'ALIGN':
+        model = AlignModel.from_pretrained("kakaobrain/align-base")
+        processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
+        tokenizer = AutoTokenizer.from_pretrained("kakaobrain/align-base")
+    elif args.model == 'BLIP2':
+        model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b")
+        processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
+        tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
 
     # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     # eps = int(cfg.AT.EPS * 255)
