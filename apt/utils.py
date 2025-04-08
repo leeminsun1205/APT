@@ -243,7 +243,7 @@ class CustomALIGN(nn.Module):
         self.model = model
         self.processor = processor
         self.classnames = classnames
-        
+        self.mode = 'classification'
         # Freeze model parameters
         self.model.requires_grad_(False)
         
