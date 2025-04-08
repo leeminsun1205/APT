@@ -268,7 +268,7 @@ class CustomALIGN(nn.Module):
             text=prompts,
             return_tensors="pt",
             padding=True
-        ).cuda()
+        ).to(self.model.device)
         return self.model.get_text_features(**inputs).detach()
 
     def forward(self, images):
