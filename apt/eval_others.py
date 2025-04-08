@@ -214,13 +214,13 @@ if __name__ == '__main__':
     else:
         if args.model == 'BLIP':
             model = CustomBLIP(model,
-                            tokenizer,
+                            processor,
                             classes,
                             cls_prompt=classify_prompt,
                             atk_prompt=attack_prompt,)
         else:
             model = CustomALIGN(model,
-                            processor,
+                            tokenizer,
                             classes,
                             cls_prompt=classify_prompt,
                             atk_prompt=attack_prompt,)
