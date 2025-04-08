@@ -340,7 +340,7 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        print(image)
+        # print(image)
         image_feats = self.model.get_image_features(self.normalizer(image))
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         # image_feats = self.model.encode_image(self.normalize(image))
