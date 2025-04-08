@@ -140,6 +140,7 @@ if __name__ == '__main__':
                        sampler=SequentialSampler(testset),)
 
     else:    
+        cfg.DATALOADER.TEST.BATCH_SIZE = 8
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
         loader = dm.test_loader
@@ -241,8 +242,7 @@ if __name__ == '__main__':
         except:
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
-        # bs = imgs.size(0)
-        bs = 8
+        bs = imgs.size(0)
         imgs = [ToPILImage()(img.float()) for img in imgs]
         image_inputs = processor(images=imgs, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
