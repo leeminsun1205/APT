@@ -291,7 +291,7 @@ class CustomALIGN(nn.Module):
     def forward(self, image):
         # print(image)
         image_inputs = self.processor(
-            image = image,
+            images = image,
             return_tensors="pt",
             padding=True
         ).to(self.model.device)
