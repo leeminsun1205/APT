@@ -345,7 +345,7 @@ class CustomALIGN(nn.Module):
         # image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
         # logit_scale = self.logit_scale.exp()
-        logits = image_feats @ text_feats.T.cuda()
+        logits = image_feats @ text_feats.T
         # print(logits)
         return logits
     
