@@ -137,7 +137,7 @@ if __name__ == '__main__':
         if args.attack == 'aa':
             dataset = torch.utils.data.Subset(dataset, list(range(5000)))
         loader = torch.utils.data.DataLoader(dataset,
-                                             batch_size=100,
+                                             batch_size=8,
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
