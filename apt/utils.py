@@ -302,6 +302,7 @@ class CustomALIGN(nn.Module):
         self.processor = processcor
         self.model = model
         self.mode = 'classification'
+        self.normalizer = ImageNormalizer(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         self.cls_prompt = cls_prompt 
         self.atk_prompt = atk_prompt
         
@@ -339,7 +340,7 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        image_feats = self.model.get_image_features(image)
+        image_feats = self.model.get_image_features(self.normalizer(image))
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         # image_feats = self.model.encode_image(self.normalize(image))
         # image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
