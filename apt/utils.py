@@ -280,6 +280,9 @@ class CustomALIGN(nn.Module):
             padding=True
         ).to(images.device)
         print(inputs.keys())
+        inputs['input_ids'] = inputs['input_ids'].detach()
+        inputs['token_type_ids'] = inputs['token_type_ids'].detach()
+        inputs['attention_mask'] = inputs['attention_mask'].detach()
         if self.mode == 'classification':
             # Get model outputs
             with torch.no_grad():
