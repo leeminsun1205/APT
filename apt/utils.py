@@ -288,12 +288,12 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, images):
-        if isinstance(images, torch.Tensor):  # Nếu là tensor (đã xử lý)
-            image_inputs = {"pixel_values": images}
-        else:  # Nếu là ảnh raw
-            images = [ToPILImage()(img.float()) for img in images]
-            image_inputs = self.processor(images=images, return_tensors="pt")
-            image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
+        # if isinstance(images, torch.Tensor):  # Nếu là tensor (đã xử lý)
+        #     image_inputs = {"pixel_values": images}
+        # else:  # Nếu là ảnh raw
+        images = [ToPILImage()(img.float()) for img in images]
+        image_inputs = self.processor(images=images, return_tensors="pt")
+        image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
