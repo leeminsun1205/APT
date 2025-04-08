@@ -113,9 +113,9 @@ class BaseCustomModel(nn.Module):
 
 class CustomCLIP(BaseCustomModel):
     def __init__(self, model, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
         self.logit_scale = model.logit_scale
         self.normalize = ImageNormalizer(mu, std).cuda()  # Assume mu, std are defined
+        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
@@ -151,8 +151,8 @@ class CustomCLIP(BaseCustomModel):
 
 class CustomBLIP(BaseCustomModel):
     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
         self.processor = processor
+        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
@@ -178,8 +178,8 @@ class CustomBLIP(BaseCustomModel):
 
 class CustomALIGN(BaseCustomModel):
     def __init__(self, model, tokenizer, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
         self.tokenizer = tokenizer
+        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
