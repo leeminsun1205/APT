@@ -9,6 +9,7 @@ from clip import clip
 from trainers.apt import PromptLearner, TextEncoder
 from clip.simple_tokenizer import SimpleTokenizer 
 from evaluate import load_clip_to_cpu
+from torchvision.transforms import ToPILImage
 mu = (0.48145466, 0.4578275, 0.40821073)
 std = (0.26862954, 0.26130258, 0.27577711)
 
@@ -287,7 +288,7 @@ class CustomALIGN(nn.Module):
             self.atk_prompt = atk_prompts
                 
     def forward(self, image):
-        image = image.to(torch.float32)
+        image = ToPILImage()(image)
         image_inputs = self.processor(images=image, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         image_feats = self.model.get_image_features(**image_inputs)
