@@ -280,12 +280,12 @@ class CustomALIGN(nn.Module):
         # No gradient for classification
         with torch.no_grad():
             image_embeds = self.model.get_image_features(images)
-            return image_embeds @ self.cls_embeds.T
+            return image_embeds @ self.cls_embeds.T.cuda()
 
     def _attack_forward(self, images):
         # Only need gradient for images
         image_embeds = self.model.get_image_features(images)
-        return image_embeds @ self.atk_embeds.T
+        return image_embeds @ self.atk_embeds.T.cuda()
 
 # class CustomALIGN(nn.Module):
 #     def __init__(self,
