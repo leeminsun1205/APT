@@ -237,62 +237,55 @@ class CustomBLIP(nn.Module):
         }
 
 class CustomALIGN(nn.Module):
-    def __init__(self,
-                 model,
-                 processor,
-                 classnames,
-                 cls_prompt='a photo of a {}',
-                 atk_prompt=None):
+    def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
         super().__init__()
         
         self.model = model
         self.processor = processor
         self.classnames = classnames
         self.mode = 'classification'
+        # Freeze model parameters
+        self.model.requires_grad_(False)
         
-        self.set_prompts(cls_prompt, atk_prompt)
+        # Pre-cache text embeddings
+        self._init_prompts(cls_prompt, atk_prompt)
+
+    def _init_prompts(self, cls_prompt, atk_prompt):
+        # Precompute classification embeddings
+        self.cls_embeds = self._encode_prompts(cls_prompt)
         
-    def set_prompts(self, cls_prompt, atk_prompt=None):
-        print(f'classification prompt: {cls_prompt}')
-        self.cls_prompts = self._format_prompts(cls_prompt)
-        
-        if atk_prompt is None or cls_prompt == atk_prompt:
-            print(f'attack prompt: {cls_prompt}')
-            self.atk_prompts = self.cls_prompts
+        # Precompute attack embeddings 
+        if atk_prompt is None or atk_prompt == cls_prompt:
+            self.atk_embeds = self.cls_embeds
         else:
-            print(f'attack prompt: {atk_prompt}')
-            self.atk_prompts = self._format_prompts(atk_prompt)
-    
-    def _format_prompts(self, prompt_template):
-        if '{}' in prompt_template:
-            return [prompt_template.format(c) for c in self.classnames]
-        else:
-            return [c for c in self.classnames]
+            self.atk_embeds = self._encode_prompts(atk_prompt)
+
+    def _encode_prompts(self, prompt_template):
+        prompts = [prompt_template.format(c) if '{}' in prompt_template else c 
+                  for c in self.classnames]
         
-    def forward(self, images):
-        prompts = self.cls_prompts if self.mode == 'classification' else self.atk_prompts
-        
-        # Process the inputs
         inputs = self.processor(
             text=prompts,
-            images=images,
             return_tensors="pt",
             padding=True
-        ).to(images.device)
-        print(inputs.keys())
-        inputs['input_ids'] = inputs['input_ids'].detach()
-        inputs['token_type_ids'] = inputs['token_type_ids'].detach()
-        inputs['attention_mask'] = inputs['attention_mask'].detach()
+        )
+        return self.model.get_text_features(**inputs).detach()
+
+    def forward(self, images):
         if self.mode == 'classification':
-            # Get model outputs
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                logits = outputs.logits_per_image
-        else:
-            outputs = self.model(**inputs)
-            logits = outputs.logits_per_image
-            
-        return logits
+            return self._classification_forward(images)
+        return self._attack_forward(images)
+
+    def _classification_forward(self, images):
+        # No gradient for classification
+        with torch.no_grad():
+            image_embeds = self.model.get_image_features(images)
+            return image_embeds @ self.cls_embeds.T
+
+    def _attack_forward(self, images):
+        # Only need gradient for images
+        image_embeds = self.model.get_image_features(images)
+        return image_embeds @ self.atk_embeds.T
 
 # class CustomALIGN(nn.Module):
 #     def __init__(self,
