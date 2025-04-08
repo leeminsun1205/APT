@@ -242,7 +242,7 @@ if __name__ == '__main__':
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
         # bs = imgs.size(0)
-        bs = 16
+        bs = 8
         imgs = [ToPILImage()(img.float()) for img in imgs]
         image_inputs = processor(images=imgs, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
