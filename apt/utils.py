@@ -265,7 +265,7 @@ class CustomALIGN(nn.Module):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        text_inputs = self.tokenizer(["a photo of a cat", "a photo of a dog"], padding=True, return_tensors="pt").to(self.model.device)
+        text_inputs = self.tokenizer(prompts_list, padding=True, return_tensors="pt").to(self.model.device)
         text_feats = self.model.get_text_features(**text_inputs)
         text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
         return text_feats.detach(), text_inputs
@@ -288,6 +288,7 @@ class CustomALIGN(nn.Module):
                 
     def forward(self, image):
         image_inputs = self.processor(images=image, return_tensors="pt")
+        image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
