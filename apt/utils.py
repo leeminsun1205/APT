@@ -287,9 +287,9 @@ class CustomALIGN(nn.Module):
             self.atk_tfeatures = atk_tfeatures.cuda()
             self.atk_prompt = atk_prompts
                 
-    def forward(self, image):
-        image = ToPILImage()(image)
-        image_inputs = self.processor(images=image, return_tensors="pt")
+    def forward(self, images):
+        images = [ToPILImage()(img.float()) for img in images]
+        image_inputs = self.processor(images=images, return_tensors="pt")
         image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
