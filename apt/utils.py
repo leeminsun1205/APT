@@ -279,7 +279,7 @@ class CustomALIGN(nn.Module):
             return_tensors="pt",
             padding=True
         ).to(images.device)
-        print(dir(inputs))
+        print(inputs.keys())
         if self.mode == 'classification':
             # Get model outputs
             with torch.no_grad():
