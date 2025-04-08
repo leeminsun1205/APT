@@ -135,7 +135,7 @@ if __name__ == '__main__':
         ])
         testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
         loader = DataLoader(testset,
-                       batch_size=32,
+                       batch_size=16,
                        num_workers=8,
                        sampler=SequentialSampler(testset),)
 
@@ -202,7 +202,6 @@ if __name__ == '__main__':
         model.linear.load_state_dict(ckp)
     else:
         model = CustomALIGN(model,
-                           processor,
                            tokenizer,
                            classes,
                            cls_prompt=classify_prompt,
@@ -254,14 +253,18 @@ if __name__ == '__main__':
 
         model.mode = 'attack'
         if args.attack == 'aa':
-            advs = attack.run_standard_evaluation(imgs, tgts, bs=bs)
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
         elif args.attack in ['pgd', 'tpgd']:
             pixel_values = image_inputs["pixel_values"]
             pixel_values.requires_grad_()
             advs = attack(pixel_values, tgts)
             
         else:
-            advs, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
         advs = [ToPILImage()(adv.float()) for adv in advs]
         adv_inputs = processor(images=advs, return_tensors="pt")
         adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}

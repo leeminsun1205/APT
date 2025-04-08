@@ -4,13 +4,14 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import AutoProcessor, BlipForImageTextRetrieval
+from transformers import AutoProcessor, BlipModel
 from torch.autograd import grad, Variable
-
+from torchvision.datasets import CIFAR10
 from addict import Dict
-
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 from dassl.data import DataManager
-
+from torch.utils.data import SequentialSampler
 import datasets.oxford_pets
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
@@ -111,11 +112,39 @@ if __name__ == '__main__':
         if result[tune][args.attack] != {}:
             print(f'eval result already exists at: {save_path}')
             exit()
-            
-    dm = DataManager(cfg)
-    classes = dm.dataset.classnames
-    loader = dm.test_loader
-    num_classes = dm.num_classes
+    num_classes = None
+    classes = None
+    loader = None
+    if args.dataset == 'Cifar10':     
+        # DATA = 'CIFAR10'
+        num_classes = 10
+        classes = [
+            'airplanes',
+            'cars',
+            'birds',
+            'cats',
+            'deers',
+            'dogs',
+            'frogs',
+            'horses',
+            'ships',
+            'trucks',
+        ]
+        transformer = transforms.Compose([
+            transforms.ToTensor()
+        ])
+        testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
+        loader = DataLoader(testset,
+                       batch_size=16,
+                       num_workers=8,
+                       sampler=SequentialSampler(testset),)
+
+    else:    
+        cfg.DATALOADER.TEST.BATCH_SIZE = 16
+        dm = DataManager(cfg)
+        classes = dm.dataset.classnames
+        loader = dm.test_loader
+        num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
@@ -142,9 +171,8 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
     
-    from transformers import AutoProcessor, BlipForImageTextRetrieval
-    model = BlipForImageTextRetrieval.from_pretrained("Salesforce/blip-itm-base-coco")
-    processor = AutoProcessor.from_pretrained("Salesforce/blip-itm-base-coco")
+    model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
+    processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
 
     # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
     # eps = int(cfg.AT.EPS * 255)
@@ -172,12 +200,11 @@ if __name__ == '__main__':
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
     else:
-        model = CustomBLIP(model,
+        model = CustomALIGN(model,
                            processor,
                            classes,
                            cls_prompt=classify_prompt,
-                           atk_prompt=attack_prompt,
-                           cfg=cfg)
+                           atk_prompt=attack_prompt,)
     
     model = model.cuda()
     model.eval()
@@ -214,29 +241,41 @@ if __name__ == '__main__':
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
-
+        imgs = [ToPILImage()(img.float()) for img in imgs]
+        image_inputs = processor(images=imgs, return_tensors="pt")
+        image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         with torch.no_grad():
-            output = model(imgs)
+            output = model(image_inputs)
         # print(f'output: {output}')
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
 
-        # model.mode = 'attack'
-        # if args.attack == 'aa':
-        #     adv = attack.run_standard_evaluation(imgs, tgts, bs=bs)
-        # elif args.attack in ['pgd', 'tpgd']:
-        #     adv = attack(imgs, tgts)
-        # else:
-        #     adv, _ = pgd(imgs, tgts, model, CWLoss, eps, alpha, steps)
+        model.mode = 'attack'
+        if args.attack == 'aa':
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
+        elif args.attack in ['pgd', 'tpgd']:
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            advs = attack(pixel_values, tgts)
             
-        # model.mode = 'classification'
+        else:
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
+            advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
+        advs = [ToPILImage()(adv.float()) for adv in advs]
+        adv_inputs = processor(images=advs, return_tensors="pt")
+        adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
 
-        # # Calculate features
-        # with torch.no_grad():
-        #     output = model(adv)
+        model.mode = 'classification'
 
-        # rob = accuracy(output, tgts)
-        # meters.rob.update(rob[0].item(), bs)
+        # Calculate features
+        with torch.no_grad():
+            output = model(adv_inputs)
+
+        rob = accuracy(output, tgts)
+        meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
