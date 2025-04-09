@@ -290,7 +290,7 @@ if __name__ == '__main__':
             model.mode = 'attack'
             if args.attack == 'aa':
                 if args.model == 'BLIP':
-                    image_inputs['image'].requires_grad_()
+                    image_inputs.requires_grad_()
                     advs = attack.run_standard_evaluation(image_inputs, tgts, bs=bs)
                 else:    
                     pixel_values = image_inputs["pixel_values"]
@@ -298,7 +298,7 @@ if __name__ == '__main__':
                     advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
             elif args.attack in ['pgd', 'tpgd']:
                 if args.model == 'BLIP':
-                    image_inputs['image'].requires_grad_()
+                    image_inputs.requires_grad_()
                     advs = attack(image_inputs, tgts)
                 else:
                     pixel_values = image_inputs["pixel_values"]
@@ -307,7 +307,7 @@ if __name__ == '__main__':
                 
             else:
                 if args.model == 'BLIP':
-                    image_inputs['image'].requires_grad_()
+                    image_inputs.requires_grad_()
                     advs = attack(image_inputs, tgts)
                 else:
                     pixel_values = image_inputs["pixel_values"]
