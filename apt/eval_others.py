@@ -4,7 +4,8 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import AutoTokenizer, AutoProcessor, AlignModel, BlipModel, Blip2Model
+from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
+from adv_lp import LinearProbe
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict
@@ -25,6 +26,7 @@ import datasets.sun397
 import datasets.caltech101
 import datasets.ucf101
 import datasets.imagenet
+
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -120,7 +122,6 @@ if __name__ == '__main__':
     classes = None
     loader = None
     if args.dataset == 'Cifar10':     
-        # DATA = 'CIFAR10'
         num_classes = 10
         classes = [
             'airplanes',
@@ -177,6 +178,7 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
+        
     model, processor, tokenizer = None, None, None
     if args.model == 'ALIGN':
         print('model: ALIGN')
@@ -214,7 +216,6 @@ if __name__ == '__main__':
     attack_prompt = prompter_path if args.atk_prompt == 'prompter' else args.atk_prompt
 
     if args.linear_probe:
-        from adv_lp import LinearProbe
         model = LinearProbe(model, 512, num_classes, False)
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
@@ -280,7 +281,6 @@ if __name__ == '__main__':
 
             if args.model == 'BLIP':
                 pixel_values = imgs
-                # pixel_values.requires_grad_()
             else:
                 pixel_values = image_inputs["pixel_values"]
                 pixel_values.requires_grad_()
@@ -291,15 +291,16 @@ if __name__ == '__main__':
                 advs = attack(pixel_values, tgts)
             else:
                 advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
+
             if args.model != 'BLIP':
                 advs = [ToPILImage()(adv.float()) for adv in advs]
                 adv_inputs = processor(images=advs, return_tensors="pt")
                 adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
             else:
                 adv_inputs = advs
+
             model.mode = 'classification'
 
-            # Calculate features
             with torch.no_grad():
                 output = model(adv_inputs)
 
@@ -319,7 +320,7 @@ if __name__ == '__main__':
     _result = result if args.dataset is None or args.dataset==train_dataset else result[args.dataset]
     tune = 'linear_probe' if args.linear_probe else args.cls_prompt
     _result[tune].clean = meters.acc.avg
-    # _result[tune][args.attack] = meters.rob.avg
+    _result[tune][args.attack] = meters.rob.avg
 
     with open(save_path, 'w+') as f:
         yaml.dump(result.to_dict(), f)
