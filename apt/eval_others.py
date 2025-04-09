@@ -277,7 +277,6 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
         image_inputs = imgs
-        image_inputs = imgs
         if args.model != 'BLIP':
             imgs = [ToPILImage()(img.float()) for img in imgs]
             image_inputs = processor(images=imgs, return_tensors="pt")
