@@ -185,8 +185,10 @@ if __name__ == '__main__':
         tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
     elif args.model == 'BLIP':
         print('model: BLIP')
-        model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
-        processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+        model_name_1 = 'Salesforce/blip-itm-large'
+        model_name_2 = 'Salesforce/blip-image-captioning-base'
+        model = BlipModel.from_pretrained(model_name_1)
+        processor = AutoProcessor.from_pretrained(model_name_1)
     else:
         raise ValueError(f'Unknown model: {args.model}')
 
