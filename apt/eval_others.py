@@ -293,7 +293,7 @@ if __name__ == '__main__':
                 pixel_values = image_inputs
             else:
                 pixel_values = image_inputs["pixel_values"]
-                pixel_values.requires_grad_()
+            pixel_values.requires_grad_()
             if args.attack == 'aa':
                 advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
             elif args.attack in ['pgd', 'tpgd']:
