@@ -110,7 +110,6 @@ class BaseCustomModel(nn.Module):
             'attack_prompt': self.atk_prompt
         }
 
-
 class CustomCLIP(BaseCustomModel):
     def __init__(self, model, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
         self.logit_scale = model.logit_scale
@@ -152,6 +151,7 @@ class CustomCLIP(BaseCustomModel):
 class CustomBLIP(BaseCustomModel):
     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
         self.processor = processor
+        self.logit_scale = nn.Parameter(torch.tensor(self.config.logit_scale_init_value))
         super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
 
     def _prompt_text_features(self, prompt):
@@ -159,9 +159,10 @@ class CustomBLIP(BaseCustomModel):
             prompts_list = [prompt.format(c) for c in self.classnames]
         else:
             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-        
+        print(f"Prompts: {prompts_list[:5]}")
         text_inputs = self.processor(text = prompts_list, padding=True, return_tensors="pt").to(self.model.device)
         text_feats = self.model.get_text_features(**text_inputs)
+        print(f"Text features shape: {text_feats.shape}")
         text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
         return text_feats.detach(), text_inputs
 
@@ -169,11 +170,11 @@ class CustomBLIP(BaseCustomModel):
         image_inputs = images
         if self.mode == 'attack':
             image_inputs = {"pixel_values": images}
-        
+        logit_scale = self.logit_scale.exp().to(device=images.device)
         image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-        return image_feats @ text_feats.T
+        return image_feats @ text_feats.T * logit_scale
 
 
 class CustomALIGN(BaseCustomModel):
