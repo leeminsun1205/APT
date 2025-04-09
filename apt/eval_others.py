@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
-from lavis.models import load_model_and_preprocess
+from LAVIS.lavis.models import load_model_and_preprocess
 
 import datasets.oxford_pets
 import datasets.oxford_flowers
