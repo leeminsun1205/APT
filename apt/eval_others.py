@@ -194,7 +194,7 @@ if __name__ == '__main__':
         # model_name_2 = 'Salesforce/blip-image-captioning-large'
         # model = BlipModel.from_pretrained(model_name_1)
         # processor = AutoProcessor.from_pretrained(model_name_1)
-        model, processor, _ = load_model_and_preprocess("blip_feature_extractor", model_type="base", is_eval=True, device='cuda')
+        model, _, _ = load_model_and_preprocess("blip_feature_extractor", model_type="base", is_eval=True, device='cuda')
     else:
         raise ValueError(f'Unknown model: {args.model}')
 
@@ -290,10 +290,7 @@ if __name__ == '__main__':
             model.mode = 'attack'
 
             if args.model == 'BLIP':
-                imgs = [ToPILImage()(img.float()) for img in imgs]
-                image_inputs = processor(images=imgs, return_tensors="pt")
-                image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
-                pixel_values = image_inputs["pixel_values"]
+                pixel_values = imgs
                 pixel_values.requires_grad_()
             else:
                 pixel_values = image_inputs["pixel_values"]
