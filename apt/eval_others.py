@@ -79,6 +79,7 @@ parser.add_argument('experiment')
 parser.add_argument('-cp','--cls-prompt', default='a photo of a {}')
 parser.add_argument('-ap','--atk-prompt', default=None)
 parser.add_argument('--best-checkpoint', action='store_true')
+parser.add_argument('--rob', action='store_true')
 parser.add_argument('--model', default='ALIGN')
 
 parser.add_argument('--attack', default='pgd')
@@ -270,33 +271,33 @@ if __name__ == '__main__':
         # print(f'output: {output}')
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
+        if args.rob:
+            model.mode = 'attack'
+            if args.attack == 'aa':
+                pixel_values = image_inputs["pixel_values"]
+                pixel_values.requires_grad_()
+                advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
+            elif args.attack in ['pgd', 'tpgd']:
+                pixel_values = image_inputs["pixel_values"]
+                pixel_values.requires_grad_()
+                advs = attack(pixel_values, tgts)
+                
+            else:
+                pixel_values = image_inputs["pixel_values"]
+                pixel_values.requires_grad_()
+                advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
+            advs = [ToPILImage()(adv.float()) for adv in advs]
+            adv_inputs = processor(images=advs, return_tensors="pt")
+            adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
 
-        model.mode = 'attack'
-        if args.attack == 'aa':
-            pixel_values = image_inputs["pixel_values"]
-            pixel_values.requires_grad_()
-            advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
-        elif args.attack in ['pgd', 'tpgd']:
-            pixel_values = image_inputs["pixel_values"]
-            pixel_values.requires_grad_()
-            advs = attack(pixel_values, tgts)
-            
-        else:
-            pixel_values = image_inputs["pixel_values"]
-            pixel_values.requires_grad_()
-            advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
-        advs = [ToPILImage()(adv.float()) for adv in advs]
-        adv_inputs = processor(images=advs, return_tensors="pt")
-        adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
+            model.mode = 'classification'
 
-        model.mode = 'classification'
+            # Calculate features
+            with torch.no_grad():
+                output = model(adv_inputs)
 
-        # Calculate features
-        with torch.no_grad():
-            output = model(adv_inputs)
-
-        rob = accuracy(output, tgts)
-        meters.rob.update(rob[0].item(), bs)
+            rob = accuracy(output, tgts)
+            meters.rob.update(rob[0].item(), bs)
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
