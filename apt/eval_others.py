@@ -277,7 +277,9 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
         image_inputs = imgs
-        if args.model != 'BLIP':
+        if args.model == 'BLIP':
+            image_inputs = {'pixel_values': imgs}
+        else:
             imgs = [ToPILImage()(img.float()) for img in imgs]
             image_inputs = processor(images=imgs, return_tensors="pt")
             image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
@@ -288,31 +290,14 @@ if __name__ == '__main__':
         meters.acc.update(acc[0].item(), bs)
         if args.rob:
             model.mode = 'attack'
+            pixel_values = image_inputs["pixel_values"]
+            pixel_values.requires_grad_()
             if args.attack == 'aa':
-                if args.model == 'BLIP':
-                    image_inputs.requires_grad_()
-                    advs = attack.run_standard_evaluation(image_inputs, tgts, bs=bs)
-                else:    
-                    pixel_values = image_inputs["pixel_values"]
-                    pixel_values.requires_grad_()
-                    advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
+                advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
             elif args.attack in ['pgd', 'tpgd']:
-                if args.model == 'BLIP':
-                    image_inputs.requires_grad_()
-                    advs = attack(image_inputs, tgts)
-                else:
-                    pixel_values = image_inputs["pixel_values"]
-                    pixel_values.requires_grad_()
-                    advs = attack(pixel_values, tgts)
-                
+                advs = attack(pixel_values, tgts)
             else:
-                if args.model == 'BLIP':
-                    image_inputs.requires_grad_()
-                    advs = attack(image_inputs, tgts)
-                else:
-                    pixel_values = image_inputs["pixel_values"]
-                    pixel_values.requires_grad_()
-                    advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
+                advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
             if args.model != 'BLIP':
                 advs = [ToPILImage()(adv.float()) for adv in advs]
                 adv_inputs = processor(images=advs, return_tensors="pt")
