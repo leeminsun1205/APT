@@ -197,7 +197,7 @@ class CustomBLIP(BaseCustomModel):
         # if self.mode == 'attack':
         image_embeds = self.model.visual_encoder.forward_features(images)
         image_feats = self.model.vision_proj(image_embeds)
-        image_feats = F.normalize(image_feats, dim=-1)
+        image_feats = F.normalize(image_feats, dim=-1).image_embeds_proj[:, 0]
         # else:
         #     image_inputs = {"image": images}
         #     image_feats = self.model.extract_features(image_inputs, mode="image").image_embeds_proj[:, 0]        
