@@ -189,11 +189,7 @@ if __name__ == '__main__':
         processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
         tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
     elif args.model == 'BLIP':
-        # print('model: BLIP')
-        # model_name_1 = 'Salesforce/blip-itm-large-coco'
-        # model_name_2 = 'Salesforce/blip-image-captioning-large'
-        # model = BlipModel.from_pretrained(model_name_1)
-        # processor = AutoProcessor.from_pretrained(model_name_1)
+        print('model: BLIP')
         model, _, _ = load_model_and_preprocess("blip_feature_extractor", model_type="base", is_eval=True, device='cuda')
     else:
         raise ValueError(f'Unknown model: {args.model}')
@@ -224,12 +220,6 @@ if __name__ == '__main__':
         model.linear.load_state_dict(ckp)
     else:
         if args.model == 'BLIP':
-            # model = CustomBLIP(model,
-            #                 processor,
-            #                 classes,
-            #                 cls_prompt=classify_prompt,
-            #                 atk_prompt=attack_prompt,)
-            
             model = CustomBLIP(model,
                             classes,
                             cls_prompt=classify_prompt,
@@ -270,7 +260,6 @@ if __name__ == '__main__':
         
     for i, data in enumerate(loader, start=1):
         try:
-            # few-shot data loader from Dassl
             imgs, tgts = data['img'], data['label']
         except:
             imgs, tgts = data[:2]
@@ -283,15 +272,15 @@ if __name__ == '__main__':
             image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         with torch.no_grad():
             output = model(image_inputs)
-        # print(f'output: {output}')
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
+
         if args.rob:
             model.mode = 'attack'
 
             if args.model == 'BLIP':
-                pixel_values = imgs.clone().requires_grad_()
-                pixel_values.requires_grad_()
+                pixel_values = imgs
+                # pixel_values.requires_grad_()
             else:
                 pixel_values = image_inputs["pixel_values"]
                 pixel_values.requires_grad_()

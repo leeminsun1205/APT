@@ -37,7 +37,6 @@ def convert_to_raw(classify_prompt, classes, num_classes):
         return class_raw_titles
     elif ctx.dim() == 3:
         print("Processing class-specific context...")
-        # n_classes, n_ctx, dim = ctx.shape
 
         class_raw_words = []
         for class_idx, class_ctx in enumerate(ctx):
@@ -148,35 +147,6 @@ class CustomCLIP(BaseCustomModel):
         logits = logit_scale * image_features @ text_features.t()
         return logits
 
-
-# class CustomBLIP(BaseCustomModel):
-#     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
-#         self.processor = processor
-#         super().__init__(model, classnames, cls_prompt, atk_prompt)
-#         self.logit_scale = nn.Parameter(torch.tensor(self.model.config.logit_scale_init_value))
-
-#     def _prompt_text_features(self, prompt):
-#         if '{}' in prompt:
-#             prompts_list = [prompt.format(c) for c in self.classnames]
-#         else:
-#             prompts_list = convert_to_raw(prompt, self.classnames, len(self.classnames))
-#         print(f"Prompts: {prompts_list[:5]}")
-#         text_inputs = self.processor(text = prompts_list, padding=True, return_tensors="pt").to(self.model.device)
-#         text_feats = self.model.get_text_features(**text_inputs)
-#         print(f"Text features shape: {text_feats.shape}")
-#         text_feats = text_feats / text_feats.norm(dim=-1, keepdim=True)
-#         return text_feats.detach(), text_inputs
-
-#     def forward(self, images):
-#         image_inputs = images
-#         if self.mode == 'attack':
-#             image_inputs = {"pixel_values": images}
-#         logit_scale = self.logit_scale.exp().to('cuda')
-#         image_feats = self.model.get_image_features(**image_inputs)
-#         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
-#         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-#         return image_feats @ text_feats.T * logit_scale
-
 class CustomBLIP(BaseCustomModel):
     def __init__(self, model, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
         super().__init__(model, classnames, cls_prompt, atk_prompt)
@@ -194,20 +164,12 @@ class CustomBLIP(BaseCustomModel):
         return text_feats.detach(), prompts_list
 
     def forward(self, images):
-        # if self.mode == 'attack':
-        # samples = {"image": images} 
-        # image = samples.get("image")
-        image_embeds = self.model.visual_encoder.forward_features(images)[:, 0]
+        image_embeds = self.model.visual_encoder.forward_features(images)
         image_feats = self.model.vision_proj(image_embeds)
-        image_feats = F.normalize(image_feats, dim=-1)
-        # else:
-        # image_inputs = {"image": images}
-        # image_feats = self.model.extract_features(image_inputs, mode="image").image_embeds_proj[:, 0]        
+        image_feats = F.normalize(image_feats, dim=-1)[:, 0]      
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
-        # print(f"Image features shape: {image_feats.shape}")
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
         return image_feats @ text_feats.T
-
 
 class CustomALIGN(BaseCustomModel):
     def __init__(self, model, tokenizer, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
