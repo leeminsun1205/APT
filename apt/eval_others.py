@@ -134,10 +134,13 @@ if __name__ == '__main__':
             'ships',
             'trucks',
         ]
-        transformer = transforms.Compose([
-            transforms.ToTensor()
-        ])
-        testset = CIFAR10(root='./data', transform=transformer, train=False, download=True)
+        if args.model == 'BLIP':
+            _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
+        else:
+            processor = transforms.Compose([
+                transforms.ToTensor()
+            ])
+        testset = CIFAR10(root='./data', transform=processor, train=False, download=True)
         loader = DataLoader(testset,
                        batch_size=100,
                        num_workers=8,
