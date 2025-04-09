@@ -278,7 +278,7 @@ if __name__ == '__main__':
         bs = imgs.size(0)
         image_inputs = imgs
         if args.model == 'BLIP':
-            image_inputs = {'pixel_values': imgs}
+            image_inputs = imgs
         else:
             imgs = [ToPILImage()(img.float()) for img in imgs]
             image_inputs = processor(images=imgs, return_tensors="pt")
@@ -290,6 +290,8 @@ if __name__ == '__main__':
         meters.acc.update(acc[0].item(), bs)
         if args.rob:
             model.mode = 'attack'
+            if args.model == 'BLIP':
+                image_inputs = {'pixel_values': imgs}
             pixel_values = image_inputs["pixel_values"]
             pixel_values.requires_grad_()
             if args.attack == 'aa':
