@@ -290,7 +290,7 @@ if __name__ == '__main__':
             model.mode = 'attack'
 
             if args.model == 'BLIP':
-                pixel_values = imgs.clone().detach().requires_grad_()
+                pixel_values = imgs.clone().requires_grad_()
                 pixel_values.requires_grad_()
             else:
                 pixel_values = image_inputs["pixel_values"]
