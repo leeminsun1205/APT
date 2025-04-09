@@ -277,9 +277,8 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
         image_inputs = imgs
-        if args.model == 'BLIP':
-            image_inputs = imgs
-        else:
+        image_inputs = imgs
+        if args.model != 'BLIP':
             imgs = [ToPILImage()(img.float()) for img in imgs]
             image_inputs = processor(images=imgs, return_tensors="pt")
             image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
@@ -290,8 +289,8 @@ if __name__ == '__main__':
         meters.acc.update(acc[0].item(), bs)
         if args.rob:
             model.mode = 'attack'
-            if args.model == 'BLIP':
-                image_inputs = {'pixel_values': imgs}
+            # if args.model == 'BLIP':
+            #     image_inputs = {'pixel_values': imgs}
             pixel_values = image_inputs["pixel_values"]
             pixel_values.requires_grad_()
             if args.attack == 'aa':
