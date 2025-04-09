@@ -12,6 +12,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
+from lavis.models import load_model_and_preprocess
+
 import datasets.oxford_pets
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
@@ -184,11 +186,12 @@ if __name__ == '__main__':
         processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
         tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
     elif args.model == 'BLIP':
-        print('model: BLIP')
-        model_name_1 = 'Salesforce/blip-itm-large-coco'
-        model_name_2 = 'Salesforce/blip-image-captioning-large'
-        model = BlipModel.from_pretrained(model_name_1)
-        processor = AutoProcessor.from_pretrained(model_name_1)
+        # print('model: BLIP')
+        # model_name_1 = 'Salesforce/blip-itm-large-coco'
+        # model_name_2 = 'Salesforce/blip-image-captioning-large'
+        # model = BlipModel.from_pretrained(model_name_1)
+        # processor = AutoProcessor.from_pretrained(model_name_1)
+        model, _, _ = load_model_and_preprocess("blip_feature_extractor", model_type="base", is_eval=True, device='cuda')
     else:
         raise ValueError(f'Unknown model: {args.model}')
 
@@ -218,8 +221,13 @@ if __name__ == '__main__':
         model.linear.load_state_dict(ckp)
     else:
         if args.model == 'BLIP':
+            # model = CustomBLIP(model,
+            #                 processor,
+            #                 classes,
+            #                 cls_prompt=classify_prompt,
+            #                 atk_prompt=attack_prompt,)
+            
             model = CustomBLIP(model,
-                            processor,
                             classes,
                             cls_prompt=classify_prompt,
                             atk_prompt=attack_prompt,)
@@ -265,9 +273,11 @@ if __name__ == '__main__':
             imgs, tgts = data[:2]
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
-        imgs = [ToPILImage()(img.float()) for img in imgs]
-        image_inputs = processor(images=imgs, return_tensors="pt")
-        image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
+        image_inputs = imgs
+        if args.model != 'BLIP':
+            imgs = [ToPILImage()(img.float()) for img in imgs]
+            image_inputs = processor(images=imgs, return_tensors="pt")
+            image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         with torch.no_grad():
             output = model(image_inputs)
         # print(f'output: {output}')
@@ -276,22 +286,33 @@ if __name__ == '__main__':
         if args.rob:
             model.mode = 'attack'
             if args.attack == 'aa':
-                pixel_values = image_inputs["pixel_values"]
-                pixel_values.requires_grad_()
-                advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
+                if args.model == 'BLIP':
+                    advs = attack.run_standard_evaluation(image_inputs, tgts, bs=bs)
+                else:    
+                    pixel_values = image_inputs["pixel_values"]
+                    pixel_values.requires_grad_()
+                    advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
             elif args.attack in ['pgd', 'tpgd']:
-                pixel_values = image_inputs["pixel_values"]
-                pixel_values.requires_grad_()
-                advs = attack(pixel_values, tgts)
+                if args.model == 'BLIP':
+                    advs = attack(image_inputs, tgts)
+                else:
+                    pixel_values = image_inputs["pixel_values"]
+                    pixel_values.requires_grad_()
+                    advs = attack(pixel_values, tgts)
                 
             else:
-                pixel_values = image_inputs["pixel_values"]
-                pixel_values.requires_grad_()
-                advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
-            advs = [ToPILImage()(adv.float()) for adv in advs]
-            adv_inputs = processor(images=advs, return_tensors="pt")
-            adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
-
+                if args.model == 'BLIP':
+                    advs = attack(image_inputs, tgts)
+                else:
+                    pixel_values = image_inputs["pixel_values"]
+                    pixel_values.requires_grad_()
+                    advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
+            if args.model != 'BLIP':
+                advs = [ToPILImage()(adv.float()) for adv in advs]
+                adv_inputs = processor(images=advs, return_tensors="pt")
+                adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
+            else:
+                adv_inputs = advs
             model.mode = 'classification'
 
             # Calculate features
