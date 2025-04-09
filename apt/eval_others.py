@@ -290,7 +290,8 @@ if __name__ == '__main__':
         if args.rob:
             model.mode = 'attack'
             if args.model == 'BLIP':
-                pixel_values = image_inputs
+                attack_image_inputs = image_inputs
+                pixel_values = attack_image_inputs
             else:
                 pixel_values = image_inputs["pixel_values"]
             pixel_values.requires_grad_()
