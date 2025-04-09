@@ -149,10 +149,10 @@ class CustomCLIP(BaseCustomModel):
 
 
 class CustomBLIP(BaseCustomModel):
-    def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
+    def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
         self.processor = processor
-        self.logit_scale = nn.Parameter(torch.tensor(self.config.logit_scale_init_value))
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
+        self.logit_scale = nn.Parameter(torch.tensor(self.model.config.logit_scale_init_value))
+        super().__init__(model, classnames, cls_prompt, atk_prompt)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
@@ -178,9 +178,9 @@ class CustomBLIP(BaseCustomModel):
 
 
 class CustomALIGN(BaseCustomModel):
-    def __init__(self, model, tokenizer, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
+    def __init__(self, model, tokenizer, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
         self.tokenizer = tokenizer
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
+        super().__init__(model, classnames, cls_prompt, atk_prompt)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
