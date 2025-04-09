@@ -289,10 +289,11 @@ if __name__ == '__main__':
         meters.acc.update(acc[0].item(), bs)
         if args.rob:
             model.mode = 'attack'
-            # if args.model == 'BLIP':
-            #     image_inputs = {'pixel_values': imgs}
-            pixel_values = image_inputs["pixel_values"]
-            pixel_values.requires_grad_()
+            if args.model == 'BLIP':
+                pixel_values = image_inputs
+            else:
+                pixel_values = image_inputs["pixel_values"]
+                pixel_values.requires_grad_()
             if args.attack == 'aa':
                 advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
             elif args.attack in ['pgd', 'tpgd']:
