@@ -5,7 +5,6 @@ import yaml
 import argparse
 from torchvision.datasets import *
 from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
-from adv_lp import LinearProbe
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict
@@ -216,6 +215,7 @@ if __name__ == '__main__':
     attack_prompt = prompter_path if args.atk_prompt == 'prompter' else args.atk_prompt
 
     if args.linear_probe:
+        from adv_lp import LinearProbe
         model = LinearProbe(model, 512, num_classes, False)
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
@@ -301,6 +301,7 @@ if __name__ == '__main__':
 
             model.mode = 'classification'
 
+            # Calculate features
             with torch.no_grad():
                 output = model(adv_inputs)
 
