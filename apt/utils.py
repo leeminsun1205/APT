@@ -72,9 +72,8 @@ class ImageNormalizer(nn.Module):
         return f'ImageNormalizer(mean={self.mean.squeeze()}, std={self.std.squeeze()})'  # type: ignore
 
 class BaseCustomModel(nn.Module):
-    def __init__(self, model, classnames, cls_prompt, atk_prompt, cfg):
+    def __init__(self, model, classnames, cls_prompt, atk_prompt):
         super().__init__()
-        self.cfg = cfg
         self.classnames = classnames
         self.model = model
         self.mode = 'classification'
@@ -112,9 +111,10 @@ class BaseCustomModel(nn.Module):
 
 class CustomCLIP(BaseCustomModel):
     def __init__(self, model, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
+        self.cfg = cfg
         self.logit_scale = model.logit_scale
         self.normalize = ImageNormalizer(mu, std).cuda()  # Assume mu, std are defined
-        super().__init__(model, classnames, cls_prompt, atk_prompt, cfg)
+        super().__init__(model, classnames, cls_prompt, atk_prompt)
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
