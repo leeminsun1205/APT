@@ -204,8 +204,9 @@ class CustomBLIP(BaseCustomModel):
         #     image_inputs = {"image": images}
         #     image_feats = self.model.extract_features(image_inputs, mode="image").image_embeds_proj[:, 0]        
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
+        print(f"Image features shape: {image_feats.shape}")
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
-        return image_feats @ text_feats.t()
+        return image_feats @ text_feats.T
 
 
 class CustomALIGN(BaseCustomModel):
