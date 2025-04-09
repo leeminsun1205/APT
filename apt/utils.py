@@ -14,7 +14,7 @@ mu = (0.48145466, 0.4578275, 0.40821073)
 std = (0.26862954, 0.26130258, 0.27577711)
 
 def convert_to_raw(classify_prompt, classes, num_classes):
-    prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
+    prompt_learner_state = torch.load(classify_prompt, map_location='cpu', weights_only=False)["state_dict"]
     ctx = prompt_learner_state["ctx"]
     ctx = ctx.float()
     print(f"Size of context: {ctx.shape}")
