@@ -151,8 +151,8 @@ class CustomCLIP(BaseCustomModel):
 class CustomBLIP(BaseCustomModel):
     def __init__(self, model, processor, classnames, cls_prompt='a photo of a {}', atk_prompt=None):
         self.processor = processor
-        self.logit_scale = nn.Parameter(torch.tensor(self.model.config.logit_scale_init_value))
         super().__init__(model, classnames, cls_prompt, atk_prompt)
+        self.logit_scale = nn.Parameter(torch.tensor(self.model.config.logit_scale_init_value))
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
