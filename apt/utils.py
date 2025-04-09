@@ -170,7 +170,7 @@ class CustomBLIP(BaseCustomModel):
         image_inputs = images
         if self.mode == 'attack':
             image_inputs = {"pixel_values": images}
-        logit_scale = self.logit_scale.exp().to(device=images.device)
+        logit_scale = self.logit_scale.exp().to('cuda')
         image_feats = self.model.get_image_features(**image_inputs)
         image_feats = image_feats / image_feats.norm(dim=-1, keepdim=True)
         text_feats = self.cls_tfeatures if self.mode == 'classification' else self.atk_tfeatures
