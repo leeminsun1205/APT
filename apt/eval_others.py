@@ -173,14 +173,17 @@ if __name__ == '__main__':
                                              pin_memory=True)
     model, processor, tokenizer = None, None, None
     if args.model == 'ALIGN':
+        print('model: ALIGN')
         model = AlignModel.from_pretrained("kakaobrain/align-base")
         processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
         tokenizer = AutoTokenizer.from_pretrained("kakaobrain/align-base")
     elif args.model == 'BLIP2':
+        print('model: BLIP2')
         model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b")
         processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
         tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
     elif args.model == 'BLIP':
+        print('model: BLIP')
         model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
         processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     else:
