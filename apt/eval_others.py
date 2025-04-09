@@ -141,7 +141,7 @@ if __name__ == '__main__':
                        sampler=SequentialSampler(testset),)
 
     else:    
-        cfg.DATALOADER.TEST.BATCH_SIZE = 16
+        cfg.DATALOADER.TEST.BATCH_SIZE = 32
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
         loader = dm.test_loader
