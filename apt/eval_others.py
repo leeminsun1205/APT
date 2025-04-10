@@ -89,7 +89,7 @@ parser.add_argument('--save-path', type=str, default = None,
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
-
+parser.add_argument('batch-size', type=int, default=100)
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -109,7 +109,7 @@ if __name__ == '__main__':
             cfg.DATASET.NAME = 'ImageNet'
         else:
             cfg.DATASET.NAME = args.dataset
-        save_path = os.path.join(save_output, 'dist_shift.yaml')
+        save_path = os.path.join(save_output, f'{args.model}_{args.dataset}.yaml')
     else:
         save_path = os.path.join(save_output, 'evaluation.yaml')
     if os.path.isfile(save_path):
@@ -146,12 +146,12 @@ if __name__ == '__main__':
             ])
         testset = CIFAR10(root='./data', transform=processor, train=False, download=True)
         loader = DataLoader(testset,
-                       batch_size=16,
+                       batch_size=args.batch_size,
                        num_workers=8,
                        sampler=SequentialSampler(testset),)
 
     else:    
-        cfg.DATALOADER.TEST.BATCH_SIZE = 64
+        cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
         loader = dm.test_loader
