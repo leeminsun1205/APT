@@ -89,7 +89,7 @@ parser.add_argument('--save-path', type=str, default = None,
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
-parser.add_argument('batch-size', type=int, default=100)
+parser.add_argument('-bs', '--batch-size', type=int, default=100)
 
 if __name__ == '__main__':
     args = parser.parse_args()
