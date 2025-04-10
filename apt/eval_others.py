@@ -104,7 +104,7 @@ if __name__ == '__main__':
         save_output = args.save_path
     else:
         save_output = cfg.OUTPUT_DIR
-    os.makedirs(args.save_output, exist_ok=True)
+    os.makedirs(save_output, exist_ok=True)
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
