@@ -84,7 +84,8 @@ parser.add_argument('-ap','--atk-prompt', default=None)
 parser.add_argument('--best-checkpoint', action='store_true')
 parser.add_argument('--rob', action='store_true')
 parser.add_argument('--model', default='ALIGN')
-
+parser.add_argument('--save-path', type=str, default = None,
+                    help="Specific path to save images. Default is ./")
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
@@ -99,15 +100,18 @@ if __name__ == '__main__':
     cfg.merge_from_file(cfg_path)
 
     train_dataset = cfg.DATASET.NAME
-    
+    if args.save_path:
+        save_output = args.save_path
+    else:
+        save_output = cfg.OUTPUT_DIR
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
         else:
             cfg.DATASET.NAME = args.dataset
-        save_path = os.path.join(cfg.OUTPUT_DIR, 'dist_shift.yaml')
+        save_path = os.path.join(save_output, 'dist_shift.yaml')
     else:
-        save_path = os.path.join(cfg.OUTPUT_DIR, 'evaluation.yaml')
+        save_path = os.path.join(save_output, 'evaluation.yaml')
     if os.path.isfile(save_path):
         with open(save_path, 'r') as f:
             result = Dict(yaml.safe_load(f))
