@@ -112,9 +112,10 @@ class BaseCustomModel(nn.Module):
 class CustomCLIP(BaseCustomModel):
     def __init__(self, model, classnames, cls_prompt='a photo of a {}', atk_prompt=None, cfg=None):
         self.cfg = cfg
-        self.normalize = ImageNormalizer(mu, std).cuda()  # Assume mu, std are defined
         super().__init__(model, classnames, cls_prompt, atk_prompt)
+        self.normalize = ImageNormalizer(mu, std).cuda()
         self.logit_scale = model.logit_scale
+
 
     def _prompt_text_features(self, prompt):
         if '{}' in prompt:
