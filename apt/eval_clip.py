@@ -141,7 +141,7 @@ if __name__ == '__main__':
             cfg.DATASET.NAME = 'ImageNet'
         else:
             cfg.DATASET.NAME = args.dataset
-        save_path = os.path.join(args.save_path, 'dist_shift.yaml')  # Modified to use args.save_path
+        save_path = os.path.join(args.save_path, f'CLIP_{args.dataset}.yaml')  # Modified to use args.save_path
     else:
         save_path = os.path.join(args.save_path, 'evaluation.yaml')  # Modified to use args.save_path
     if os.path.isfile(save_path):
