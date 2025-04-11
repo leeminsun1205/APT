@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
 
     if args.cls_prompt == 'prompter':
-        prompt_learner_state = torch.load(classify_prompt, map_location='cpu')["state_dict"]
+        prompt_learner_state = torch.load(classify_prompt, weights_only=False, map_location='cpu')["state_dict"]
         ctx = prompt_learner_state["ctx"]
         ctx = ctx.float()
         print(f"Size of context: {ctx.shape}")
