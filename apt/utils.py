@@ -125,7 +125,7 @@ class CustomCLIP(BaseCustomModel):
             prompter_ckp = prompt
             assert os.path.isfile(prompter_ckp), "Prompt file not found"
             prompter = PromptLearner(self.cfg, self.classnames, self.model)
-            state_dict = torch.load(prompter_ckp)["state_dict"]
+            state_dict = torch.load(prompter_ckp, weights_only=False)["state_dict"]
             
             if "token_prefix" in state_dict:
                 del state_dict["token_prefix"]
