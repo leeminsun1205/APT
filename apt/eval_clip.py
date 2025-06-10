@@ -4,7 +4,6 @@ import yaml
 import argparse
 from yacs.config import CfgNode
 from tqdm import tqdm
-
 import matplotlib.pyplot as plt
 import numpy as np
 
