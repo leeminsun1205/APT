@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict
-import torchvision.transforms as transforms
+from torchvision import transforms
 from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
@@ -27,7 +27,6 @@ import datasets.ucf101
 import datasets.imagenet
 
 import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
