@@ -1,5 +1,5 @@
-ftfy
-regex
-tqdm
 torchattacks
+transformers
+salesforce-lavis==1.0.2
+addict
 git+https://github.com/fra31/auto-attack
