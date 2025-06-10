@@ -1,13 +1,5 @@
 ftfy
 regex
 tqdm
-addict
-salesforce-lavis
 torchattacks
 git+https://github.com/fra31/auto-attack
-# --extra-index-url https://download.pytorch.org/whl/torch_stable.html
-torch
-torchaudio
-torchvision
-transformers
-
