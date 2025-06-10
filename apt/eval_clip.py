@@ -20,7 +20,6 @@ from collections import OrderedDict
 from typing import Tuple, TypeVar
 
 from addict import Dict
-
 from dassl.data import DataManager
 
 from datasets import (
