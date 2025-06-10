@@ -9,4 +9,5 @@ git+https://github.com/fra31/auto-attack
 torch
 torchaudio
 torchvision
+transformers
 
