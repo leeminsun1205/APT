@@ -2,7 +2,6 @@ import os
 import torch
 import yaml
 import argparse
-from warnings import warn
 from yacs.config import CfgNode
 from tqdm import tqdm
 

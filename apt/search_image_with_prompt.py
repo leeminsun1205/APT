@@ -1,6 +1,5 @@
 import os
 import torch
-from warnings import warn
 from yacs.config import CfgNode
 import yaml
 import argparse
