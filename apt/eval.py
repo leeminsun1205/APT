@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     else:    
         cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
-        cfg.DATALOADER.TEST.NUM_WORKERS = 4
+        cfg.DATALOADER.NUM_WORKERS = 4
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
         loader = dm.test_loader
