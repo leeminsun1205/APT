@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
+import torch.multiprocessing as mp
 
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
@@ -84,6 +85,8 @@ parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
+
     args = parser.parse_args()
     cfg = CfgNode()
     cfg.set_new_allowed(True)
