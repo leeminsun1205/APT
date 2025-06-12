@@ -147,7 +147,8 @@ if __name__ == '__main__':
         cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
         dm = DataManager(cfg)
         classes = dm.dataset.classnames
-        loader = dm.test_loader
+        # loader = dm.test_loader
+        loader = 4
         num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
