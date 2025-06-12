@@ -215,7 +215,6 @@ if __name__ == '__main__':
                            atk_prompt=attack_prompt,
                            cfg=cfg)
     model = model.cuda()
-    prompts = model._get_prompts()
     model.eval()
 
 

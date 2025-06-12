@@ -14,17 +14,10 @@ from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
 
-import datasets.oxford_pets
-import datasets.oxford_flowers
-import datasets.fgvc_aircraft
-import datasets.dtd
-import datasets.eurosat
-import datasets.stanford_cars
-import datasets.food101
-import datasets.sun397
-import datasets.caltech101
-import datasets.ucf101
-import datasets.imagenet
+from datasets import (
+    oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
+    stanford_cars, food101, sun397, caltech101, ucf101, imagenet
+)
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -33,7 +26,6 @@ from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 
 from utils import *
-
 
 def CWLoss(output, target, confidence=0):
     """
@@ -76,24 +68,23 @@ def pgd(imgs, targets, model, criterion, eps, eps_step, max_iter, pert=None, ig=
     return adv, pert
 
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument('experiment')
-parser.add_argument('-cp','--cls-prompt', default='a photo of a {}')
-parser.add_argument('-ap','--atk-prompt', default=None)
+parser.add_argument('experiment', type=str, help="Name or type of experiment to run.")
+parser.add_argument('-cp','--cls-prompt', type=str, default='a photo of a {}')
+parser.add_argument('-ap','--atk-prompt', type=str, default=None)
 parser.add_argument('--best-checkpoint', action='store_true')
 parser.add_argument('--rob', action='store_true')
-parser.add_argument('--model', default='ALIGN')
-parser.add_argument('--save-path', type=str, default = None,
+parser.add_argument('--model', default='CLIP', choices=['ALIGN', 'BLIP', 'CLIP'])
+parser.add_argument('--save-path', type=str, default = './',
                     help="Specific path to save images. Default is ./")
 parser.add_argument('--attack', default='pgd')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
+parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
 
 if __name__ == '__main__':
     args = parser.parse_args()
-
     cfg = CfgNode()
     cfg.set_new_allowed(True)
     cfg_path = os.path.join(args.experiment, 'cfg.yaml')
@@ -184,27 +175,26 @@ if __name__ == '__main__':
                                              pin_memory=True)
         
     model, processor, tokenizer = None, None, None
-    if args.model == 'ALIGN':
+    if args.model == 'CLIP':
+        print('model: CLIP')
+        model, _ = clip.load(cfg.MODEL.BACKBONE.NAME, device='cpu')
+    elif args.model == 'ALIGN':
         print('model: ALIGN')
         model = AlignModel.from_pretrained("kakaobrain/align-base")
         processor = AutoProcessor.from_pretrained("kakaobrain/align-base")
         tokenizer = AutoTokenizer.from_pretrained("kakaobrain/align-base")
-    elif args.model == 'BLIP2':
-        print('model: BLIP2')
-        model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b")
-        processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
-        tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
     elif args.model == 'BLIP':
         print('model: BLIP')
         model, _, _ = load_model_and_preprocess("blip_feature_extractor", model_type="base", is_eval=True, device='cuda')
     else:
         raise ValueError(f'Unknown model: {args.model}')
-
-    # ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
-    # eps = int(cfg.AT.EPS * 255)
-    # ckp_name += f'_eps{eps}.pth.tar'
-    # ckp = torch.load(os.path.join('backbone', ckp_name))
-    # model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
+    
+    if args.pre_AT:
+        ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
+        eps = int(cfg.AT.EPS * 255)
+        ckp_name += f'_eps{eps}.pth.tar'
+        ckp = torch.load(os.path.join('backbone', ckp_name))
+        model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
@@ -225,18 +215,25 @@ if __name__ == '__main__':
         ckp = torch.load(os.path.join(cfg.OUTPUT_DIR, 'linear_probe/linear.pth.tar'))
         model.linear.load_state_dict(ckp)
     else:
-        if args.model == 'BLIP':
-            model = CustomBLIP(model,
-                            classes,
-                            cls_prompt=classify_prompt,
-                            atk_prompt=attack_prompt,)
-        else:
+        if args.model == 'ALIGN':
             model = CustomALIGN(model,
                             tokenizer,
                             classes,
                             cls_prompt=classify_prompt,
                             atk_prompt=attack_prompt,)
     
+        elif args.model == 'BLIP':
+            model = CustomBLIP(model,
+                            classes,
+                            cls_prompt=classify_prompt,
+                            atk_prompt=attack_prompt,)
+        elif args.model == 'CLIP':
+            model = CustomCLIP(model,
+                            classes,
+                            cls_prompt=classify_prompt,
+                            atk_prompt=attack_prompt,
+                            cfg=cfg)
+        
     model = model.cuda()
     model.eval()
 
@@ -272,7 +269,7 @@ if __name__ == '__main__':
         imgs, tgts = imgs.cuda(), tgts.cuda()
         bs = imgs.size(0)
         image_inputs = imgs
-        if args.model != 'BLIP':
+        if args.model == 'ALIGN':
             imgs = [ToPILImage()(img.float()) for img in imgs]
             image_inputs = processor(images=imgs, return_tensors="pt")
             image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
@@ -280,15 +277,16 @@ if __name__ == '__main__':
             output = model(image_inputs)
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
-
         if args.rob:
             model.mode = 'attack'
 
             if args.model == 'BLIP':
                 pixel_values = imgs
-            else:
+            elif args.model == 'ALIGN':
                 pixel_values = image_inputs["pixel_values"]
                 pixel_values.requires_grad_()
+            elif args.model == 'CLIP':
+                pixel_values = imgs.requires_grad_()
 
             if args.attack == 'aa':
                 advs = attack.run_standard_evaluation(pixel_values, tgts, bs=bs)
@@ -297,7 +295,7 @@ if __name__ == '__main__':
             else:
                 advs, _ = pgd(pixel_values, tgts, model, CWLoss, eps, alpha, steps)
 
-            if args.model != 'BLIP':
+            if args.model == 'ALIGN':
                 advs = [ToPILImage()(adv.float()) for adv in advs]
                 adv_inputs = processor(images=advs, return_tensors="pt")
                 adv_inputs = {k: v.cuda() for k, v in adv_inputs.items()}
