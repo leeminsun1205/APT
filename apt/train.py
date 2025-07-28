@@ -6,7 +6,6 @@ from yacs.config import CfgNode as CN
 from dassl.utils import setup_logger, set_random_seed, collect_env_info
 from dassl.config import get_cfg_default
 from dassl.engine import build_trainer
-from dassl.optim import lr_scheduler
 
 # custom
 import datasets.oxford_pets
@@ -23,11 +22,17 @@ import datasets.imagenet
 
 import trainers.apt_clip
 
-def new_scheduler_init(self, optimizer, last_epoch=-1):
-    # Hàm __init__ mới này không nhận tham số 'verbose'
-    super(lr_scheduler.WarmupMultiStepLR, self).__init__(optimizer, last_epoch)
+from torch.optim.lr_scheduler import _LRScheduler
+import dassl.optim.lr_scheduler as lr_scheduler
 
-lr_scheduler.WarmupMultiStepLR.__init__ = new_scheduler_init
+def new_warmup_scheduler_init(self, optimizer, last_epoch=-1, verbose=False):
+    # Hàm __init__ mới này sẽ gọi super() một cách chính xác
+    # mà không truyền 'verbose' vào hàm khởi tạo của Pytorch.
+    super(lr_scheduler.WarmupScheduler, self).__init__(optimizer, last_epoch)
+    self.verbose = verbose # Ta vẫn có thể lưu lại verbose nếu cần dùng sau này
+
+# Ghi đè hàm __init__ cũ bị lỗi của lớp WarmupScheduler
+lr_scheduler.WarmupScheduler.__init__ = new_warmup_scheduler_init
 
 def print_args(args, cfg):
     print("***************")
