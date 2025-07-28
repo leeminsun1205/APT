@@ -20,7 +20,7 @@ import datasets.caltech101
 import datasets.ucf101
 import datasets.imagenet
 
-import trainers.apt
+import trainers.apt_clip
 
 def print_args(args, cfg):
     print("***************")
