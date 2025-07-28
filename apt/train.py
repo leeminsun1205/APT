@@ -6,6 +6,7 @@ from yacs.config import CfgNode as CN
 from dassl.utils import setup_logger, set_random_seed, collect_env_info
 from dassl.config import get_cfg_default
 from dassl.engine import build_trainer
+from dassl.optim import lr_scheduler
 
 # custom
 import datasets.oxford_pets
@@ -21,6 +22,12 @@ import datasets.ucf101
 import datasets.imagenet
 
 import trainers.apt_clip
+
+def new_scheduler_init(self, optimizer, last_epoch=-1):
+    # Hàm __init__ mới này không nhận tham số 'verbose'
+    super(lr_scheduler.WarmupMultiStepLR, self).__init__(optimizer, last_epoch)
+
+lr_scheduler.WarmupMultiStepLR.__init__ = new_scheduler_init
 
 def print_args(args, cfg):
     print("***************")
