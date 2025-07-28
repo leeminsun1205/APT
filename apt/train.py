@@ -22,18 +22,6 @@ import datasets.imagenet
 
 import trainers.apt_clip
 
-from torch.optim.lr_scheduler import _LRScheduler
-import dassl.optim.lr_scheduler as lr_scheduler
-
-def new_warmup_scheduler_init(self, optimizer, last_epoch=-1, verbose=False):
-    # Hàm __init__ mới này sẽ gọi super() một cách chính xác
-    # mà không truyền 'verbose' vào hàm khởi tạo của Pytorch.
-    super(lr_scheduler._BaseWarmupScheduler, self).__init__(optimizer, last_epoch)
-    self.verbose = verbose # Ta vẫn có thể lưu lại verbose nếu cần dùng sau này
-
-# Ghi đè hàm __init__ cũ bị lỗi của lớp WarmupScheduler
-lr_scheduler._BaseWarmupScheduler.__init__ = new_warmup_scheduler_init
-
 def print_args(args, cfg):
     print("***************")
     print("** Arguments **")
