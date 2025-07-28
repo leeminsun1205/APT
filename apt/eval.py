@@ -10,7 +10,7 @@ from yacs.config import CfgNode
 import yaml
 import argparse
 from torchvision.datasets import *
-from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
+from transformers import AutoTokenizer, AutoProcessor, AlignModel
 from torch.autograd import grad, Variable
 from torchvision.datasets import CIFAR10
 from addict import Dict

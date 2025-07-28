@@ -1,3 +1,2 @@
 torchattacks
-addict
 git+https://github.com/fra31/auto-attack

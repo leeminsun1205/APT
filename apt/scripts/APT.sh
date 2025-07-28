@@ -17,20 +17,26 @@ SEED=${10}
 ATP=${11}
 PALPHA=${12}
 
-
+#pertubed
 if [ ${ATP} == 'perturbed' ]
 then
     DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/eps${EPS}_alpha${ALPHA}_step${STEPS}_${ATP}_${PALPHA}/seed${SEED}
+
+#constant
 elif [ ${ATP} == 'constant' ]
 then
     DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/eps${EPS}_alpha${ALPHA}_step${STEPS}_${ATP}/seed${SEED}
+
+#onfly
 else
     DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/eps${EPS}_alpha${ALPHA}_step${STEPS}/seed${SEED}
 fi
 
-
+#results existed
 if [ -d "$DIR" ]; then
     echo "Oops! The results exist at ${DIR} (so skip this job)"
+
+#train is implemented
 else
     python train.py \
     --root ${DATA} \

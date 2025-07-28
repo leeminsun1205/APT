@@ -1,10 +1,7 @@
 import os.path as osp
 from tqdm import tqdm
 import copy
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # Điều này giúp tránh lỗi trong môi trường không GUI
-import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -238,9 +235,10 @@ class CustomCLIP(nn.Module):
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
-        
+
         return logits
 
 
@@ -400,7 +398,7 @@ class APT(CoOp):
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optim)
             self.scaler.update()
-        elif self.cfg.AT.PROMPT == 'optimized':
+        elif self.cfg.AT.PROMPT == 'perturbed':
             state = copy.deepcopy(self.model.prompt_learner.state_dict())
             delta = torch.zeros_like(image).uniform_(-eps, eps)
             for _ in range(steps):
