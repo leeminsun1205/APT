@@ -264,7 +264,7 @@ class CoOp(TrainerX):
             ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
             eps = int(cfg.AT.EPS * 255)
             ckp_name += f'_eps{eps}.pth.tar'
-            ckp = torch.load(osp.join('backbone', ckp_name))
+            ckp = torch.load(osp.join('backbone', ckp_name), weights_only=False)
             clip_model.visual.load_state_dict(ckp['vision_encoder_state_dict'])
 
         if cfg.TRAINER.COOP.PREC == "fp32" or cfg.TRAINER.COOP.PREC == "amp":
