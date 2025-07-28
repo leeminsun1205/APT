@@ -5,7 +5,7 @@ from typing import Tuple
 from torch import Tensor
 from clip import clip
 import torch.nn.functional as F
-from trainers.apt import PromptLearner, TextEncoder
+from trainers.apt_clip import PromptLearner, TextEncoder
 from clip.simple_tokenizer import SimpleTokenizer 
 from eval_clip import load_clip_to_cpu
 mu = (0.48145466, 0.4578275, 0.40821073)
