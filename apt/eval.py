@@ -19,6 +19,7 @@ from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
+from torchvision.transforms import ToPILImage
 
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
