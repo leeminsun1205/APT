@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA=TODO_replace_with_data_root_path
+DATA=kaggle/input/
 TRAINER=APT
 
 DATASET=$1
