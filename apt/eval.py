@@ -9,10 +9,9 @@ import torch
 from yacs.config import CfgNode
 import yaml
 import argparse
-from torchvision.datasets import *
+import clip # Thêm import này
 from transformers import AutoTokenizer, AutoProcessor, AlignModel
 from torch.autograd import grad, Variable
-from torchvision.datasets import CIFAR10
 from addict import Dict
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -21,10 +20,13 @@ from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
 from torchvision.transforms import ToPILImage
 
+# Import các dataset tùy chỉnh
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
     stanford_cars, food101, sun397, caltech101, ucf101
 )
+# Import hàm load_cifar mới
+from datasets.cifar import load_cifar
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -124,31 +126,25 @@ if __name__ == '__main__':
     num_classes = None
     classes = None
     loader = None
-    if args.dataset == 'Cifar10':     
-        num_classes = 10
-        classes = [
-            'airplanes',
-            'cars',
-            'birds',
-            'cats',
-            'deers',
-            'dogs',
-            'frogs',
-            'horses',
-            'ships',
-            'trucks',
-        ]
+    
+    if args.dataset in ['Cifar10', 'Cifar100']:
+        # Xác định processor dựa trên model
         if args.model == 'BLIP':
+            # Giữ lại logic gốc của bạn để tải processor cho BLIP
             _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
         else:
+            # Processor mặc định cho các model khác
             processor = transforms.Compose([
                 transforms.ToTensor()
             ])
-        testset = CIFAR10(root='./data', transform=processor, train=False, download=True)
-        loader = DataLoader(testset,
-                       batch_size=args.batch_size,
-                       num_workers=4,
-                       sampler=SequentialSampler(testset),)
+        
+        # Gọi hàm load_cifar để lấy loader, classes và num_classes
+        loader, classes, num_classes = load_cifar(
+            dataset_name=args.dataset,
+            processor=processor,
+            batch_size=args.batch_size,
+            num_workers=4
+        )
 
     else:    
         cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
