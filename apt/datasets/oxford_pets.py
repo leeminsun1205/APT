@@ -12,6 +12,7 @@ from dassl.utils import read_json, write_json, mkdir_if_missing
 class OxfordPets(DatasetBase):
 
     dataset_dir = "oxford_pets"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

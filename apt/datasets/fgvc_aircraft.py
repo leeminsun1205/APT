@@ -11,12 +11,13 @@ from .oxford_pets import OxfordPets
 class FGVCAircraft(DatasetBase):
 
     dataset_dir = "fgvc_aircraft"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
         self.dataset_dir = os.path.join(root, self.dataset_dir)
         self.image_dir = os.path.join(self.dataset_dir, "images")
-        self.split_fewshot_dir = os.path.join(self.dataset_dir, "split_fewshot")
+        self.split_fewshot_dir = os.path.join(self.data_temp, "split_fewshot")
         mkdir_if_missing(self.split_fewshot_dir)
 
         classnames = []

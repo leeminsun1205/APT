@@ -12,6 +12,7 @@ from .dtd import DescribableTextures as DTD
 class Food101(DatasetBase):
 
     dataset_dir = "food-101"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

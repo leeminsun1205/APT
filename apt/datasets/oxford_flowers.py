@@ -14,6 +14,7 @@ from .oxford_pets import OxfordPets
 class OxfordFlowers(DatasetBase):
 
     dataset_dir = "oxford_flowers"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

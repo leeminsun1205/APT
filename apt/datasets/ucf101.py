@@ -12,6 +12,7 @@ from .oxford_pets import OxfordPets
 class UCF101(DatasetBase):
 
     dataset_dir = "ucf101"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
