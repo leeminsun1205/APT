@@ -7,7 +7,7 @@ from clip import clip
 import torch.nn.functional as F
 from trainers.apt_clip import PromptLearner, TextEncoder
 from clip.simple_tokenizer import SimpleTokenizer 
-from eval_clip import load_clip_to_cpu
+from helpers.eval_clip_more_funcs import load_clip_to_cpu
 mu = (0.48145466, 0.4578275, 0.40821073)
 std = (0.26862954, 0.26130258, 0.27577711)
 
