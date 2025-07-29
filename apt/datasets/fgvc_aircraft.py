@@ -10,7 +10,7 @@ from .oxford_pets import OxfordPets
 @DATASET_REGISTRY.register()
 class FGVCAircraft(DatasetBase):
 
-    dataset_dir = "fgvc_aircraft"
+    dataset_dir = "fgvc-aircraft"
     data_temp = "data_temp"
 
     def __init__(self, cfg):

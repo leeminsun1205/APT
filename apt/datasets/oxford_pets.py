@@ -11,7 +11,7 @@ from dassl.utils import read_json, write_json, mkdir_if_missing
 @DATASET_REGISTRY.register()
 class OxfordPets(DatasetBase):
 
-    dataset_dir = "oxford_pets"
+    dataset_dir = "oxford-pets"
     data_temp = "data_temp"
 
     def __init__(self, cfg):

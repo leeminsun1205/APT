@@ -11,7 +11,7 @@ from .oxford_pets import OxfordPets
 @DATASET_REGISTRY.register()
 class DescribableTextures(DatasetBase):
 
-    dataset_dir = "dtd"
+    dataset_dir = "dtd-data"
     data_temp = "data_temp"
 
     def __init__(self, cfg):

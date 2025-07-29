@@ -13,7 +13,7 @@ from .oxford_pets import OxfordPets
 @DATASET_REGISTRY.register()
 class OxfordFlowers(DatasetBase):
 
-    dataset_dir = "oxford_flowers"
+    dataset_dir = "oxford-flowers"
     data_temp = "data_temp"
 
     def __init__(self, cfg):
