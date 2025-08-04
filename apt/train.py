@@ -71,7 +71,10 @@ def reset_cfg(cfg, args):
 
     if args.head:
         cfg.MODEL.HEAD.NAME = args.head
-        
+    
+    if args.no_backbone:
+        cfg.MODEL.BACKBONE.USE_BACKBONE = False
+    
     cfg.AT = CN()
     cfg.AT.EPS = args.eps / 255.0
     cfg.AT.ALPHA = args.alpha / 255.0
@@ -102,6 +105,8 @@ def extend_cfg(cfg):
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
 
     cfg.MODEL.BACKBONE.ROBUST = True
+    
+    cfg.MODEL.BACKBONE.USE_BACKBONE = True
     
 def setup_cfg(args):
     cfg = get_cfg_default()
@@ -205,6 +210,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--no-train", action="store_true", help="do not call trainer.train()"
+    )
+    parser.add_argument(
+        "--no-backbone", action="store_true", help="Do not use a pre-trained backbone"
     )
     parser.add_argument(
         "opts",

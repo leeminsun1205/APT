@@ -260,12 +260,21 @@ class CoOp(TrainerX):
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)#.to(self.device)
 
-        if cfg.MODEL.BACKBONE.ROBUST:
-            ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
-            eps = int(cfg.AT.EPS * 255)
-            ckp_name += f'_eps{eps}.pth.tar'
-            ckp = torch.load(osp.join('backbone', ckp_name), weights_only=False)
-            clip_model.visual.load_state_dict(ckp['vision_encoder_state_dict'])
+        if cfg.MODEL.BACKBONE.USE_BACKBONE:
+            print("Using a pre-trained backbone.")
+            if cfg.MODEL.BACKBONE.ROBUST:
+                ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
+                eps = int(cfg.AT.EPS * 255)
+                ckp_name += f'_eps{eps}.pth.tar'
+                ckp_path = osp.join('backbone', ckp_name)
+                if osp.exists(ckp_path):
+                    print(f"Loading robust backbone from {ckp_path}")
+                    ckp = torch.load(ckp_path, map_location="cpu", weights_only=False)
+                    clip_model.visual.load_state_dict(ckp['vision_encoder_state_dict'])
+                else:
+                    print(f"Warning: Backbone checkpoint not found at {ckp_path}. Using the original CLIP backbone.")
+        else:
+            print("Not using a pre-trained backbone.")
 
         if cfg.TRAINER.COOP.PREC == "fp32" or cfg.TRAINER.COOP.PREC == "amp":
             # CLIP's default precision is fp16

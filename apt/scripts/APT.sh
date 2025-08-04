@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA=kaggle/input/
+DATA=/kaggle/input/
 TRAINER=APT
 
 DATASET=$1
