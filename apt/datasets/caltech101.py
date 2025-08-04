@@ -20,27 +20,21 @@ NEW_CNAMES = {
 class Caltech101(DatasetBase):
 
     dataset_dir = "caltech-101"
-    # Thư mục tạm để lưu các tệp có thể ghi
-    data_temp_dir = "data_temp"
+    data_temp = "data_temp"
 
     def __init__(self, cfg):
-        root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
+        # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
+        root = '/kaggle/input/'
         self.dataset_dir = os.path.join(root, self.dataset_dir)
         self.image_dir = os.path.join(self.dataset_dir, "101_ObjectCategories")
-        
-        # Tạo thư mục tạm nếu chưa có
-        mkdir_if_missing(self.data_temp_dir)
-        
-        # **SỬA LỖI:** Chuyển đường dẫn của split file vào thư mục có thể ghi
-        self.split_path = os.path.join(self.data_temp_dir, "split_zhou_Caltech101.json")
-        self.split_fewshot_dir = os.path.join(self.data_temp_dir, "split_fewshot")
+        self.split_path = os.path.join(self.dataset_dir, "split_zhou_Caltech101.json")
+        self.split_fewshot_dir = os.path.join(self.data_temp, "split_fewshot")
         mkdir_if_missing(self.split_fewshot_dir)
 
         if os.path.exists(self.split_path):
             train, val, test = OxfordPets.read_split(self.split_path, self.image_dir)
         else:
             train, val, test = DTD.read_and_split_data(self.image_dir, ignored=IGNORED, new_cnames=NEW_CNAMES)
-            # Lưu split file vào thư mục có thể ghi
             OxfordPets.save_split(train, val, test, self.split_path, self.image_dir)
 
         num_shots = cfg.DATASET.NUM_SHOTS
