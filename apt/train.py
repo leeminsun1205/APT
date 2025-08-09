@@ -26,6 +26,8 @@ import datasets.caltech101
 import datasets.ucf101
 
 import trainers.apt_clip
+import datasets.cifar
+
 
 def print_args(args, cfg):
     print("***************")
