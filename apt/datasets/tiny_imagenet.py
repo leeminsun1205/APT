@@ -51,7 +51,7 @@ def _read_val_items(val_dir, wnid_to_label, wnid2name):
     with open(anno, "r") as f:
         for line in f:
             # <filename> <wnid> <x1> <y1> <x2> <y2>
-            parts = line.strip().split("\t")[0].split()
+            parts = line.strip().split()  # robust: mọi khoảng trắng
             if len(parts) < 2:
                 continue
             fn, wnid = parts[0], parts[1]
