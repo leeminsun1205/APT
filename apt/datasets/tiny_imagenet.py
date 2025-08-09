@@ -96,7 +96,7 @@ class TinyImagenet(DatasetBase):
 
     def __init__(self, cfg):
         # base root (read-only on Kaggle if /kaggle/input)
-        root_cfg = getattr(cfg.DATASET, "ROOT", "/kaggle/input/")
+        root_cfg = "/kaggle/input/"
         self.dataset_dir = os.path.join(root_cfg, self.dataset_dir)
 
         # where we store split JSON & few-shot cache (writable)
