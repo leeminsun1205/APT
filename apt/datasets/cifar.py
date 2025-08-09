@@ -155,14 +155,14 @@ class _CIFARBase(DatasetBase):
 
 
 @DATASET_REGISTRY.register()
-class Cifar10(_CIFARBase):
+class Cifar10Dassl(_CIFARBase):
     dataset_dir = "cifar10-data"
     torchvision_name = "CIFAR10"
     split_filename = "split_zhou_CIFAR10.json"
 
 
 @DATASET_REGISTRY.register()
-class Cifar10(_CIFARBase):
+class Cifar10Dassl(_CIFARBase):
     dataset_dir = "cifar100-data"
     torchvision_name = "CIFAR100"
     split_filename = "split_zhou_CIFAR100.json"
