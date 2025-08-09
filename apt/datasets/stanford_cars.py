@@ -11,7 +11,7 @@ from .oxford_pets import OxfordPets
 @DATASET_REGISTRY.register()
 class StanfordCars(DatasetBase):
 
-    dataset_dir = "stanford_cars"
+    dataset_dir = "stanford-cars"
     data_temp = "data_temp"
 
     def __init__(self, cfg):
