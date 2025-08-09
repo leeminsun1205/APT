@@ -24,9 +24,12 @@ import datasets.food101
 import datasets.sun397
 import datasets.caltech101
 import datasets.ucf101
+import datasets.tiny_imagenet
+import datasets.cifar
+
 
 import trainers.apt_clip
-import datasets.cifar
+
 
 
 def print_args(args, cfg):
