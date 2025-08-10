@@ -22,7 +22,7 @@ from lavis.models import load_model_and_preprocess
 
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
-    stanford_cars, food101, sun397, caltech101, ucf101, imagenet
+    stanford_cars, food101, sun397, caltech101, ucf101
 )
 
 import os
