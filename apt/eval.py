@@ -23,7 +23,7 @@ from torchvision.transforms import ToPILImage
 # Import các dataset tùy chỉnh
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
-    stanford_cars, food101, sun397, caltech101, ucf101, cifar
+    stanford_cars, food101, sun397, caltech101, ucf101, cifar, tiny_imagenet
 )
 # # Import hàm load_cifar mới
 # from datasets.cifar import load_cifar
