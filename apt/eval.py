@@ -26,7 +26,7 @@ from datasets import (
     stanford_cars, food101, sun397, caltech101, ucf101, tiny_imagenet
 )
 # Import hàm load_cifar mới
-from datasets.cifar import load_cifar
+from datasets.cifar_eval import load_cifar
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
