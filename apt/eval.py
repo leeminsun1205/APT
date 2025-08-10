@@ -128,17 +128,24 @@ if __name__ == '__main__':
     loader = None
     
     if args.dataset in ['Cifar10', 'Cifar100']:
-        # Xác định processor dựa trên model
-        if args.model == 'BLIP':
-            # Giữ lại logic gốc của bạn để tải processor cho BLIP
-            _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
-        else:
-            # Processor mặc định cho các model khác
-            processor = transforms.Compose([
-                transforms.ToTensor()
-            ])
-        
-        # Gọi hàm load_cifar để lấy loader, classes và num_classes
+        # Chọn đúng processor theo model
+        if args.model == 'CLIP':
+            # Lấy preprocess chuẩn CLIP (Resize+CenterCrop+Normalize...)
+            _, processor = clip.load(cfg.MODEL.BACKBONE.NAME, device='cpu', jit=False)
+
+        elif args.model == 'BLIP':
+            # Lấy đúng pipeline eval của BLIP từ LAVIS (không dùng CLIP preprocess)
+            _, vis_processors, _ = load_model_and_preprocess(
+                "blip_feature_extractor", model_type="base", is_eval=True, device='cpu'
+            )
+            processor = vis_processors["eval"]
+
+        else:  # ALIGN
+            # Với ALIGN, giữ ToTensor() để DataLoader trả tensor;
+            # trong loop bạn đã convert sang PIL và gọi AutoProcessor rồi.
+            processor = transforms.Compose([transforms.ToTensor()])
+
+        # Gọi hàm loader dùng processor vừa chọn
         loader, classes, num_classes = load_cifar(
             dataset_name=args.dataset,
             processor=processor,
