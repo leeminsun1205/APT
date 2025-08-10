@@ -1,5 +1,4 @@
 # datasets/cifar.py
-from typing import Tuple, List
 from torch.utils.data import DataLoader, SequentialSampler
 from torchvision.datasets import CIFAR10, CIFAR100
 

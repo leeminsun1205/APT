@@ -9,24 +9,21 @@ import torch
 from yacs.config import CfgNode
 import yaml
 import argparse
-import clip # Thêm import này
-from transformers import AutoTokenizer, AutoProcessor, AlignModel
+from torchvision.datasets import *
+from transformers import AutoTokenizer, AutoProcessor, AlignModel, Blip2Model
 from torch.autograd import grad, Variable
+from torchvision.datasets import CIFAR10
 from addict import Dict
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from dassl.data import DataManager
 from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
-from torchvision.transforms import ToPILImage
 
-# Import các dataset tùy chỉnh
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
-    stanford_cars, food101, sun397, caltech101, ucf101, tiny_imagenet
+    stanford_cars, food101, sun397, caltech101, ucf101, imagenet
 )
-# Import hàm load_cifar mới
-from datasets.cifar_eval import load_cifar
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -126,32 +123,31 @@ if __name__ == '__main__':
     num_classes = None
     classes = None
     loader = None
-    
-    if args.dataset in ['Cifar10', 'Cifar100']:
-        # Chọn đúng processor theo model
-        if args.model == 'CLIP':
-            # Lấy preprocess chuẩn CLIP (Resize+CenterCrop+Normalize...)
-            _, processor = clip.load(cfg.MODEL.BACKBONE.NAME, device='cpu', jit=False)
-
-        elif args.model == 'BLIP':
-            # Lấy đúng pipeline eval của BLIP từ LAVIS (không dùng CLIP preprocess)
-            _, vis_processors, _ = load_model_and_preprocess(
-                "blip_feature_extractor", model_type="base", is_eval=True, device='cpu'
-            )
-            processor = vis_processors["eval"]
-
-        else:  # ALIGN
-            # Với ALIGN, giữ ToTensor() để DataLoader trả tensor;
-            # trong loop bạn đã convert sang PIL và gọi AutoProcessor rồi.
-            processor = transforms.Compose([transforms.ToTensor()])
-
-        # Gọi hàm loader dùng processor vừa chọn
-        loader, classes, num_classes = load_cifar(
-            dataset_name=args.dataset,
-            processor=processor,
-            batch_size=args.batch_size,
-            num_workers=4
-        )
+    if args.dataset == 'Cifar10':     
+        num_classes = 10
+        classes = [
+            'airplanes',
+            'cars',
+            'birds',
+            'cats',
+            'deers',
+            'dogs',
+            'frogs',
+            'horses',
+            'ships',
+            'trucks',
+        ]
+        if args.model == 'BLIP':
+            _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
+        else:
+            processor = transforms.Compose([
+                transforms.ToTensor()
+            ])
+        testset = CIFAR10(root='./data', transform=processor, train=False, download=True)
+        loader = DataLoader(testset,
+                       batch_size=args.batch_size,
+                       num_workers=4,
+                       sampler=SequentialSampler(testset),)
 
     else:    
         cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
