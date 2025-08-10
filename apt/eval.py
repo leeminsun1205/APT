@@ -23,10 +23,10 @@ from torchvision.transforms import ToPILImage
 # Import các dataset tùy chỉnh
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
-    stanford_cars, food101, sun397, caltech101, ucf101
+    stanford_cars, food101, sun397, caltech101, ucf101, cifar
 )
-# Import hàm load_cifar mới
-from datasets.cifar import load_cifar
+# # Import hàm load_cifar mới
+# from datasets.cifar import load_cifar
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -127,32 +127,32 @@ if __name__ == '__main__':
     classes = None
     loader = None
     
-    if args.dataset in ['Cifar10', 'Cifar100']:
-        # Xác định processor dựa trên model
-        if args.model == 'BLIP':
-            # Giữ lại logic gốc của bạn để tải processor cho BLIP
-            _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
-        else:
-            # Processor mặc định cho các model khác
-            processor = transforms.Compose([
-                transforms.ToTensor()
-            ])
+    # if args.dataset in ['Cifar10', 'Cifar100']:
+    #     # Xác định processor dựa trên model
+    #     if args.model == 'BLIP':
+    #         # Giữ lại logic gốc của bạn để tải processor cho BLIP
+    #         _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
+    #     else:
+    #         # Processor mặc định cho các model khác
+    #         processor = transforms.Compose([
+    #             transforms.ToTensor()
+    #         ])
         
-        # Gọi hàm load_cifar để lấy loader, classes và num_classes
-        loader, classes, num_classes = load_cifar(
-            dataset_name=args.dataset,
-            processor=processor,
-            batch_size=args.batch_size,
-            num_workers=4
-        )
+    #     # Gọi hàm load_cifar để lấy loader, classes và num_classes
+    #     loader, classes, num_classes = load_cifar(
+    #         dataset_name=args.dataset,
+    #         processor=processor,
+    #         batch_size=args.batch_size,
+    #         num_workers=4
+    #     )
 
-    else:    
-        cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
-        cfg.DATALOADER.NUM_WORKERS = 4
-        dm = DataManager(cfg)
-        classes = dm.dataset.classnames
-        loader = dm.test_loader
-        num_classes = dm.num_classes
+    # else:    
+    cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
+    cfg.DATALOADER.NUM_WORKERS = 4
+    dm = DataManager(cfg)
+    classes = dm.dataset.classnames
+    loader = dm.test_loader
+    num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
