@@ -1,37 +1,47 @@
 # datasets/cifar.py
-import torch
+from typing import Tuple, List
 from torch.utils.data import DataLoader, SequentialSampler
 from torchvision.datasets import CIFAR10, CIFAR100
-from torchvision import transforms
 
-def load_cifar(dataset_name: str, processor, batch_size: int, num_workers: int = 4):
-    
-    dataset_name = dataset_name.lower()
-    if dataset_name == 'cifar10':
-        dataset_class = CIFAR10
-    elif dataset_name == 'cifar100':
-        dataset_class = CIFAR100
-    else:
-        raise ValueError("Tên bộ dữ liệu không hợp lệ. Vui lòng chọn 'cifar10' hoặc 'cifar100'.")
+def load_cifar(
+    dataset_name: str,
+    processor,                   # transform/processor đã chuẩn bị sẵn (Compose hoặc callable)
+    batch_size: int = 100,
+    num_workers: int = 4,
+    root: str = "./data",
+):
+    """
+    Trả về (loader, classes, num_classes) cho Cifar10/Cifar100.
+    Không dùng lambda/closure để tránh lỗi pickling khi num_workers>0.
+    """
+    assert dataset_name in ["Cifar10", "Cifar100"], "dataset_name phải là 'Cifar10' hoặc 'Cifar100'"
 
-    # Tải tập dữ liệu test
-    testset = dataset_class(
-        root='./data', 
-        train=False, 
-        download=True, 
-        transform=processor
-    )
-    
-    # Lấy thông tin về lớp từ chính bộ dữ liệu
-    classes = testset.classes
-    num_classes = len(classes)
+    if dataset_name == "Cifar10":
+        ds = CIFAR10(root=root, transform=processor, train=False, download=True)
+        # Giữ nguyên danh sách classes như file gốc của bạn (dạng số nhiều).
+        classes = [
+            "airplanes",
+            "cars",
+            "birds",
+            "cats",
+            "deers",
+            "dogs",
+            "frogs",
+            "horses",
+            "ships",
+            "trucks",
+        ]
+        num_classes = 10
+    else:  # "Cifar100"
+        ds = CIFAR100(root=root, transform=processor, train=False, download=True)
+        # Với CIFAR100, dùng chính labels chuẩn đi kèm dataset (không tự liệt kê 100 lớp).
+        classes = list(ds.classes)
+        num_classes = 100
 
-    # Tạo DataLoader
     loader = DataLoader(
-        testset,
+        ds,
         batch_size=batch_size,
         num_workers=num_workers,
-        sampler=SequentialSampler(testset)
+        sampler=SequentialSampler(ds),
     )
-
     return loader, classes, num_classes
