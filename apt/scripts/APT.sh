@@ -18,25 +18,11 @@ SEED=${10}
 ATP=${11}
 PALPHA=${12}
 
-# 2. Xử lý các tham số TÙY CHỌN ($13 trở đi)
-RESUME=""
-EXTRA_ARGS=""
+# 2. Xử lý tham số TÙY CHỌN
+RUN_MODE=$13 # $13 là "resume" hoặc "train"
+EXTRA_ARGS="${@:14}" # $14 trở đi là --no-backbone
 
-if [ -n "$13" ] && [[ "$13" != -* ]]; then
-    RESUME=$13
-    EXTRA_ARGS="${@:14}"
-else
-    RESUME=""
-    EXTRA_ARGS="${@:13}"
-fi
-
-# 3. Kiểm tra resume (dựa trên biến RESUME)
-IS_RESUME=false
-if [ -n "$RESUME" ]; then
-    IS_RESUME=true
-fi
-
-# 4. Tạo đường dẫn DIR
+# 3. Tạo đường dẫn DIR (Một lần duy nhất)
 if [ ${ATP} == 'perturbed' ]
 then
     DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/eps${EPS}_alpha${ALPHA}_step${STEPS}_${ATP}_${PALPHA}/seed${SEED}
@@ -47,17 +33,21 @@ else
     DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/eps${EPS}_alpha${ALPHA}_step${STEPS}/seed${SEED}
 fi
 
+# 4. Xử lý resume
+RESUME_FLAG=""
+IS_RESUME=false
+if [ "$RUN_MODE" == "resume" ]; then
+    IS_RESUME=true
+    # Tự động gán cờ resume bằng chính đường dẫn DIR
+    RESUME_FLAG="--resume ${DIR}"
+fi
+
 # 5. Kiểm tra thư mục
 if [ "$IS_RESUME" = false ] && [ -d "$DIR" ]; then
     echo "Oops! The results exist at ${DIR} (so skip this job)"
 
 # 6. Chạy python
 else
-    RESUME_FLAG=""
-    if [ "$IS_RESUME" = true ]; then
-        RESUME_FLAG="--resume ${RESUME}"
-    fi
-    
     python train.py \
     --root ${DATA} \
     --trainer ${TRAINER} \
