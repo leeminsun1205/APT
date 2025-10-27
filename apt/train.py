@@ -155,9 +155,9 @@ def main(args):
     with open(os.path.join(cfg.OUTPUT_DIR, 'cfg.yaml'), 'w+') as f:
         f.write(cfg.dump())
         
-    if args.resume:
-        print(f"Resuming from checkpoint: {cfg.RESUME}")
-        trainer.load_model(cfg.RESUME)
+    # if args.resume:
+    #     print(f"Resuming from checkpoint: {cfg.RESUME}")
+    #     trainer.load_model(cfg.RESUME)
     
     if args.eval_only:
         trainer.load_model(args.model_dir, epoch=args.load_epoch)
