@@ -17,9 +17,7 @@ STEPS=$9
 SEED=${10}
 ATP=${11}
 PALPHA=${12}
-
-# 2. Xử lý tham số TÙY CHỌN
-RUN_MODE=$13 # $13 là "resume" hoặc "train"
+RUN_MODE=${13} # $13 là "resume" hoặc "train"
 EXTRA_ARGS="${@:14}" # $14 trở đi là --no-backbone
 
 # 3. Tạo đường dẫn DIR (Một lần duy nhất)
@@ -38,7 +36,6 @@ RESUME_FLAG=""
 IS_RESUME=false
 if [ "$RUN_MODE" == "resume" ]; then
     IS_RESUME=true
-    # Tự động gán cờ resume bằng chính đường dẫn DIR
     RESUME_FLAG="--resume ${DIR}"
 fi
 
@@ -59,7 +56,8 @@ else
     --steps ${STEPS} \
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
-    ${RESUME_FLAG} ${EXTRA_ARGS} \
+    ${RESUME_FLAG} \
+    ${EXTRA_ARGS} \
     TRAINER.COOP.N_CTX ${NCTX} \
     TRAINER.COOP.CSC ${CSC} \
     TRAINER.COOP.CLASS_TOKEN_POSITION ${CTP} \
