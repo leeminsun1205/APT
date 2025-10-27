@@ -18,21 +18,18 @@ SEED=${10}
 ATP=${11}
 PALPHA=${12}
 
-# --- BẮT ĐẦU LOGIC SỬA LỖI ---
-
 # 2. Xử lý các tham số TÙY CHỌN ($13 trở đi)
+# Logic này sẽ kiểm tra $13, nếu nó là đường dẫn thì dùng làm RESUME
+# nếu không (rỗng hoặc là cờ -*), nó sẽ cho vào EXTRA_ARGS
 RESUME=""
 EXTRA_ARGS=""
 
-# Kiểm tra xem $13 có tồn tại VÀ KHÔNG bắt đầu bằng dấu "-"
 if [ -n "$13" ] && [[ "$13" != -* ]]; then
-    # Nếu $13 là đường dẫn (ví dụ: /kaggle/...)
     RESUME=$13
     EXTRA_ARGS="${@:14}" # Lấy từ $14 (ví dụ: --no-backbone)
 else
-    # Nếu $13 rỗng HOẶC là cờ (ví dụ: --no-backbone)
     RESUME=""
-    EXTRA_ARGS="${@:13}" # Lấy từ $13
+    EXTRA_ARGS="${@:13}" # Lấy từ $13 (bao gồm $13 nếu nó là cờ)
 fi
 
 # 3. Kiểm tra resume (dựa trên biến RESUME)
@@ -40,9 +37,6 @@ IS_RESUME=false
 if [ -n "$RESUME" ]; then
     IS_RESUME=true
 fi
-
-# --- KẾT THÚC LOGIC SỬA LỖI ---
-
 
 # 4. Tạo đường dẫn DIR (Logic này của bạn đã đúng)
 #pertubed
@@ -62,7 +56,7 @@ fi
 if [ "$IS_RESUME" = false ] && [ -d "$DIR" ]; then
     echo "Oops! The results exist at ${DIR} (so skip this job)"
 
-# 6. Chạy python (đã sửa)
+# 6. Chạy python (đã sửa lỗi)
 else
     # Tạo cờ (flag) resume một cách an toàn
     RESUME_FLAG=""
@@ -81,8 +75,7 @@ else
     --steps ${STEPS} \
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
-    ${RESUME_FLAG} \   # <-- An toàn (sẽ rỗng nếu không resume)
-    ${EXTRA_ARGS} \    # <-- An toàn (sẽ chứa --no-backbone)
+    ${RESUME_FLAG} ${EXTRA_ARGS} \ # <--- SỬA LỖI: Đặt 2 biến an toàn trên CÙNG 1 DÒNG
     TRAINER.COOP.N_CTX ${NCTX} \
     TRAINER.COOP.CSC ${CSC} \
     TRAINER.COOP.CLASS_TOKEN_POSITION ${CTP} \
