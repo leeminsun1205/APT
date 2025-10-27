@@ -146,14 +146,18 @@ def main(args):
     if torch.cuda.is_available() and cfg.USE_CUDA:
         torch.backends.cudnn.benchmark = True
 
-    # print_args(args, cfg)
+    print_args(args, cfg)
     # print("Collecting env info ...")
     # print("** System info **\n{}\n".format(collect_env_info()))
-    
+
     trainer = build_trainer(cfg)
 
     with open(os.path.join(cfg.OUTPUT_DIR, 'cfg.yaml'), 'w+') as f:
         f.write(cfg.dump())
+        
+    if args.resume:
+        print(f"Resuming from checkpoint: {cfg.RESUME}")
+        trainer.load_model(cfg.RESUME)
     
     if args.eval_only:
         trainer.load_model(args.model_dir, epoch=args.load_epoch)
