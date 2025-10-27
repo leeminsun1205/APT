@@ -16,6 +16,13 @@ STEPS=$9  # number of steps for AT
 SEED=${10}
 ATP=${11}
 PALPHA=${12}
+IS_RESUME=false
+for arg in "$@"; do
+    if [[ "$arg" == "--resume" ]]; then
+        IS_RESUME=true
+        break
+    fi
+done
 RESUME=${13}
 
 
@@ -35,7 +42,7 @@ else
 fi
 
 #results existed
-if [ -d "$DIR" ]; then
+if [ "$IS_RESUME" = false ] && [ -d "$DIR" ]; then
     echo "Oops! The results exist at ${DIR} (so skip this job)"
 
 #train is implemented
