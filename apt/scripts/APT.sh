@@ -49,6 +49,10 @@ if [ "$IS_RESUME" = false ] && [ -d "$DIR" ]; then
 
 # 6. Chạy python (truyền tham số từ biến)
 else
+    RESUME_FLAG=""
+    if [ "$IS_RESUME" = true ]; then
+        RESUME_FLAG="--resume ${RESUME}"
+    fi
     python train.py \
     --root ${DATA} \
     --trainer ${TRAINER} \
@@ -60,7 +64,7 @@ else
     --steps ${STEPS} \
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
-    --resume "${RESUME}" \
+    ${RESUME_FLAG} \
     ${EXTRA_ARGS} \
     TRAINER.COOP.N_CTX ${NCTX} \
     TRAINER.COOP.CSC ${CSC} \
