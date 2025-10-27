@@ -61,10 +61,10 @@ else
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
     --resume "${RESUME}" \
+    ${EXTRA_ARGS} \
     TRAINER.COOP.N_CTX ${NCTX} \
     TRAINER.COOP.CSC ${CSC} \
     TRAINER.COOP.CLASS_TOKEN_POSITION ${CTP} \
     DATASET.NUM_SHOTS ${SHOTS} \
-    TRAIN.CHECKPOINT_FREQ 1 \
-    ${EXTRA_ARGS} # <--- Truyền các cờ "thêm" (như --no-backbone) vào đây
+    TRAIN.CHECKPOINT_FREQ 1 
 fi
