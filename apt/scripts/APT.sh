@@ -16,6 +16,8 @@ STEPS=$9  # number of steps for AT
 SEED=${10}
 ATP=${11}
 PALPHA=${12}
+RESUME=${13}
+
 
 #pertubed
 if [ ${ATP} == 'perturbed' ]
@@ -49,6 +51,7 @@ else
     --steps ${STEPS} \
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
+    --resume "${RESUME}" \
     TRAINER.COOP.N_CTX ${NCTX} \
     TRAINER.COOP.CSC ${CSC} \
     TRAINER.COOP.CLASS_TOKEN_POSITION ${CTP} \
