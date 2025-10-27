@@ -53,16 +53,6 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --eps ${EPS} \
-    --alpha ${ALPHA} \
-    --steps ${STEPS} \
-    --adv-prompt ${ATP} \
-    --prompt-alpha ${PALPHA} \
-    --resume "${RESUME}" \
-    TRAINER.COOP.N_CTX ${NCTX} \
-    TRAINER.COOP.CSC ${CSC} \
-    TRAINER.COOP.CLASS_TOKEN_POSITION ${CTP} \
-    DATASET.NUM_SHOTS ${SHOTS} \
     TRAIN.CHECKPOINT_FREQ 1 \
-    "$@"
+    "$@"  # <--- CHỈ GIỮ LẠI DÒNG NÀY
 fi
