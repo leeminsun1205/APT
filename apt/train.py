@@ -15,6 +15,21 @@ from dassl.utils import setup_logger, set_random_seed, collect_env_info
 from dassl.config import get_cfg_default
 from dassl.engine import build_trainer
 
+# Monkey patch for dassl.optim.lr_scheduler._BaseWarmupScheduler
+# due to LRScheduler.__init__ no longer accepting 'verbose'
+try:
+    import dassl.optim.lr_scheduler as dls
+    from torch.optim.lr_scheduler import _LRScheduler
+    
+    def new_init(self, optimizer, successor, warmup_epoch, last_epoch=-1, verbose=False):
+        self.successor = successor
+        self.warmup_epoch = warmup_epoch
+        _LRScheduler.__init__(self, optimizer, last_epoch)
+        
+    dls._BaseWarmupScheduler.__init__ = new_init
+except Exception as e:
+    print(f"Warning: Failed to patch dassl scheduler: {e}")
+
 # custom
 import datasets.oxford_pets
 import datasets.oxford_flowers
