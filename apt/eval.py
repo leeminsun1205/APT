@@ -8,6 +8,7 @@ import os
 import torch
 from yacs.config import CfgNode
 import yaml
+import json
 import argparse
 import clip # Thêm import này
 from transformers import AutoTokenizer, AutoProcessor, AlignModel
@@ -245,6 +246,31 @@ if __name__ == '__main__':
     meters = Dict()
     meters.acc = AverageMeter('Clean Acc@1', ':6.2f')
     meters.rob = AverageMeter('Robust Acc@1', ':6.2f')
+
+    # --- ADD RESUME LOGIC START ---
+    progress_file_path = save_path + ".progress.json"
+    start_batch = 1
+
+    if os.path.exists(progress_file_path):
+        print(f"*** Found progress file, reloading: {progress_file_path} ***")
+        try:
+            with open(progress_file_path, 'r') as f:
+                progress_data = json.load(f)
+            
+            start_batch = progress_data['last_batch'] + 1
+            meters.acc.sum = progress_data['acc_sum']
+            meters.acc.count = progress_data['acc_count']
+            meters.acc.avg = meters.acc.sum / meters.acc.count if meters.acc.count > 0 else 0
+            meters.rob.sum = progress_data['rob_sum']
+            meters.rob.count = progress_data['rob_count']
+            meters.rob.avg = meters.rob.sum / meters.rob.count if meters.rob.count > 0 else 0
+            print(f"*** Reload success! Resuming from batch {start_batch} ***")
+        except Exception as e:
+            print(f"Error loading progress file, starting from scratch. Error: {e}")
+            start_batch = 1
+            meters.acc.reset()
+            meters.rob.reset()
+    # --- ADD RESUME LOGIC END ---
     
     progress = ProgressMeter(
         len(loader),
@@ -267,6 +293,9 @@ if __name__ == '__main__':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
         
     for i, data in enumerate(loader, start=1):
+        if i < start_batch:
+            continue
+            
         try:
             imgs, tgts = data['img'], data['label']
         except:
@@ -318,6 +347,20 @@ if __name__ == '__main__':
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
+
+            # print(f"*** Saving progress at batch {i} to {progress_file_path} ***")
+            progress_data = {
+                'last_batch': i,
+                'acc_sum': meters.acc.sum,
+                'acc_count': meters.acc.count,
+                'rob_sum': meters.rob.sum,
+                'rob_count': meters.rob.count
+            }
+            try:
+                with open(progress_file_path, 'w') as f:
+                    json.dump(progress_data, f)
+            except Exception as e:
+                print(f"Warning: Could not save progress file. {e}")
             
     # save result
     if os.path.isfile(save_path):
@@ -335,3 +378,11 @@ if __name__ == '__main__':
         yaml.dump(result.to_dict(), f)
     
     print(f'result saved at: {save_path}')
+
+    # --- CLEANUP PROGRESS FILE ---
+    if os.path.exists(progress_file_path):
+        try:
+            os.remove(progress_file_path)
+            print(f"*** Evaluation complete. Deleted progress file: {progress_file_path} ***")
+        except OSError as e:
+            print(f"Warning: Could not delete progress file. {e}")

@@ -127,8 +127,11 @@ class TinyImagenet(DatasetBase):
             OxfordPets.save_split(train_x, val, test, self.split_path, path_prefix=self.dataset_dir)
             train, val = train_x, val
 
-        # few-shot
+        # few-shot (for all shot now only use 100 for computationally efficiency)
         num_shots = int(getattr(cfg.DATASET, "NUM_SHOTS", 0))
+        if num_shots == -1:
+            num_shots = 100
+
         if num_shots >= 1:
             seed = cfg.SEED
             cache = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
