@@ -198,8 +198,31 @@ if __name__ == '__main__':
         ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
         eps = int(cfg.AT.EPS * 255)
         ckp_name += f'_eps{eps}.pth.tar'
-        ckp = torch.load(os.path.join('backbone', ckp_name))
-        model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
+
+        ckp = torch.load(
+            os.path.join('backbone', ckp_name),
+            map_location='cpu'
+        )
+
+        state = ckp['vision_encoder_state_dict']
+
+        # ===== Case 1: OpenAI CLIP (clip.load) =====
+        if hasattr(model, 'visual'):
+            print('[INFO] Loading AT weights into OpenAI CLIP visual encoder')
+            missing, unexpected = model.visual.load_state_dict(state, strict=False)
+
+        # ===== Case 2: HuggingFace-style CLIP =====
+        elif hasattr(model, 'vision_model'):
+            print('[INFO] Loading AT weights into HF CLIP vision_model')
+            missing, unexpected = model.vision_model.load_state_dict(state, strict=False)
+
+        else:
+            raise RuntimeError('Unknown CLIP vision backbone structure')
+
+        print('[INFO] AT backbone loaded')
+        print('Missing keys:', missing)
+        print('Unexpected keys:', unexpected)
+
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
