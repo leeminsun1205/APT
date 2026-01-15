@@ -262,7 +262,6 @@ if __name__ == '__main__':
         ckp = torch.load(
             os.path.join('backbone', ckp_name),
             map_location='cpu',
-            weights_only=True
         )
 
         state = ckp['vision_encoder_state_dict']
