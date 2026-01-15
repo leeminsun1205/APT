@@ -8,8 +8,10 @@ import os
 import torch
 from yacs.config import CfgNode
 import yaml
+import json
 import argparse
-import clip # Thêm import này
+import clip
+import numpy as np
 from transformers import AutoTokenizer, AutoProcessor, AlignModel
 from torch.autograd import grad, Variable
 from addict import Dict
@@ -20,13 +22,14 @@ from torch.utils.data import SequentialSampler
 from lavis.models import load_model_and_preprocess
 from torchvision.transforms import ToPILImage
 
-# Import các dataset tùy chỉnh
+
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
     stanford_cars, food101, sun397, caltech101, ucf101, cifar
 )
-# # Import hàm load_cifar mới
-# from datasets.cifar import load_cifar
+from robustbench.data import load_cifar10c, load_cifar100c
+from torch.utils.data import TensorDataset
+
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -127,26 +130,7 @@ if __name__ == '__main__':
     classes = None
     loader = None
     
-    # if args.dataset in ['Cifar10', 'Cifar100']:
-    #     # Xác định processor dựa trên model
-    #     if args.model == 'BLIP':
-    #         # Giữ lại logic gốc của bạn để tải processor cho BLIP
-    #         _, processor = clip.load('ViT-B/32', device='cuda', jit=False)
-    #     else:
-    #         # Processor mặc định cho các model khác
-    #         processor = transforms.Compose([
-    #             transforms.ToTensor()
-    #         ])
-        
-    #     # Gọi hàm load_cifar để lấy loader, classes và num_classes
-    #     loader, classes, num_classes = load_cifar(
-    #         dataset_name=args.dataset,
-    #         processor=processor,
-    #         batch_size=args.batch_size,
-    #         num_workers=4
-    #     )
 
-    # else:    
     cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
     cfg.DATALOADER.NUM_WORKERS = 4
     dm = DataManager(cfg)
@@ -178,6 +162,82 @@ if __name__ == '__main__':
                                              shuffle=False,
                                              num_workers=4,
                                              pin_memory=True)
+
+    elif args.dataset in ['Cifar10C', 'Cifar100C']:
+        # Default to severity 5 as standard benchmark, or make it configurable if needed
+        severity = 5
+        n_examples = 10000 # Full test set size for CIFAR
+        data_dir = './data' # Or use cfg.DATASET.ROOT if appropriate, but robustbench usually handles downloads
+
+        if args.dataset == 'Cifar10C':
+             print(f"Loading CIFAR-10-C (Severity {severity})...")
+             x_test, y_test = load_cifar10c(n_examples=n_examples, severity=severity, data_dir=data_dir)
+             num_classes = 10
+             classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+
+        elif args.dataset == 'Cifar100C':
+             print(f"Loading CIFAR-100-C (Severity {severity})...")
+             x_test, y_test = load_cifar100c(n_examples=n_examples, severity=severity, data_dir=data_dir)
+             num_classes = 100
+             from torchvision.datasets import CIFAR100
+             dummy_ds = CIFAR100(root='./data', download=True, train=False)
+             classes = dummy_ds.classes
+
+        elif args.dataset == 'Cifar10P':
+             print("Loading CIFAR-10-P (Custom Loader)...")
+             cifar10p_dir = os.path.join(data_dir, 'CIFAR-10-P') 
+
+             if not os.path.exists(cifar10p_dir):
+                 raise FileNotFoundError(f"CIFAR-10-P data not found at {cifar10p_dir}")
+
+             labels_path = os.path.join(cifar10p_dir, 'labels.npy')
+             if not os.path.exists(labels_path):
+                  raise FileNotFoundError(f"labels.npy not found at {labels_path}")
+             y_test = np.load(labels_path)
+             if y_test.dtype != np.int64:
+                 y_test = y_test.astype(np.int64)
+             y_test = torch.from_numpy(y_test)
+             
+             perturbation_files = [f for f in os.listdir(cifar10p_dir) if f.endswith('.npy') and f != 'labels.npy']
+             if not perturbation_files:
+                  raise FileNotFoundError("No perturbation .npy files found in CIFAR-10-P directory")
+             
+             perturbation_files.sort()
+             x_test_list = []
+             print(f"Found {len(perturbation_files)} perturbation files. Loading...")
+             
+             for p_file in perturbation_files:
+                 p_path = os.path.join(cifar10p_dir, p_file)
+                 print(f"Loading {p_file}...")
+                 data = np.load(p_path)
+                 if data.shape[-1] == 3: # HWC
+                     data = np.transpose(data, (0, 3, 1, 2))
+                 
+                 if data.max() > 1.0:
+                     data = data.astype(np.float32) / 255.0
+                 else:
+                     data = data.astype(np.float32)
+                 
+                 x_test_list.append(data)
+             
+             x_test = np.concatenate(x_test_list, axis=0)
+             x_test = torch.from_numpy(x_test)
+             
+             if len(y_test) != len(x_test):
+                 if len(x_test) % len(y_test) == 0:
+                     repeat_factor = len(x_test) // len(y_test)
+                     print(f"Repeating labels {repeat_factor} times to match data size.")
+                     y_test = y_test.repeat(repeat_factor)
+                 else:
+                     raise ValueError(f"Mismatch in data size ({len(x_test)}) and labels ({len(y_test)})")
+
+             num_classes = 10
+             classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+        dataset = TensorDataset(x_test, y_test)
+        loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
+
         
     model, processor, tokenizer = None, None, None
     if args.model == 'CLIP':
@@ -268,6 +328,31 @@ if __name__ == '__main__':
     meters = Dict()
     meters.acc = AverageMeter('Clean Acc@1', ':6.2f')
     meters.rob = AverageMeter('Robust Acc@1', ':6.2f')
+
+    # --- ADD RESUME LOGIC START ---
+    progress_file_path = save_path + ".progress.json"
+    start_batch = 1
+
+    if os.path.exists(progress_file_path):
+        print(f"*** Found progress file, reloading: {progress_file_path} ***")
+        try:
+            with open(progress_file_path, 'r') as f:
+                progress_data = json.load(f)
+            
+            start_batch = progress_data['last_batch'] + 1
+            meters.acc.sum = progress_data['acc_sum']
+            meters.acc.count = progress_data['acc_count']
+            meters.acc.avg = meters.acc.sum / meters.acc.count if meters.acc.count > 0 else 0
+            meters.rob.sum = progress_data['rob_sum']
+            meters.rob.count = progress_data['rob_count']
+            meters.rob.avg = meters.rob.sum / meters.rob.count if meters.rob.count > 0 else 0
+            print(f"*** Reload success! Resuming from batch {start_batch} ***")
+        except Exception as e:
+            print(f"Error loading progress file, starting from scratch. Error: {e}")
+            start_batch = 1
+            meters.acc.reset()
+            meters.rob.reset()
+    # --- ADD RESUME LOGIC END ---
     
     progress = ProgressMeter(
         len(loader),
@@ -290,6 +375,9 @@ if __name__ == '__main__':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
         
     for i, data in enumerate(loader, start=1):
+        if i < start_batch:
+            continue
+            
         try:
             imgs, tgts = data['img'], data['label']
         except:
@@ -341,6 +429,20 @@ if __name__ == '__main__':
 
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
+
+
+            progress_data = {
+                'last_batch': i,
+                'acc_sum': meters.acc.sum,
+                'acc_count': meters.acc.count,
+                'rob_sum': meters.rob.sum,
+                'rob_count': meters.rob.count
+            }
+            try:
+                with open(progress_file_path, 'w') as f:
+                    json.dump(progress_data, f)
+            except Exception as e:
+                print(f"Warning: Could not save progress file. {e}")
             
     # save result
     if os.path.isfile(save_path):
@@ -358,3 +460,11 @@ if __name__ == '__main__':
         yaml.dump(result.to_dict(), f)
     
     print(f'result saved at: {save_path}')
+
+    # --- CLEANUP PROGRESS FILE ---
+    if os.path.exists(progress_file_path):
+        try:
+            os.remove(progress_file_path)
+            print(f"*** Evaluation complete. Deleted progress file: {progress_file_path} ***")
+        except OSError as e:
+            print(f"Warning: Could not delete progress file. {e}")

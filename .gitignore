@@ -160,3 +160,28 @@ cython_debug/
 #.idea/
 .ipynb
 documents
+
+
+# LaTex Compiled
+*.aux
+*.out
+*.toc
+# *.pdf
+*.log
+*.bcf
+*.blg
+*.idx
+*.ilg
+*.ind
+*.ist
+*.lg
+*.lof
+*.lot
+*.out
+*.pdf
+*.run.xml
+*.synctex.gz
+*.toc
+*.vrb
+*.xref
+*.zip
