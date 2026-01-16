@@ -94,6 +94,7 @@ parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
 parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
+parser.add_argument('-atk_e', '--atk_eps', type=int, default = None)
 
 if __name__ == '__main__':
 
@@ -358,10 +359,14 @@ if __name__ == '__main__':
         len(loader),
         [meters.acc, meters.rob],
         prefix=cfg.DATASET.NAME)
-
-    eps = cfg.AT.EPS
+    if args.atk_eps == None:
+        eps = cfg.AT.EPS
+        
+    else:
+        eps = args.atk_eps
     alpha = eps / 4.0
     steps = 100
+        
     
     if args.attack == 'aa':
         attack = AutoAttack(model,
