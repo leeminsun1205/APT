@@ -95,6 +95,7 @@ parser.add_argument('-lp', '--linear-probe', action='store_true')
 parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
 parser.add_argument('--subset', type=int, default=None, help="Test on a subset of the dataset (first N samples)")
+parser.add_argument('-atk_e', '--atk_eps', type=int, default = None)
 
 if __name__ == '__main__':
 
@@ -296,8 +297,31 @@ if __name__ == '__main__':
         ckp_name = 'vitb32' if cfg.MODEL.BACKBONE.NAME == 'ViT-B/32' else 'rn50'
         eps = int(cfg.AT.EPS * 255)
         ckp_name += f'_eps{eps}.pth.tar'
-        ckp = torch.load(os.path.join('backbone', ckp_name))
-        model.vision_model.load_state_dict(ckp['vision_encoder_state_dict'], strict=False)
+
+        ckp = torch.load(
+            os.path.join('backbone', ckp_name),
+            map_location='cpu',
+        )
+
+        state = ckp['vision_encoder_state_dict']
+
+        # ===== Case 1: OpenAI CLIP (clip.load) =====
+        if hasattr(model, 'visual'):
+            print('[INFO] Loading AT weights into OpenAI CLIP visual encoder')
+            missing, unexpected = model.visual.load_state_dict(state, strict=False)
+
+        # ===== Case 2: HuggingFace-style CLIP =====
+        elif hasattr(model, 'vision_model'):
+            print('[INFO] Loading AT weights into HF CLIP vision_model')
+            missing, unexpected = model.vision_model.load_state_dict(state, strict=False)
+
+        else:
+            raise RuntimeError('Unknown CLIP vision backbone structure')
+
+        print('[INFO] AT backbone loaded')
+        print('Missing keys:', missing)
+        print('Unexpected keys:', unexpected)
+
 
     if 'prompter' in (args.cls_prompt, args.atk_prompt):
         prompter_path = os.path.join(cfg.OUTPUT_DIR, 'prompt_learner/')
@@ -373,10 +397,14 @@ if __name__ == '__main__':
         len(loader),
         [meters.acc, meters.rob],
         prefix=cfg.DATASET.NAME)
-
-    eps = cfg.AT.EPS
+    if args.atk_eps == None:
+        eps = cfg.AT.EPS
+        
+    else:
+        eps = args.atk_eps
     alpha = eps / 4.0
     steps = 100
+        
     
     if args.attack == 'aa':
         attack = AutoAttack(model,
