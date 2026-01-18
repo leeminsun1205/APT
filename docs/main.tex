@@ -1,310 +1,95 @@
-\PassOptionsToPackage{table}{xcolor}
-\documentclass[12pt]{article}
-\usepackage{style}
-\usepackage{adjustbox}
-% \usepackage[utf8]{inputenc} % Removed for xelatex
-% \usepackage[vietnamese]{babel} % Removed for xelatex
-% \usepackage[T1]{fontenc} % Removed for xelatex
-\usepackage{fontspec}
-\usepackage{polyglossia}
-\setdefaultlanguage{vietnamese}
-\setmainfont{Liberation Serif}
-
-\usepackage{hyperref}
-\usepackage{url}
-\usepackage{booktabs}
+\documentclass[a4paper, oneside]{project}
+\usepackage[utf8]{vietnam}
+\usepackage{placeins}
 \usepackage{amsfonts}
-\usepackage{nicefrac}
-\usepackage{microtype}
-\usepackage{lipsum}
-\usepackage{float}
-\usepackage{titlesec}
+\usepackage{textcomp}
+\usepackage{dblfloatfix}
+\usepackage{subfig}
+\usepackage{lineno}
+\usepackage{amssymb}
+\usepackage{tabularx,booktabs}
+\usepackage{longtable, lipsum}
+\usepackage{amsmath}
+\usepackage{mathtools}
 \usepackage{graphicx}
-\usepackage{multicol}
-\usepackage{eqparbox}
-\usepackage{duckuments}
-\usepackage{titletoc}
-\usepackage{etoolbox}
-\usepackage{enumerate}
-\usepackage{doi}
-\usepackage{xcolor}
-\usepackage{textpos}
-\usepackage{algpseudocode}
-\usepackage{algorithm}
-\usepackage{import}
-\usepackage{makeidx}
-\usepackage[table]{xcolor}
-\usepackage[contents={}]{background}
-\usepackage{amsmath,amsthm,amssymb}
-\usepackage[shortlabels]{enumitem}
+\usepackage{lscape}
 \usepackage{caption}
-\usepackage{setspace}
-\usepackage{minted}
-\usepackage{tkz-tab}
-\usepackage{tikz,pgf}
+\usepackage{hyperref}
+\usepackage[sorting=nyt]{biblatex}
+\usepackage{mathtools}
+\usepackage{lipsum}
 \usepackage{fancyhdr}
-\setlength{\headheight}{25pt}
-\setlength{\parskip}{0.5em}
-\usepackage{multirow}
+\usepackage{titlesec}
+\usepackage{makecell}
+\usepackage{blindtext}
+\usepackage{subfiles} % Chèn các file nhỏ, giúp chia các chapter ra nhiều file hơn
 
-\usepackage[style=ieee]{biblatex}
-\addbibresource{references.bib}
-\addto\captionsvietnamese{%
-  \renewcommand{\figurename}{Hình}%
-  \renewcommand{\tablename}{Bảng}%
-}
+% Config reference
+\addbibresource{ref.bib}
 
-% Spacing
-% --- UI Improvements ---
-\definecolor{primaryColor}{RGB}{0, 51, 153} % Deep Blue
-\definecolor{secondaryColor}{RGB}{204, 0, 0} % Dark Red
+% Setup hype link in thesis
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true} 
+\DeclarePairedDelimiter\bra{\langle}{\rvert}
+\DeclarePairedDelimiter\ket{\lvert}{\rangle}
+\DeclarePairedDelimiterX\braket[2]{\langle}{\rangle}{#1 \delimsize\vert #2}
 
-\titleformat{\section}
-{\LARGE\bfseries\normalfont\sffamily\color{primaryColor}\raggedright}
-  {\color{secondaryColor}\thesection.}
-  {1em}
-  {\color{primaryColor}\bfseries}
-  
-\titleformat{\subsection}
-{\Large\bfseries\normalfont\sffamily\color{primaryColor}\raggedright}
-  {\color{secondaryColor}\thesubsection.}
-  {1em}
-  {\color{primaryColor}\bfseries}
-  
-\titleformat{\subsubsection}
-{\large\bfseries\normalfont\sffamily\color{primaryColor}\raggedright}
-  {\color{secondaryColor}\thesubsubsection.}
-  {1em}
-  {\color{primaryColor}\bfseries}
 
-% Fancy Header Styling
-\pagestyle{fancy}
-\fancyhf{}
-\lhead{\color{primaryColor}\footnotesize\sffamily \leftmark} 
-\rhead{\color{primaryColor}\footnotesize\sffamily CS105.P22 - UIT}
-\cfoot{\thepage}
-\renewcommand{\headrulewidth}{1pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{primaryColor}\leaders\hrule height \headrulewidth\hfill}}
+% Config information thesis
+\upperuniname{ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}
+\uniname{TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN}
+\deptname{KHOA KHOA HỌC MÁY TÍNH}
+\stumajor{KỸ SƯ KHOA HỌC MÁY TÍNH}
+\title{TÊN ĐỀ TÀI ĐỒ ÁN CHUYÊN NGÀNH BẰNG TIẾNG VIỆT}
+\titleen{TITLE FOR THE SPECIALIZED PROJECT IN ENGLISH}
+\supervisor{GIẢNG VIÊN HƯỚNG DẪN}
+\supervisorname{HỌC VỊ VÀ HỌ TÊN GVHD}
+\stunamewithid{HỌ TÊN SINH VIÊN 1 - MSSV SV1\\HỌ TÊN SINH VIÊN 2 - MSSV SV2}
+\reporttime{NĂM 2024}
 
-\titlespacing*{\section}{0pt}{*0.5}{*0.5}
-\titlespacing*{\subsection}{0pt}{*0.5}{*0.5}
-
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
-
-\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=4cm, minimum height=1.5cm, text centered, text width=7cm, draw=black, fill=green!30]
-\tikzstyle{process} = [rectangle, rounded corners, minimum width=4cm, minimum height=1.5cm, text centered, text width=5cm, draw=black, fill=green!30]
-\tikzstyle{arrow} = [thick,->,>=stealth]
-
-\makeindex
-\rhead{Place holder}
-
-\numberwithin{equation}{section}
-\setcounter{secnumdepth}{4}
-\setcounter{tocdepth}{4}
-\renewcommand{\contentsname}{Mục Lục}
-
+% Begin thesis
 \begin{document}
-\onehalfspacing
 
-% --- Title Page ---
-\begin{titlepage}
-  \import{./}{cover.tex}
-\end{titlepage}
+\coverpage
+
+% % Begin above main thesis
+\frontmatter
+\subfile{chapters/front/thanks}
 \clearpage
-\newpage
-
-\setcounter{page}{1}
 \tableofcontents
 \clearpage
-\newpage
-
-% --- Chapter 1: Introduction ---
-\section{Mở đầu (Introduction)}
-
-\subsection{Đặt vấn đề}
-\begin{itemize}
-  \item Sự bùng nổ của các mô hình đa phương thức lớn (VLMs) như CLIP.
-  \item Vấn đề bảo mật: Tấn công đối kháng (Adversarial Attacks) rất dễ đánh lừa mô hình.
-  \item \textit{Ví dụ: Minh họa một ví dụ tấn công đối kháng cơ bản.}
-\end{itemize}
-
-\subsection{Lý do chọn đề tài}
-\begin{itemize}
-  \item Các phương pháp phòng thủ hiện tại (như Adversarial Training) quá nặng nề về chi phí tính toán.
-  \item Không phù hợp để tinh chỉnh (fine-tune) các mô hình khổng lồ trên tài nguyên hạn chế.
-  \item Cần giải pháp nhẹ hơn $\rightarrow$ Prompt Tuning.
-\end{itemize}
-
-\subsection{Mục tiêu \& Phạm vi}
-\subsubsection{Mục tiêu}
-\begin{itemize}
-  \item Tăng cường tính bền vững (Robustness) của mô hình trước các tấn công đối kháng.
-  \item Giữ nguyên trọng số (weights) của mô hình gốc (frozen backbone).
-\end{itemize}
-\subsubsection{Phạm vi}
-\begin{itemize}
-  \item Tập trung vào mô hình \textbf{CLIP (ViT-B/32)}.
-  \item Sử dụng các bộ dữ liệu độ phân giải trung bình/thấp như \textbf{CIFAR, TinyImageNet} để phù hợp với tài nguyên thực tế.
-\end{itemize}
-
-\subsection{Đóng góp của đề tài}
-\begin{itemize}
-  \item Triển khai phương pháp APT (Adversarial Prompt Tuning).
-  \item Đánh giá trên benchmark rộng (12 bộ dữ liệu).
-  \item Phân tích chi phí tính toán so với các phương pháp khác.
-\end{itemize}
-
+\listoffigures
 \clearpage
-
-% --- Chapter 2: Background ---
-\section{Cơ sở lý thuyết \& Tổng quan (Background)}
-
-\subsection{Mô hình CLIP}
-\begin{itemize}
-  \item Kiến trúc Image Encoder \& Text Encoder.
-  \item Cơ chế dự đoán Zero-shot (Zero-shot Prediction).
-  \item \textit{Hình ảnh: Sơ đồ kiến trúc CLIP.}
-\end{itemize}
-
-\subsection{Tấn công đối kháng (Adversarial Attacks)}
-\begin{itemize}
-  \item Định nghĩa tấn công PGD (Projected Gradient Descent).
-  \item Công thức toán học tạo nhiễu $\delta$.
-  \item Khái niệm $\epsilon$-ball (giới hạn nhiễu cho phép).
-\end{itemize}
-
-\subsection{Prompt Learning}
-\begin{itemize}
-  \item Khác biệt giữa Hard Prompt (văn bản tự nhiên) và Soft Prompt (vector học được).
-\end{itemize}
-
-\subsection{Các công trình liên quan}
-\begin{itemize}
-  \item Tóm tắt Adversarial Visual Prompting (AVP).
-  \item Tóm tắt TeCoA.
-  \item \textit{Trích dẫn bài báo gốc ở đây.}
-\end{itemize}
-
+\listoftables
 \clearpage
+\subfile{chapters/front/glossaries}
 
-% --- Chapter 3: Methodology ---
-\section{Phương pháp nghiên cứu (Methodology)}
 
-\subsection{Kiến trúc tổng thể}
-\begin{itemize}
-  \item \textit{Hình ảnh: Sơ đồ pipeline của APT (vẽ lại từ Hình 2 bài báo gốc).}
-  \item Giải thích luồng dữ liệu: Ảnh $\rightarrow$ Image Encoder $\rightarrow$ Similarity $\leftarrow$ Text Encoder $\leftarrow$ Prompt.
-\end{itemize}
+% Begin main thesis, start page numbering
+\counterwithin{equation}{section}
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\setcounter{secnumdepth}{3}
+\mainmatter
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\subfile{chapters/main/summary}
+\subfile{chapters/main/intro}
 
-\subsection{Biểu diễn Prompt (Prompt Parameterization)}
-\begin{itemize}
-  \item Công thức biểu diễn: $t = [V]_1 [V]_2 ... [V]_M [CLASS]$.
-  \item So sánh Unified Context (UC) vs Class-Specific Context (CSC).
-  \item \textit{Lý do chọn UC: Tránh overfitting.}
-\end{itemize}
 
-\subsection{Chiến lược tối ưu hóa (Optimization Strategy)}
-\subsubsection{Hàm mất mát (Loss Function)}
-\begin{itemize}
-  \item Sử dụng Cross-Entropy Loss trên Logits.
-\end{itemize}
-\subsubsection{Thuật toán huấn luyện}
-\begin{itemize}
-  \item \textit{Mã giả (Pseudo-code): Algorithm 2 (On-the-fly).}
-  \item Giải thích lý do chọn "On-the-fly" (tạo nhiễu trong quá trình huấn luyện): Cân bằng tốc độ và hiệu quả.
-\end{itemize}
 
-\subsection{Phân tích độ phức tạp}
-\begin{itemize}
-  \item So sánh số lượng tham số cần huấn luyện (vài chục vector prompt) so với Full Fine-tuning (hàng triệu tham số).
-\end{itemize}
+% Config page header
+\if @twoside
+  \fancyhead[EL,OR]{\bfseries\nouppercase\rightmark}
+\else
+  \fancyhead[R]{\bfseries\nouppercase\rightmark}
+\fi
 
-\clearpage
+% Main chapter in thesis
+\subfile{chapters/main/chapter-1}
+\subfile{chapters/main/chapter-2}
 
-% --- Chapter 4: Experiments ---
-\section{Thực nghiệm \& Kết quả (Experiments)}
-
-\subsection{Cấu hình thực nghiệm}
-\begin{itemize}
-  \item \textbf{Dataset:} Liệt kê 12 bộ dữ liệu (CIFAR-10, CIFAR-100, TinyImageNet, SUN397-Subset, ...).
-  \item \textit{Lý do dùng Subset cho SUN397: Hạn chế tài nguyên.}
-  \item \textbf{Metric:} Clean Accuracy, Robust Accuracy (PGD $\epsilon=4/255$), AutoAttack (nếu có).
-  \item \textbf{Hardware:} Kaggle P100 / Local iGPU.
-\end{itemize}
-
-\subsection{Kết quả chính (Main Results)}
-\subsubsection{So sánh APT vs HEP}
-\begin{itemize}
-  \item \textbf{Bảng 1:} Kết quả trên CIFAR-10, CIFAR-100, TinyImageNet.
-  \item \textit{Nhận xét: APT cải thiện Robustness đáng kể so với Baseline.}
-\end{itemize}
-
-\subsubsection{Kết quả trên các tập dữ liệu chuyên biệt}
-\begin{itemize}
-  \item \textbf{Bảng 2:} Kết quả trên EuroSAT, DTD, OxfordPets, ...
-  \item \textit{Nhận xét: Hiệu quả trên đa dạng miền dữ liệu.}
-\end{itemize}
-
-\subsection{Đánh giá chuyên sâu (Analysis)}
-\subsubsection{Tính tổng quát (OOD)}
-\begin{itemize}
-  \item Kết quả trên \textbf{CIFAR-10-C}.
-  \item Đối chiếu với bảng ImageNet OOD từ bài báo gốc.
-\end{itemize}
-
-\subsubsection{Hiệu quả dữ liệu (Few-shot)}
-\begin{itemize}
-  \item So sánh kết quả 1-shot (hoặc 16-shot).
-  \item Phân tích khả năng học từ ít dữ liệu.
-\end{itemize}
-
-\subsubsection{Chi phí tính toán}
-\begin{itemize}
-  \item Bảng so sánh Time per Epoch và GFLOPs.
-\end{itemize}
-
-\subsection{Thảo luận \& Trực quan hóa}
-\subsubsection{Trực quan hóa (Visualization)}
-\begin{itemize}
-  \item \textit{Hình ảnh: Ảnh gốc vs Ảnh đối kháng (kèm nhãn dự đoán của HEP và APT).}
-  \item \textbf{Biểu đồ Robustness Curve:} Accuracy theo mức nhiễu $\epsilon$.
-  \item \textbf{Biểu đồ Trade-off:} Clean Acc vs Robust Acc.
-\end{itemize}
-
-\subsubsection{Hạn chế}
-\begin{itemize}
-  \item Chưa chạy trên ImageNet đầy đủ (do tài nguyên).
-  \item Chưa thử nghiệm với Backbones khác (như ResNet) hoặc mô hình BLIP/ALIGN (do thiếu Robust Backbone pretrained).
-  \item Sử dụng SUN397 Subset thay vì Full set.
-\end{itemize}
-
-\clearpage
-
-% --- Chapter 5: Conclusion ---
-\section{Kết luận \& Hướng phát triển}
-
-\subsection{Kết luận}
-\begin{enumerate}
-  \item Đã đề xuất/triển khai giải pháp Prompt Tuning nhẹ cho bài toán Robustness.
-  \item Chứng minh hiệu quả trên môi trường tài nguyên hạn chế (Kaggle/Local).
-  \item Xác nhận tính đúng đắn trên nhiều bộ dữ liệu (12 datasets).
-\end{enumerate}
-
-\subsection{Hạn chế}
-\begin{itemize}
-  \item Giới hạn về tài nguyên phần cứng dẫn đến việc phải dùng tập con (subset) ở một số dataset.
-  \item Chưa mở rộng sang các kiến trúc Transformer khác ngoài ViT-B/32.
-\end{itemize}
-
-\subsection{Hướng phát triển}
-\begin{itemize}
-  \item Nghiên cứu chuyển giao phương pháp sang các mô hình khác (BLIP, ALIGN) khi có điều kiện.
-  \item Giải mã ý nghĩa ngữ nghĩa của các vector prompt học được.
-\end{itemize}
-
-\clearpage
-
-% --- References ---
-\printbibliography
-
+% Conclusion
+\subfile{chapters/main/conclusion}
+% Print references
+\printbibliography[heading=bibintoc, title = {Tài liệu tham khảo}]
 \end{document}

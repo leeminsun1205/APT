@@ -1,0 +1,89 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{mcafee2020risk}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=a956ecb1af42cd50dc2ee79e9e563806}{%
+           family={McAfee},
+           familyi={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{fullhash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{fullhashraw}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{bibnamehash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{authorbibnamehash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{authornamehash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{authorfullhash}{a956ecb1af42cd50dc2ee79e9e563806}
+      \strng{authorfullhashraw}{a956ecb1af42cd50dc2ee79e9e563806}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{McAfee cloud adoption and risk report}
+      \field{urlday}{12}
+      \field{urlmonth}{7}
+      \field{urlyear}{2021}
+      \field{year}{2020}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.cybersecasia.net/whitepapers/mcafee-cloud-adoption-and-risk-report
+      \endverb
+      \verb{url}
+      \verb https://www.cybersecasia.net/whitepapers/mcafee-cloud-adoption-and-risk-report
+      \endverb
+    \endentry
+    \entry{vladimir2021cloudcomputing}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=c8a062dd86a73ccf5d68061e4bded64a}{%
+           family={Sumina},
+           familyi={S\bibinitperiod},
+           given={Vladimir},
+           giveni={V\bibinitperiod}}}%
+      }
+      \strng{namehash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{fullhash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{fullhashraw}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{bibnamehash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{authorbibnamehash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{authornamehash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{authorfullhash}{c8a062dd86a73ccf5d68061e4bded64a}
+      \strng{authorfullhashraw}{c8a062dd86a73ccf5d68061e4bded64a}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{26 Cloud Computing Statistics, Facts Trends for 2021}
+      \field{urlday}{12}
+      \field{urlmonth}{7}
+      \field{urlyear}{2021}
+      \field{year}{2021}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.cloudwards.net/cloud-computing-statistics/
+      \endverb
+      \verb{url}
+      \verb https://www.cloudwards.net/cloud-computing-statistics/
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

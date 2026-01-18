@@ -94,10 +94,27 @@ parser.add_argument('--dataset', default=None)
 parser.add_argument('-lp', '--linear-probe', action='store_true')
 parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
+parser.add_argument('--subset', type=int, default=None, help="Test on a subset of the dataset (first N samples)")
 
 if __name__ == '__main__':
 
     args = parser.parse_args()
+
+    # Normalize dataset name to canonical case usually expected by the script
+    if args.dataset:
+        canonical_names = {
+            'cifar10c': 'Cifar10C',
+            'cifar100c': 'Cifar100C',
+            'cifar10p': 'Cifar10P',
+            'imagenetr': 'ImageNetR',
+            'imageneta': 'ImageNetA',
+            'imagenetv2': 'ImageNetV2',
+            'on': 'ON',
+            'cifar10': 'CIFAR10',
+            'cifar100': 'CIFAR100'
+        }
+        args.dataset = canonical_names.get(args.dataset.lower(), args.dataset)
+
     cfg = CfgNode()
     cfg.set_new_allowed(True)
     cfg_path = os.path.join(args.experiment, 'cfg.yaml')
@@ -112,6 +129,10 @@ if __name__ == '__main__':
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
+        elif args.dataset in ['Cifar10C', 'Cifar10P']:
+            cfg.DATASET.NAME = 'CIFAR10'
+        elif args.dataset in ['Cifar100C']:
+            cfg.DATASET.NAME = 'CIFAR100'
         else:
             cfg.DATASET.NAME = args.dataset
         save_path = os.path.join(save_output, f'{args.model}_{args.dataset}.yaml')
@@ -133,6 +154,10 @@ if __name__ == '__main__':
 
     cfg.DATALOADER.TEST.BATCH_SIZE = args.batch_size
     cfg.DATALOADER.NUM_WORKERS = 4
+
+    if cfg.DATASET.NUM_LABELED <= 0:
+        cfg.DATASET.NUM_LABELED = 10  # Default value to bypass assertion
+
     dm = DataManager(cfg)
     classes = dm.dataset.classnames
     loader = dm.test_loader
@@ -163,7 +188,7 @@ if __name__ == '__main__':
                                              num_workers=4,
                                              pin_memory=True)
 
-    elif args.dataset in ['Cifar10C', 'Cifar100C']:
+    elif args.dataset in ['Cifar10C', 'Cifar100C', 'CIFAR10C', 'CIFAR100C']:
         # Default to severity 5 as standard benchmark, or make it configurable if needed
         severity = 5
         n_examples = 10000 # Full test set size for CIFAR
@@ -237,6 +262,19 @@ if __name__ == '__main__':
 
         dataset = TensorDataset(x_test, y_test)
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
+
+    if args.subset:
+        if args.subset < len(loader.dataset):
+            print(f"*** Subsetting test set to first {args.subset} samples ***")
+            subset_indices = list(range(args.subset))
+            subset_dataset = torch.utils.data.Subset(loader.dataset, subset_indices)
+            loader = DataLoader(subset_dataset, 
+                                batch_size=args.batch_size, 
+                                shuffle=False, 
+                                num_workers=4, 
+                                pin_memory=True)
+        else:
+            print(f"Warning: Subset size {args.subset} >= dataset size {len(loader.dataset)}. Using full dataset.")
 
         
     model, processor, tokenizer = None, None, None
