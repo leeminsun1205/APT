@@ -1,33 +1,97 @@
-\chapter{Some chapter name}
+\chapter{Phương pháp nghiên cứu (Methodology)}
+\label{chap:methodology}
 
-\section{Some section title}
+Chương này trình bày chi tiết về phương pháp \textbf{Adversarial Prompt Tuning (APT)}, giải pháp trọng tâm của đồ án nhằm nâng cao tính bền vững cho các mô hình Ngôn ngữ-Thị giác (VLMs). Chúng tôi sẽ đi sâu vào kiến trúc tổng thể, cách thức biểu diễn tham số prompt (Prompt Parameterization), và chiến lược tối ưu hóa "On-the-fly" để huấn luyện các prompt này.
 
-\blindtext
+\section{Tổng quan kiến trúc (Overview)}
+Mục tiêu cốt lõi của APT là tìm ra một prompt văn bản $P$ sao cho mô hình VLM có thể phân loại đúng hình ảnh đầu vào ngay cả khi nó bị tấn công bởi nhiễu đối kháng. Khác với các phương pháp Adversarial Training truyền thống thường yêu cầu cập nhật lại toàn bộ trọng số của mô hình (Model Fine-tuning), APT giữ nguyên hoàn toàn (freeze) các thành phần cốt lõi của VLM, bao gồm Image Encoder ($\mathcal{I}$) và Text Encoder ($\mathcal{T}$).
 
-\subsection{Some subsection title}
-\blindtext
-\blindtext
-\begin{figure}
-    \centering
-    \includegraphics[scale=0.5]{graphics/chapter-2/chap2-k8s.jpg}
-    \caption{Some caption for images}
-    \label{fig:chap2-k8s}
-\end{figure}
-\blindtext
-\blindtext \cite{vladimir2021cloudcomputing}.
-\begin{figure}
-    \centering
-    \includegraphics[scale=0.25]{graphics/chapter-1/chap1-architecture.png}
-    \caption{Some caption for images \cite{mcafee2020risk}}
-    \label{fig:chap1-architecture}
-\end{figure}
-\subsection{Some subsection title}
-\blindtext
-\blindtext
+Kiến trúc tổng thể của hệ thống bao gồm các thành phần:
+\begin{enumerate}
+  \item \textbf{Frozen Backbone:} Sử dụng mô hình CLIP đã được huấn luyện trước. Trọng số $\theta$ của $\mathcal{I}$ và $\mathcal{T}$ được cố định, không thay đổi trong suốt quá trình huấn luyện APT.
+  \item \textbf{Learnable Prompt:} Một chuỗi các vector tham số liên tục $V$ được chèn vào trước tên của các lớp. Đây là thành phần duy nhất được cập nhật.
+  \item \textbf{Adversary (Kẻ tấn công):} Một module sinh nhiễu đối kháng $\delta$ (sử dụng thuật toán PGD) để cộng vào ảnh đầu vào, nhằm cực đại hóa loss phân loại.
+\end{enumerate}
 
-\subsection{Some subsection title}
-\blindtext
-\blindtext \cite{mcafee2020risk}
-\blindtext
-\blindtext
-\blindtext
+Quy trình huấn luyện là sự cạnh tranh giữa Prompt (cố gắng giảm loss) và Adversary (cố gắng tăng loss), tạo nên cơ chế Min-Max Optimization đặc trưng của Adversarial Training.
+
+\section{Biểu diễn Prompt (Prompt Parameterization)}
+Trong CLIP tiêu chuẩn, prompt thường là một câu cứng nhắc như "a photo of a [CLASS]". Phương pháp APT thay thế các từ ngữ cố định này bằng các vector mềm (soft vectors).
+
+\subsection{Cấu trúc Soft Prompt}
+Một prompt $t_k$ tương ứng với lớp thứ $k$ ($CLASS_k$) được định nghĩa như sau:
+\begin{equation}
+  t_k = [V]_1 [V]_2 ... [V]_M [CLASS]_k
+\end{equation}
+Trong đó:
+\begin{itemize}
+  \item $M$ là độ dài của ngữ cảnh (context length), ví dụ $M=16$.
+  \item $\{[V]_1, [V]_2, ..., [V]_M\}$ là tập hợp các vector ngữ cảnh có cùng chiều $D$ với word embedding của CLIP (ví dụ $D=512$ cho ViT-B/32).
+  \item $[CLASS]_k$ là word embedding cố định của tên lớp thứ $k$.
+\end{itemize}
+
+\subsection{Unified Context (UC)}
+Chúng tôi đề xuất sử dụng chiến lược \textbf{Unified Context (UC)}. Trong chiến lược này, tất cả $K$ lớp trong tập dữ liệu đều chia sẻ chung một tập hợp vector ngữ cảnh $\{[V]_m\}_{m=1}^M$. Điều này có nghĩa là các vector $[V]$ là độc lập với lớp (class-agnostic).
+
+Lợi ích của UC so với Class-Specific Context (CSC - mỗi lớp có bộ vector riêng):
+\begin{enumerate}
+  \item \textbf{Giảm số lượng tham số:} Số lượng tham số cần học chỉ là $M \times D$, không phụ thuộc vào số lượng lớp $K$. Điều này rất quan trọng khi huấn luyện trên các tập dữ liệu có số lớp lớn (như ImageNet với 1000 lớp).
+  \item \textbf{Tránh Overfitting:} Với số lượng tham số ít, mô hình ít có khả năng "học vẹt" (memoriation) các nhiễu đối kháng cụ thể của từng lớp, từ đó tổng quát hóa tốt hơn (Robust Generalization).
+\end{enumerate}
+
+\section{Chiến lược tối ưu hóa (Optimization Strategy)}
+Bài toán tối ưu của APT có thể được phát biểu dưới dạng bài toán Min-Max:
+\begin{equation}
+  \min_{P} \mathbb{E}_{(x, y) \in \mathcal{D}} \left[ \max_{\|\delta\|_\infty \leq \epsilon} \mathcal{L}(P, x + \delta, y) \right]
+\end{equation}
+Trong đó:
+\begin{itemize}
+  \item $P = \{[V]_1, ..., [V]_M\}$ là tập hợp các tham số prompt cần tìm.
+  \item $\delta$ là nhiễu đối kháng bị giới hạn bởi chuẩn $\epsilon$.
+  \item $\mathcal{L}$ là hàm mất mát Cross-Entropy.
+\end{itemize}
+
+\subsection{Hàm mất mát (Loss Function)}
+Hàm mất mát được tính dựa trên xác suất dự đoán của mô hình đối với ảnh đối kháng $x_{adv} = x + \delta$:
+\begin{equation}
+  p(y | x_{adv}, P) = \frac{\exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_y)) / \tau)}{\sum_{k=1}^K \exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_k)) / \tau)}
+\end{equation}
+\begin{equation}
+  \mathcal{L}(P, x_{adv}, y) = -\log p(y | x_{adv}, P)
+\end{equation}
+
+\subsection{Thuật toán huấn luyện "On-the-fly"}
+Để giải bài toán Min-Max trên, chúng tôi áp dụng chiến lược huấn luyện "On-the-fly". Thay vì sinh sẵn một tập ảnh đối kháng cố định (vốn tốn bộ nhớ lưu trữ), ảnh đối kháng được sinh ra trực tiếp (online) trong mỗi bước lặp của quá trình huấn luyện.
+
+Thuật toán chi tiết được mô tả trong Algorithm \ref{alg:apt}.
+
+\begin{algorithm}[H]
+  \caption{Adversarial Prompt Tuning (APT)}
+  \label{alg:apt}
+  \begin{algorithmic}[1]
+    \Require Pre-trained CLIP ($\mathcal{I}, \mathcal{T}$), Training set $\mathcal{D}$, Budget $\epsilon$, Steps $T$, Meta-steps $S$.
+    \Ensure Learned Prompt $P$.
+    \State Khởi tạo $P$ ngẫu nhiên hoặc từ prompt thủ công.
+    \For{each epoch}
+    \For{each batch $(x, y) \in \mathcal{D}$}
+    \State \textbf{// Bước 1: Sinh ảnh đối kháng (Inner Maximization)}
+    \State Khởi tạo nhiễu ngẫu nhiên: $\delta \sim \mathcal{U}(-\epsilon, \epsilon)$
+    \For{$t = 1$ to $T$}
+    \State Tính toán gradient theo đầu vào: $g_{adv} = \nabla_{x+\delta} \mathcal{L}(P, x+\delta, y)$
+    \State Cập nhật nhiễu: $\delta \leftarrow \text{clip}_{[-\epsilon, \epsilon]} (\delta + \alpha \cdot \text{sign}(g_{adv}))$
+    \EndFor
+    \State $x_{adv} = \text{clip}_{[0, 1]}(x + \delta)$
+    \State
+    \State \textbf{// Bước 2: Cập nhật Prompt (Outer Minimization)}
+    \State Tính toán loss với ảnh đối kháng: $L = \mathcal{L}(P, x_{adv}, y)$
+    \State Tính gradient theo prompt: $g_{prompt} = \nabla_P L$
+    \State Cập nhật prompt (SGD): $P \leftarrow P - \eta \cdot g_{prompt}$
+    \EndFor
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+Quá trình này đảm bảo rằng Prompt luôn phải đối mặt với "kẻ thù" mạnh nhất (ảnh đối kháng khó nhất) do chính nó tạo ra tại thời điểm đó, từ đó dần dần học được cách trích xuất các đặc trưng ngữ nghĩa bền vững (robust features) của hình ảnh.
+
+\section{Kết luận chương}
+Chương này đã trình bày chi tiết phương pháp luận của APT. Bằng cách kết hợp kiến trúc Frozen Backbone hiệu quả với chiến lược Unified Context và thuật toán huấn luyện On-the-fly, APT hứa hẹn mang lại khả năng phòng thủ mạnh mẽ mà vẫn tiết kiệm tài nguyên. Chương tiếp theo sẽ kiểm chứng các giả thuyết này thông qua thực nghiệm.

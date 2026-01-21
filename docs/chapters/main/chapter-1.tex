@@ -1,36 +1,67 @@
-\chapter{Cơ sở lý thuyết}
-\section{Một số lý thuyết về máy học}
+\chapter{Cơ sở lý thuyết \& Tổng quan (Background)}
+\label{chap:background}
 
-\blindtext
-\blindtext \\
+Để hiểu rõ về phương pháp Adversarial Prompt Tuning được đề xuất trong đồ án này, chương này sẽ trình bày chi tiết các cơ sở lý thuyết nền tảng. Nội dung bao gồm kiến trúc và cơ chế hoạt động của mô hình CLIP, các khái niệm cơ bản về tấn công đối kháng (Adversarial Attacks) với trọng tâm là thuật toán PGD, và cuối cùng là tổng quan về kỹ thuật Prompt Learning, cụ thể là phương pháp CoOp.
 
-\begin{table}[!h]
-\begin{center}
-\caption{Country List}
-\label{tab:country-list}
-\begin{tabular}{||c c c c||} 
- \hline
- Country Name or Area Name& ISO ALPHA 2 Code &ISO ALPHA 3 Code&ISO numeric Code\\
-     \hline
-     Afghanistan   & AF    &AFG&   004\\
-     Aland Islands&   AX  & ALA   &248\\
-     Albania &AL & ALB&  008\\
-     Algeria    &DZ & DZA&  012\\
-     American Samoa&   AS  & ASM&016\\
-     Andorra& AD  & AND   &020\\
-     Angola& AO  & AGO&024\\
- \hline
-\end{tabular}
+\section{Mô hình CLIP (Contrastive Language-Image Pre-training)}
+CLIP \cite{radford2021learning} đại diện cho một bước tiến lớn trong lĩnh vực thị giác máy tính, chuyển dịch từ việc học các tập nhãn cố định sang học các biểu diễn hình ảnh dựa trên ngôn ngữ tự nhiên. 
 
-\end{center}
-\end{table}
+\subsection{Kiến trúc mô hình}
+CLIP bao gồm hai mạng nơ-ron mã hóa riêng biệt hoạt động song song:
+\begin{enumerate}
+    \item \textbf{Image Encoder ($\mathcal{I}$):} Chịu trách nhiệm chuyển đổi hình ảnh đầu vào $x$ thành một vector đặc trưng $f = \mathcal{I}(x) \in \mathbb{R}^d$. Image Encoder có thể là một mạng tích chập (như ResNet-50) hoặc một mạng Vision Transformer (như ViT-B/32). Trong phạm vi đề tài này, chúng tôi sử dụng \textbf{ViT-B/32}, kiến trúc chia ảnh thành các patch $32 \times 32$ và xử lý chúng như một chuỗi các token.
+    \item \textbf{Text Encoder ($\mathcal{T}$):} Chịu trách nhiệm chuyển đổi một đoạn văn bản $t$ thành vector đặc trưng $g = \mathcal{T}(t) \in \mathbb{R}^d$. Text Encoder thường là một Transformer Encoder cơ bản.
+\end{enumerate}
+Cả hai encoder được huấn luyện đồng thời để chiếu hình ảnh và văn bản vào chung một không gian embedding $d$ chiều, nới mà các cặp ảnh-văn bản tương ứng sẽ có vector đặc trưng gần nhau, và các cặp không tương ứng sẽ xa nhau.
 
+\subsection{Dự đoán Zero-shot (Zero-shot Prediction)}
+Sau khi được huấn luyện trước (pre-training) trên tập dữ liệu khổng lồ, CLIP có thể được sử dụng trực tiếp cho các tác vụ phân loại mà không cần huấn luyện lại. Quy trình phân loại zero-shot cho một ảnh $x$ với $K$ lớp ứng viên $\{y_1, y_2, ..., y_K\}$ diễn ra như sau:
 
-\blindtext
+\begin{itemize}
+    \item \textbf{Bước 1 (Tạo Prompt):} Với mỗi tên lớp $y_i$, ta tạo ra một câu mô tả (prompt) theo mẫu, ví dụ: "a photo of a $\{y_i\}$".
+    \item \textbf{Bước 2 (Text Encoding):} Các prompt này được đưa qua Text Encoder để tạo ra tập các vector đặc trưng văn bản $\{w_1, w_2, ..., w_K\}$, trong đó $w_i = \mathcal{T}(\text{"a photo of a } y_i \text{"})$.
+    \item \textbf{Bước 3 (Image Encoding):} Ảnh đầu vào $x$ được đưa qua Image Encoder để lấy vector $z = \mathcal{I}(x)$.
+    \item \textbf{Bước 4 (Tính xác suất):} Xác suất để ảnh $x$ thuộc về lớp $y_i$ được tính bằng hàm Softmax trên độ tương đồng Cosine giữa $z$ và các $w_i$:
+    \begin{equation}
+        p(y_i | x) = \frac{\exp(\text{sim}(z, w_i) / \tau)}{\sum_{j=1}^K \exp(\text{sim}(z, w_j) / \tau)}
+    \end{equation}
+    Trong đó $\text{sim}(u, v) = \frac{u \cdot v}{\|u\| \|v\|}$ là độ tương đồng cosine và $\tau$ là tham số nhiệt độ (temperature) học được của CLIP.
+\end{itemize}
 
+\section{Tấn công đối kháng (Adversarial Attacks)}
+Tấn công đối kháng đề cập đến việc tìm kiếm một nhiễu loạn nhỏ $\delta$ để cộng vào ảnh gốc $x$, tạo ra ảnh đối kháng $x_{adv} = x + \delta$ sao cho mô hình phân loại sai, trong khi mắt người vẫn nhận diện $x_{adv}$ giống như $x$.
 
-\section{Định nghĩa khái niệm nào đó}
-\blindtext
-\blindtext
+\subsection{Projected Gradient Descent (PGD)}
+PGD \cite{madry2017towards} được coi là một trong những phương pháp tấn công mạnh mẽ nhất và thường được sử dụng làm chuẩn (benchmark) để đánh giá độ bền vững của mô hình. Bài toán tấn công được định nghĩa là tìm $\delta$ để tối đa hóa hàm mất mát $L$:
+\begin{equation}
+    \max_{\|\delta\|_p \leq \epsilon} L(\theta, x + \delta, y)
+\end{equation}
+Trong đó $\epsilon$ là giới hạn độ lớn của nhiễu (thường dùng chuẩn $L_\infty$). PGD giải bài toán này bằng cách thực hiện lặp đi lặp lại việc cập nhật nhiễu theo hướng gradient của hàm mất mát. Tại bước lặp thứ $t+1$:
+\begin{equation}
+    x^{t+1}_{adv} = \Pi_{x+\mathcal{S}} \left( x^t_{adv} + \alpha \cdot \text{sign}(\nabla_x L(\theta, x^t_{adv}, y)) \right)
+\end{equation}
+Các tham số quan trọng:
+\begin{itemize}
+    \item $\alpha$: Bước nhảy (step size) của mỗi lần cập nhật.
+    \item $N$: Số bước lặp (iterations).
+    \item $\Pi$: Phép chiếu (projection) để đảm bảo nhiễu luôn nằm trong giới hạn $\epsilon$.
+\end{itemize}
 
+\section{Prompt Learning}
+Prompt Learning (Học prompt) là một phương pháp thích nghi (adaptation) mới nổi cho các mô hình ngôn ngữ lớn. Thay vì tinh chỉnh toàn bộ mô hình (fine-tuning) cho một tác vụ mới, ta chỉ cần thiết kế hoặc học một đầu vào văn bản phù hợp.
 
+\subsection{Prompt "Cứng" (Hard Prompt) vs Prompt "Mềm" (Soft Prompt)}
+\begin{itemize}
+    \item \textbf{Hard Prompt:} Sử dụng các từ ngữ tự nhiên do con người thiết kế thủ công, ví dụ "a photo of a [CLASS]". Nhược điểm là cần chuyên gia ngôn ngữ để thiết kế và khó tối ưu hóa vì không gian ngôn ngữ là rời rạc.
+    \item \textbf{Soft Prompt:} Thay thế các từ ngữ bằng các vector tham số liên tục (continuous vectors) có thể học được. Phương pháp này cho phép sử dụng gradient descent để tìm ra các vector tối ưu trong không gian embedding.
+\end{itemize}
+
+\subsection{CoOp (Context Optimization)}
+CoOp \cite{zhou2022learning} là công trình tiên phong áp dụng Soft Prompt cho CLIP. Thay vì dùng câu "a photo of a", CoOp định nghĩa prompt dưới dạng:
+\begin{equation}
+    t = [V]_1 [V]_2 ... [V]_M [CLASS]
+\end{equation}
+Trong đó $\{[V]_1, ..., [V]_M\}$ là các vector ngữ cảnh được khởi tạo ngẫu nhiên hoặc từ word embedding có sẵn, và được huấn luyện trên một tập dữ liệu nhỏ (few-shot). CoOp đã chứng minh khả năng cải thiện đáng kể độ chính xác của CLIP, tuy nhiên, nghiên cứu này chưa xem xét đến khía cạnh bền vững (robustness) trước tấn công đối kháng - đây chính là khoảng trống mà đồ án này (APT) hướng tới giải quyết.
+
+\section{Tổng kết chương}
+Chương này đã cung cấp cái nhìn tổng quan về CLIP, cơ chế tấn công PGD và kỹ thuật CoOp. Các kiến thức này là nền tảng trực tiếp để xây dựng phương pháp Adversarial Prompt Tuning, sẽ được trình bày chi tiết trong Chương 2 (Phương pháp nghiên cứu).

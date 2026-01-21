@@ -25,7 +25,8 @@ from torchvision.transforms import ToPILImage
 
 from datasets import (
     oxford_pets, oxford_flowers, fgvc_aircraft, dtd, eurosat, 
-    stanford_cars, food101, sun397, caltech101, ucf101, cifar
+    stanford_cars, food101, sun397, caltech101, ucf101, cifar,
+    tiny_imagenet
 )
 from robustbench.data import load_cifar10c, load_cifar100c
 from torch.utils.data import TensorDataset
