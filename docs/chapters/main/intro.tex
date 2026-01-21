@@ -14,14 +14,14 @@ Tuy nhiên, song hành với những tiến bộ đó là những lo ngại ngà
     \item \textbf{Yêu cầu dữ liệu lớn:} Để tránh hiện tượng overfitting (học vẹt) khi tinh chỉnh toàn bộ mô hình, cần phải có một lượng dữ liệu huấn luyện rất lớn. Tuy nhiên, trong nhiều bài toán thực tế (downstream tasks), dữ liệu được gán nhãn thường khan hiếm (few-shot scenarios), làm giảm hiệu quả của các phương pháp fine-Tuning truyền thống.
 \end{enumerate}
 
-Xuất phát từ những thách thức thực tế đó, đề tài này tập trung nghiên cứu một hướng tiếp cận mới, nhẹ nhàng hơn nhưng vẫn đảm bảo hiệu quả: \textbf{Prompt Tuning}. Thay vì thay đổi trọng số của mô hình (Model Weights), chúng ta sẽ giữ nguyên chúng và chỉ tối ưu hóa đầu vào văn bản (Text Prompt). Cụ thể, đề tài đề xuất phương pháp \textbf{Adversarial Prompt Tuning (APT)} - học một prompt tối ưu giúp mô hình CLIP chống lại các tấn công đối kháng một cách hiệu quả.
+Xuất phát từ những thách thức thực tế đó, đề tài này tập trung nghiên cứu và thực nghiệm một hướng tiếp cận hiệu quả đã được giới thiệu gần đây: \textbf{Prompt Tuning}. Thay vì thay đổi trọng số của mô hình (Model Weights), chúng ta sẽ giữ nguyên chúng và chỉ tối ưu hóa đầu vào văn bản (Text Prompt). Cụ thể, đề tài đi sâu vào việc tái cài đặt và đánh giá phương pháp \textbf{Adversarial Prompt Tuning (APT)} - kỹ thuật học một prompt tối ưu giúp mô hình CLIP chống lại các tấn công đối kháng.
 
 \section*{Mục tiêu \& Phạm vi}
 \subsection*{Mục tiêu}
 Mục tiêu chính của đồ án là xây dựng và đánh giá một giải pháp phòng thủ đối kháng cho mô hình CLIP dựa trên kỹ thuật Prompt Tuning. Các mục tiêu cụ thể bao gồm:
 \begin{enumerate}
     \item Nghiên cứu cơ sở lý thuyết về CLIP, tấn công đối kháng (Adversarial Attacks), và Prompt Learning.
-    \item Đề xuất và triển khai thuật toán APT để tìm kiếm các vector ngữ cảnh (context vectors) tối ưu.
+    \item Tái cài đặt và triển khai thuật toán APT để tìm kiếm các vector ngữ cảnh (context vectors) tối ưu dựa trên nghiên cứu gốc.
     \item Đánh giá hiệu quả của phương pháp trên nhiều bộ dữ liệu chuẩn (Benchmark), so sánh với các phương pháp Baseline về cả độ chính xác (Clean Accuracy) và độ bền vững (Robust Accuracy).
     \item Phân tích tính hiệu quả về mặt dữ liệu (Data efficiency) và chi phí tính toán (Computational cost).
 \end{enumerate}
@@ -37,6 +37,6 @@ Mục tiêu chính của đồ án là xây dựng và đánh giá một giải 
 Những đóng góp chính của đồ án có thể được tóm tắt như sau:
 \begin{enumerate}
     \item \textbf{Khẳng định vai trò của Prompt:} Chúng tôi chứng minh thực nghiệm rằng sự lựa chọn prompt có ảnh hưởng sâu sắc đến tính bền vững của mô hình VLM. Một prompt tốt không chỉ cải thiện độ chính xác mà còn giúp mô hình chống chịu tốt hơn trước nhiễu loạn.
-    \item \textbf{Đề xuất phương pháp APT:} Chúng tôi giới thiệu một quy trình huấn luyện đơn giản gọi là Adversarial Prompt Tuning. Phương pháp này chỉ cần học một số lượng tham số rất nhỏ (vài nghìn tham số) so với việc fine-tune toàn bộ mô hình (hàng trăm triệu tham số), nhưng lại mang lại hiệu quả vượt trội.
+    \item \textbf{Thực nghiệm phương pháp APT:} Chúng tôi tái hiện và đánh giá chi tiết quy trình Adversarial Prompt Tuning. Phương pháp này chỉ cần học một số lượng tham số rất nhỏ (vài nghìn tham số) so với việc fine-tune toàn bộ mô hình (hàng trăm triệu tham số), nhưng lại mang lại hiệu quả vượt trội.
     \item \textbf{Kết quả thực nghiệm ấn tượng:} Trên các thử nghiệm rộng rãi với 15 bộ dữ liệu, APT cho thấy khả năng cải thiện trung bình $+13\%$ độ chính xác trên ảnh sạch và $+8.5\%$ độ chính xác trên ảnh đối kháng so với baseline sử dụng các prompt thủ công (hand-crafted prompts). Kết quả này mở ra triển vọng cho việc triển khai các mô hình AI an toàn với chi phí thấp.
 \end{enumerate}
