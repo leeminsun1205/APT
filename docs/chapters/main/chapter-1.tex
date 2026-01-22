@@ -1,45 +1,45 @@
 \chapter{Cơ sở lý thuyết \& Tổng quan (Background)}
 \label{chap:background}
 
-Để hiểu rõ về phương pháp Adversarial Prompt Tuning (APT) được chúng tôi tiến hành thực nghiệm lại trong đồ án này, chương này sẽ trình bày chi tiết các cơ sở lý thuyết nền tảng. Nội dung bao gồm kiến trúc và cơ chế hoạt động của mô hình CLIP, các khái niệm cơ bản về tấn công đối kháng (Adversarial Attacks) với trọng tâm là thuật toán PGD, và cuối cùng là tổng quan về kỹ thuật Prompt Learning, cụ thể là phương pháp CoOp.
+Để hiểu rõ phương pháp Adversarial Prompt Tuning (APT) được thực nghiệm trong đồ án này, chương này sẽ trình bày chi tiết các cơ sở lý thuyết nền tảng. Nội dung bao gồm kiến trúc và cơ chế hoạt động của mô hình CLIP, các khái niệm cơ bản về tấn công đối kháng (Adversarial Attacks) với trọng tâm là thuật toán PGD, và cuối cùng là tổng quan kỹ thuật Prompt Learning, cụ thể là phương pháp CoOp.
 
 \section{Mô hình CLIP (Contrastive Language-Image Pre-training)}
-CLIP (Contrastive Language-Image Pre-training) \cite{radford2021learning} là một mô hình học biểu diễn đa phương thức (multi-modal representation learning) mang tính đột phá, được OpenAI giới thiệu vào năm 2021. Khác với các phương pháp thị giác máy tính truyền thống vốn phụ thuộc vào các bộ dữ liệu được gán nhãn thủ công tốn kém (như ImageNet) và bị giới hạn trong một tập hợp các lớp cố định, CLIP học các khái niệm thị giác trực tiếp từ giám sát ngôn ngữ tự nhiên (natural language supervision). Điều này cho phép CLIP có khả năng "zero-shot", tức là có thể phân loại các đối tượng chưa từng thấy trong quá trình huấn luyện mà không cần tinh chỉnh lại mô hình.
+CLIP (Contrastive Language-Image Pre-training) \cite{radford2021learning} là một mô hình học biểu diễn đa phương thức (multi-modal representation learning) mang tính đột phá, được OpenAI giới thiệu vào năm 2021. Khác biệt so với các phương pháp thị giác máy tính truyền thống vốn phụ thuộc vào các bộ dữ liệu được gán nhãn thủ công tốn kém (như ImageNet) và bị giới hạn trong một tập hợp các lớp cố định, CLIP học các khái niệm thị giác trực tiếp từ giám sát ngôn ngữ tự nhiên (natural language supervision). Cách tiếp cận này cho phép CLIP sở hữu khả năng "zero-shot", nghĩa là mô hình có thể phân loại các đối tượng chưa từng thấy trong quá trình huấn luyện mà không cần bất kỳ bước tinh chỉnh (fine-tuning) nào.
 
 \subsection{Dữ liệu huấn luyện: WebImageText (WIT)}
-Để huấn luyện CLIP, các tác giả đã xây dựng một tập dữ liệu mới có quy mô khổng lồ gọi là WebImageText (WIT), bao gồm 400 triệu cặp (hình ảnh, văn bản) được thu thập từ internet. Các phương pháp trước đây thường sử dụng các bộ dữ liệu nhỏ hơn hoặc chất lượng thấp hơn (như YFCC100M), nhưng WIT được thiết kế để đảm bảo sự đa dạng và phong phú về mặt ngữ nghĩa, bao gồm đủ mọi chủ đề từ vật thể đời thường, động vật, đến các khái niệm trừu tượng. Quy mô dữ liệu này là yếu tố then chốt giúp CLIP đạt được khả năng tổng quát hóa mạnh mẽ ngang ngửa với các mô hình state-of-the-art được huấn luyện có giám sát.
+Để huấn luyện CLIP hiệu quả, các tác giả đã xây dựng một tập dữ liệu quy mô khổng lồ mang tên WebImageText (WIT), bao gồm 400 triệu cặp (hình ảnh, văn bản) được thu thập từ internet. Trong khi các phương pháp trước đây thường sử dụng các bộ dữ liệu nhỏ hơn hoặc có chất lượng thấp hơn (như YFCC100M), WIT được thiết kế nhằm đảm bảo sự đa dạng và phong phú về mặt ngữ nghĩa, bao quát từ các vật thể đời thường, động vật, cho đến các khái niệm trừu tượng. Quy mô dữ liệu này đóng vai trò then chốt giúp CLIP đạt được khả năng tổng quát hóa mạnh mẽ, ngang tầm với các mô hình state-of-the-art được huấn luyện có giám sát.
 
 \subsection{Kiến trúc mô hình}
-CLIP sử dụng kiến trúc hai tháp (two-tower architecture) bao gồm hai mạng nơ-ron mã hóa riêng biệt hoạt động song song để xử lý hai luồng thông tin:
+CLIP sử dụng kiến trúc hai tháp (two-tower architecture), trong đó hai mạng nơ-ron mã hóa riêng biệt hoạt động song song để xử lý hai luồng thông tin hình ảnh và văn bản. Cụ thể:
 
-\begin{enumerate}
-    \item \textbf{Image Encoder ($\mathcal{I}$):} Chịu trách nhiệm chuyển đổi hình ảnh đầu vào $x$ thành một vector đặc trưng $I_f \in \mathbb{R}^{d_{img}}$. Trong bài báo gốc, hai kiến trúc được thử nghiệm là ResNet (ResNet-50, ResNet-101...) và Vision Transformer (ViT).
-          Trong phạm vi khóa luận này, chúng tôi sử dụng kiến trúc \textbf{ViT-B/32}. Ảnh đầu vào được chia thành các patch kích thước $32 \times 32$ không chồng lấn, sau đó được tuyến tính hóa và đưa vào chuỗi các lớp Transformer Encoder. Token [CLASS] ở đầu ra của tầng cuối cùng được sử dụng làm biểu diễn chung cho toàn bộ bức ảnh.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{example-image}
+    \caption{Kiến trúc tổng quan của mô hình CLIP (Nguồn: \cite{radford2021learning})}
+    \label{fig:clip_architecture}
+\end{figure}
 
-    \item \textbf{Text Encoder ($\mathcal{T}$):} Chịu trách nhiệm chuyển đổi đoạn văn bản mô tả $t$ thành vector đặc trưng $T_f \in \mathbb{R}^{d_{txt}}$. Kiến trúc được sử dụng là một Transformer Encoder cơ bản (như trong GPT-2), xử lý chuỗi các token văn bản (được mã hóa bằng BPE). Token [EOS] ở cuối câu được sử dụng làm biểu diễn đặc trưng cho toàn bộ đoạn văn bản.
-\end{enumerate}
+Đầu tiên, \textbf{Image Encoder ($\mathcal{I}$)} chịu trách nhiệm chuyển đổi hình ảnh đầu vào $x$ thành một vector đặc trưng $I_f \in \mathbb{R}^{d_{img}}$. Trong bài báo gốc, hai kiến trúc được thử nghiệm là ResNet và Vision Transformer (ViT). Trong phạm vi khóa luận này, chúng tôi sử dụng kiến trúc \textbf{ViT-B/32}. Ảnh đầu vào được chia thành các patch kích thước $32 \times 32$ không chồng lấn, sau đó được tuyến tính hóa và đưa vào chuỗi các lớp Transformer Encoder. Token [CLASS] ở đầu ra của tầng cuối cùng được sử dụng làm biểu diễn chung cho toàn bộ bức ảnh.
+
+Song song đó, \textbf{Text Encoder ($\mathcal{T}$)} chịu trách nhiệm chuyển đổi đoạn văn bản mô tả $t$ thành vector đặc trưng $T_f \in \mathbb{R}^{d_{txt}}$. Kiến trúc được sử dụng là một Transformer Encoder cơ bản (tương tự GPT-2), xử lý chuỗi các token văn bản đã được mã hóa bằng BPE. Token [EOS] ở cuối câu được sử dụng làm biểu diễn đặc trưng cho toàn bộ đoạn văn bản.
 
 Để so sánh hai loại dữ liệu này, hai vector đặc trưng $I_f$ và $T_f$ được chiếu (project) vào chung một không gian embedding đa phương thức có số chiều $d$ thông qua các ma trận chiếu $W_I$ và $W_T$:
 \begin{align}
     I_e & = \frac{W_I \cdot I_f}{\|W_I \cdot I_f\|} \\
     T_e & = \frac{W_T \cdot T_f}{\|W_T \cdot T_f\|}
 \end{align}
-Cả hai vector sau đó được chuẩn hóa L2 (L2-normalization) để có độ dài bằng 1, giúp việc so sánh độ tương đồng trở nên đơn giản thông qua tích vô hướng (cosine similarity).
+Cả hai vector kết quả đều được chuẩn hóa L2 (L2-normalization) để có độ dài bằng 1, giúp việc so sánh độ tương đồng trở nên đơn giản và hiệu quả thông qua tích vô hướng (cosine similarity).
 
 \subsection{Cơ chế huấn luyện: Contrastive Learning}
-Cơ chế cốt lõi của CLIP là hàm mất mát tương phản (contrastive loss), cụ thể là InfoNCE loss.
-Giả sử ta có một batch gồm $N$ cặp ảnh-văn bản chính xác $\{(x_1, t_1), (x_2, t_2), ..., (x_N, t_N)\}$.
-Mô hình sẽ tạo ra $N$ vector ảnh và $N$ vector văn bản tương ứng. Từ đó, ta tính được ma trận độ tương đồng cosine kích thước $N \times N$, trong đó phần tử tại hàng $i$ cột $j$ là $s_{ij} = I_{e,i} \cdot T_{e,j}$.
+Cơ chế cốt lõi của CLIP dựa trên hàm mất mát tương phản (contrastive loss), cụ thể là InfoNCE loss. Giả sử có một batch gồm $N$ cặp ảnh-văn bản chính xác $\{(x_1, t_1), (x_2, t_2), ..., (x_N, t_N)\}$. Mô hình sẽ tạo ra $N$ vector ảnh và $N$ vector văn bản tương ứng, từ đó tính toán ma trận độ tương đồng cosine kích thước $N \times N$, với phần tử $s_{ij} = I_{e,i} \cdot T_{e,j}$.
 
-Mục tiêu huấn luyện là tối đa hóa giá trị của $N$ phần tử trên đường chéo chính (các cặp đúng: $x_i$ khớp với $t_i$) và tối thiểu hóa giá trị của $N^2 - N$ phần tử còn lại (các cặp sai: $x_i$ ghép với $t_j$ với $i \neq j$).
-
-Hàm mất mát được tính bằng tổng của hai hàm loss Cross-Entropy đối xứng, một cho chiều ảnh-văn bản và một cho chiều văn bản-ảnh:
+Mục tiêu của quá trình huấn luyện là tối đa hóa giá trị của $N$ phần tử trên đường chéo chính (các cặp đúng: $x_i$ khớp với $t_i$) và đồng thời tối thiểu hóa giá trị của $N^2 - N$ phần tử còn lại (các cặp sai: $x_i$ ghép với $t_j$ với $i \neq j$). Hàm mất mát tổng quát được tính bằng trung bình cộng của hai hàm loss Cross-Entropy đối xứng:
 
 \begin{equation}
     \mathcal{L} = \frac{1}{2} (\mathcal{L}_{I \to T} + \mathcal{L}_{T \to I})
 \end{equation}
 
-Trong đó:
+Trong đó, mỗi thành phần được định nghĩa như sau:
 \begin{equation}
     \mathcal{L}_{I \to T} = - \frac{1}{N} \sum_{i=1}^N \log \frac{\exp(s_{ii} / \tau)}{\sum_{j=1}^N \exp(s_{ij} / \tau)}
 \end{equation}
@@ -47,81 +47,69 @@ Trong đó:
     \mathcal{L}_{T \to I} = - \frac{1}{N} \sum_{i=1}^N \log \frac{\exp(s_{ii} / \tau)}{\sum_{j=1}^N \exp(s_{ji} / \tau)}
 \end{equation}
 
-Tham số $\tau$ là một hệ số nhiệt độ (temperature parameter) có thể học được, giúp điều chỉnh độ sắc nhọn của phân phối xác suất. Việc sử dụng hàm loss này buộc mô hình phải học được cấu trúc ngữ nghĩa chung giữa hình ảnh và ngôn ngữ, thay vì chỉ ghi nhớ các mẫu cụ thể.
+Tham số $\tau$ là hệ số nhiệt độ học được, giúp điều chỉnh độ sắc nhọn của phân phối xác suất. Việc sử dụng hàm loss này buộc mô hình phải học được cấu trúc ngữ nghĩa chung và mối tương quan sâu sắc giữa hình ảnh và ngôn ngữ, thay vì chỉ ghi nhớ các mẫu cụ thể một cách máy móc.
 
 \subsection{Dự đoán Zero-shot (Zero-shot Prediction)}
-Sau khi được huấn luyện trước (pre-training) trên tập dữ liệu khổng lồ, CLIP có thể được sử dụng trực tiếp cho các tác vụ phân loại mà không cần huấn luyện lại. Quy trình phân loại zero-shot cho một ảnh $x$ với $K$ lớp ứng viên $\{y_1, y_2, ..., y_K\}$ diễn ra như sau:
+Sau khi được huấn luyện trước (pre-training) trên tập dữ liệu khổng lồ, CLIP có thể được ứng dụng trực tiếp cho các tác vụ phân loại mà không cần huấn luyện lại. Quy trình phân loại zero-shot cho một ảnh $x$ với $K$ lớp ứng viên $\{y_1, y_2, ..., y_K\}$ được thực hiện qua các bước liên kết chặt chẽ:
 
-\begin{itemize}
-    \item \textbf{Bước 1 (Tạo Prompt):} Với mỗi tên lớp $y_i$, ta tạo ra một câu mô tả (prompt) theo mẫu, ví dụ: "a photo of a $\{y_i\}$".
-    \item \textbf{Bước 2 (Text Encoding):} Các prompt này được đưa qua Text Encoder để tạo ra tập các vector đặc trưng văn bản $\{w_1, w_2, ..., w_K\}$, trong đó $w_i = \mathcal{T}(\text{"a photo of a } y_i \text{"})$.
-    \item \textbf{Bước 3 (Image Encoding):} Ảnh đầu vào $x$ được đưa qua Image Encoder để lấy vector $z = \mathcal{I}(x)$.
-    \item \textbf{Bước 4 (Tính xác suất):} Xác suất để ảnh $x$ thuộc về lớp $y_i$ được tính bằng hàm Softmax trên độ tương đồng Cosine giữa $z$ và các $w_i$:
-          \begin{equation}
-              p(y_i | x) = \frac{\exp(\text{sim}(z, w_i) / \tau)}{\sum_{j=1}^K \exp(\text{sim}(z, w_j) / \tau)}
-          \end{equation}
-          Trong đó $\text{sim}(u, v) = \frac{u \cdot v}{\|u\| \|v\|}$ là độ tương đồng cosine và $\tau$ là tham số nhiệt độ (temperature) học được của CLIP.
-\end{itemize}
+Đầu tiên, với mỗi tên lớp $y_i$, một câu mô tả (prompt) sẽ được tạo ra theo mẫu định sẵn, ví dụ: "a photo of a $\{y_i\}$". Các prompt này sau đó được đưa qua Text Encoder để tạo ra tập các vector đặc trưng văn bản $\{w_1, w_2, ..., w_K\}$, trong đó $w_i = \mathcal{T}(\text{"a photo of a } y_i \text{"})$. Đồng thời, ảnh đầu vào $x$ được đưa qua Image Encoder để lấy vector $z = \mathcal{I}(x)$.
 
+Cuối cùng, xác suất để ảnh $x$ thuộc về lớp $y_i$ được tính toán bằng hàm Softmax dựa trên độ tương đồng Cosine giữa $z$ và các $w_i$:
+\begin{equation}
+    p(y_i | x) = \frac{\exp(\text{sim}(z, w_i) / \tau)}{\sum_{j=1}^K \exp(\text{sim}(z, w_j) / \tau)}
+\end{equation}
+Trong đó $\text{sim}(u, v)$ là độ tương đồng cosine và $\tau$ là tham số nhiệt độ đã được học.
 
 \subsection{Dự đoán Few-shot (Few-shot Prediction)}
-Mặc dù khả năng zero-shot của CLIP rất ấn tượng, hiệu suất của nó vẫn có thể được cải thiện đáng kể nếu có thêm một lượng nhỏ dữ liệu huấn luyện (vài mẫu cho mỗi lớp - $K$-shot). Trong ngữ cảnh của VLM, thích nghi few-shot (few-shot adaptation) thường được thực hiện theo hai hướng chính:
-\begin{itemize}
-    \item \textbf{Linear Probe CLIP:} Đóng băng toàn bộ encoder và chỉ huấn luyện một bộ phân loại tuyến tính (linear classifier) nàm trên cùng (on top) của các đặc trưng ảnh $I_f$, sử dụng tập hỗ trợ (support set).
-    \item \textbf{Prompt Learning:} Thay vì tin chỉnh đầu ra, ta tối ưu hóa đầu vào văn bản để mô hình "hiểu" rõ hơn về nhiệm vụ cụ thể dựa trên các ví dụ đã cho. Đây là nền tảng của phương pháp CoOp và APT sẽ được thảo luận sau.
-\end{itemize}
-Dự đoán few-shot giúp thu hẹp khoảng cách giữa mô hình tổng quát (pre-trained) và ứng dụng chuyên biệt, đồng thời giảm thiểu chi phí gán nhãn dữ liệu.
+Mặc dù khả năng zero-shot của CLIP rất ấn tượng, hiệu suất có thể được cải thiện đáng kể nếu có thêm một lượng nhỏ dữ liệu huấn luyện (vài mẫu cho mỗi lớp - $K$-shot). Trong ngữ cảnh của Mô hình Ngôn ngữ-Thị giác (VLM), thích nghi few-shot thường được thực hiện theo hai hướng chính: \textbf{Linear Probe CLIP}, nơi toàn bộ encoder bị đóng băng và chỉ có bộ phân loại tuyến tính trên cùng được huấn luyện; và \textbf{Prompt Learning}, phương pháp tối ưu hóa đầu vào văn bản để mô hình "hiểu" rõ hơn về nhiệm vụ cụ thể. Đây là nền tảng của phương pháp CoOp và APT sẽ được thảo luận chi tiết sau.
 
 \section{Tấn công đối kháng (Adversarial Attacks)}
-Trong lĩnh vực học sâu, sự tồn tại của các mẫu đối kháng (adversarial examples) là một vấn đề an ninh nghiêm trọng. Mẫu đối kháng $x_{adv}$ là một phiên bản bị biến đổi của đầu vào gốc $x$ bằng cách cộng thêm một nhiễu loạn $\delta$ rất nhỏ (thường không thể nhận biết bằng mắt thường), nhưng lại khiến mô hình học máy $f$ đưa ra dự đoán sai lệch với độ tin cậy cao: $f(x_{adv}) \neq f(x)$.
+Trong lĩnh vực học sâu, sự tồn tại của các mẫu đối kháng (adversarial examples) đặt ra một thách thức an ninh nghiêm trọng. Mẫu đối kháng $x_{adv}$ được tạo ra bằng cách cộng thêm một nhiễu loạn $\delta$ rất nhỏ vảo đầu vào gốc $x$. Dù sự thay đổi này thường không thể nhận biết bằng mắt thường, nó lại khiến mô hình $f$ đưa ra dự đoán sai lệch với độ tin cậy cao: $f(x_{adv}) \neq f(x)$.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{example-image}
+    \caption{Minh họa tấn công đối kháng: thêm nhiễu vào ảnh gấu trúc khiến mô hình nhận diện sai thành vượn (Nguồn: \cite{goodfellow2014explaining})}
+    \label{fig:adversarial_example}
+\end{figure}
 
 \subsection{Mô hình đe dọa (Threat Models)}
-Dựa trên kiến thức của kẻ tấn công về mô hình mục tiêu, các cuộc tấn công được phân thành hai loại chính:
-\begin{itemize}
-    \item \textbf{Tấn công hộp trắng (White-box Attack):} Kẻ tấn công có toàn quyền truy cập vào kiến trúc mô hình, tham số trọng số, và gradient. Đây là trường hợp xấu nhất (worst-case scenario) để đánh giá độ an toàn của hệ thống.
-    \item \textbf{Tấn công hộp đen (Black-box Attack):} Kẻ tấn công không biết cấu trúc bên trong của mô hình mà chỉ có thể truy vấn đầu ra (nhãn hoặc xác suất).
-\end{itemize}
-Trong đồ án này, chúng tôi tập trung vào kịch bản \textbf{tấn công hộp trắng}, sử dụng thông tin gradient để tạo ra các mẫu đối kháng mạnh nhất nhằm kiểm thử khả năng phòng thủ của APT.
+Dựa trên mức độ hiểu biết của kẻ tấn công về mô hình mục tiêu, các cuộc tấn công được phân loại thành hai nhóm chính. \textbf{Tấn công hộp trắng (White-box Attack)} giả định kẻ tấn công có toàn quyền truy cập vào kiến trúc mô hình, tham số trọng số và gradient; đây là kịch bản tồi tệ nhất (worst-case scenario) dùng để đánh giá giới hạn an toàn của hệ thống. Ngược lại, \textbf{Tấn công hộp đen (Black-box Attack)} chỉ cho phép kẻ tấn công truy vấn đầu ra (nhãn hoặc xác suất) mà không biết cấu trúc bên trong. Trong đồ án này, chúng tôi tập trung vào kịch bản tấn công hộp trắng, sử dụng thông tin gradient để tạo ra các mẫu đối kháng mạnh nhất nhằm kiểm thử khả năng phòng thủ của APT.
 
 \subsection{Bài toán tối ưu hóa tấn công}
-Mục tiêu của kẻ tấn công là tìm ra nhiễu loạn $\delta$ để tối đa hóa hàm mất mát $\mathcal{L}$ của mô hình, đồng thời đảm bảo nhiễu này nằm trong một giới hạn cho phép $\epsilon$. Bài toán được phát biểu dưới dạng tối ưu hóa có ràng buộc:
+Mục tiêu của kẻ tấn công là tìm ra nhiễu loạn $\delta$ sao cho tối đa hóa hàm mất mát $\mathcal{L}$ của mô hình, đồng thời đảm bảo nhiễu này nằm trong giới hạn cho phép $\epsilon$. Bài toán được phát biểu dưới dạng tối ưu hóa có ràng buộc:
 \begin{equation}
     \max_{\delta \in \mathcal{S}} \mathcal{L}(f_\theta(x + \delta), y)
 \end{equation}
-Trong đó:
-\begin{itemize}
-    \item $\mathcal{S} = \{ \delta : \|\delta\|_p \le \epsilon \}$ là tập hợp các nhiễu cho phép trong quả cầu $L_p$ bán kính $\epsilon$.
-    \item $L_\infty$ norm (Chebyshev distance) là chuẩn phổ biến nhất trong các nghiên cứu về ảnh đối kháng, giới hạn sự thay đổi tối đa trên từng điểm ảnh.
-\end{itemize}
+Trong đó $\mathcal{S} = \{ \delta : \|\delta\|_p \le \epsilon \}$ là tập hợp các nhiễu cho phép trong quả cầu $L_p$ bán kính $\epsilon$. Chuẩn $L_\infty$ (khoảng cách Chebyshev) là chuẩn phổ biến nhất trong các nghiên cứu về ảnh đối kháng, giúp giới hạn sự thay đổi tối đa trên từng điểm ảnh.
 
 \subsection{Thuật toán Projected Gradient Descent (PGD)}
-Projected Gradient Descent (PGD) \cite{madry2017towards} được xem là thuật toán tấn công hộp trắng tiêu chuẩn và mạnh mẽ nhất hiện nay. PGD giải bài toán tối ưu trên bằng phương pháp lặp (iterative method):
+Projected Gradient Descent (PGD) \cite{madry2017towards} được xem là thuật toán tấn công hộp trắng tiêu chuẩn và mạnh mẽ nhất hiện nay. PGD giải bài toán tối ưu trên bằng phương pháp lặp (iterative method), cập nhật mẫu đối kháng theo công thức:
 \begin{equation}
     x^{t+1}_{adv} = \Pi_{\mathcal{B}(x, \epsilon)} \left( x^t_{adv} + \alpha \cdot \text{sign}(\nabla_x \mathcal{L}(f_\theta(x^t_{adv}), y)) \right)
 \end{equation}
-Quy trình thực hiện như sau:
-\begin{enumerate}
-    \item \textbf{Khởi tạo:} Bắt đầu từ một điểm ngẫu nhiên trong vùng lân cận $\epsilon$ của $x$ (Random Start) để tránh mắc kẹt ở cực trị địa phương. $x^0_{adv} = x + \delta_0$, với $\delta_0 \sim \mathcal{U}(-\epsilon, \epsilon)$.
-    \item \textbf{Cập nhật (Update):} Tại mỗi bước $t$, di chuyển điểm dữ liệu theo hướng gradient của loss function với bước nhảy $\alpha$. Hàm $\text{sign}(\cdot)$ được sử dụng để chuẩn hóa hướng di chuyển.
-    \item \textbf{Chiếu (Project):} Nếu $x^{t+1}_{adv}$ vượt ra ngoài giới hạn $\epsilon$ (cụ thể là quả cầu $L_\infty$ xung quanh $x$), dùng phép chiếu $\Pi$ để đưa nó trở lại biên của vùng cho phép. Đồng thời, đảm bảo giá trị pixel nằm trong khoảng hợp lệ $[0, 1]$.
-\end{enumerate}
-PGD với $N$ bước lặp (thường gọi là PGD-$N$) tạo ra các mẫu đối kháng "khó" hơn nhiều so với phương pháp FGSM (Fast Gradient Sign Method) chỉ có 1 bước, do đó nó là thước đo tin cậy để đánh giá robust accuracy.
+
+Quy trình thực hiện bao gồm ba bước chính lặp đi lặp lại. Đầu tiên, quá trình \textbf{Khởi tạo} bắt đầu từ một điểm ngẫu nhiên trong vùng lân cận $\epsilon$ của $x$ (Random Start) để tránh kẹt ở cực trị địa phương. Tiếp theo, bước \textbf{Cập nhật} di chuyển điểm dữ liệu theo hướng gradient của hàm mất mát với bước nhảy $\alpha$. Cuối cùng, bước \textbf{Chiếu (Project)} đảm bảo nếu $x^{t+1}_{adv}$ vượt ra ngoài giới hạn $\epsilon$, nó sẽ được chiếu ngược trở lại biên của vùng cho phép, đồng thời đảm bảo giá trị pixel nằm trong khoảng hợp lệ $[0, 1]$. PGD với $N$ bước lặp (PGD-$N$) tạo ra các mẫu đối kháng "khó" hơn nhiều so với phương pháp FGSM (chỉ 1 bước), do đó là thước đo tin cậy để đánh giá tính bền vững (robustness).
 
 \section{Prompt Learning}
-Prompt Learning (Học prompt) là một phương pháp thích nghi (adaptation) mới nổi cho các mô hình ngôn ngữ lớn. Thay vì tinh chỉnh toàn bộ mô hình (fine-tuning) cho một tác vụ mới, ta chỉ cần thiết kế hoặc học một đầu vào văn bản phù hợp.
+Prompt Learning là phương pháp thích nghi (adaptation) mới nổi cho các mô hình ngôn ngữ lớn, thay đổi cách tiếp cận truyền thống bằng việc tối ưu hóa đầu vào thay vì tinh chỉnh toàn bộ tham số mô hình (fine-tuning).
 
 \subsection{Prompt "Cứng" (Hard Prompt) vs Prompt "Mềm" (Soft Prompt)}
-\begin{itemize}
-    \item \textbf{Hard Prompt:} Sử dụng các từ ngữ tự nhiên do con người thiết kế thủ công, ví dụ "a photo of a [CLASS]". Nhược điểm là cần chuyên gia ngôn ngữ để thiết kế và khó tối ưu hóa vì không gian ngôn ngữ là rời rạc.
-    \item \textbf{Soft Prompt:} Thay thế các từ ngữ bằng các vector tham số liên tục (continuous vectors) có thể học được. Phương pháp này cho phép sử dụng gradient descent để tìm ra các vector tối ưu trong không gian embedding.
-\end{itemize}
+Có hai hướng tiếp cận chính trong Prompt Learning. \textbf{Hard Prompt} sử dụng các từ ngữ tự nhiên được thiết kế thủ công, ví dụ "a photo of a [CLASS]". Tuy nhiên, phương pháp này đòi hỏi chuyên gia ngôn ngữ và khó tối ưu hóa do không gian ngôn ngữ mang tính rời rạc. Để khắc phục, \textbf{Soft Prompt} thay thế các từ ngữ bằng các vector tham số liên tục (continuous vectors) có thể học được. Phương pháp này cho phép áp dụng gradient descent để tìm ra các vector tối ưu trực tiếp trong không gian embedding, mang lại sự linh hoạt cao hơn.
 
 \subsection{CoOp (Context Optimization)}
-CoOp \cite{zhou2022learning} là công trình tiên phong áp dụng Soft Prompt cho CLIP. Thay vì dùng câu "a photo of a", CoOp định nghĩa prompt dưới dạng:
+CoOp \cite{zhou2022learning} là công trình tiên phong áp dụng Soft Prompt cho CLIP. Thay vì sử dụng câu mẫu cố định, CoOp định nghĩa prompt dưới dạng chuỗi các vector học được:
 \begin{equation}
     t = [V]_1 [V]_2 ... [V]_M [CLASS]
 \end{equation}
-Trong đó $\{[V]_1, ..., [V]_M\}$ là các vector ngữ cảnh được khởi tạo ngẫu nhiên hoặc từ word embedding có sẵn, và được huấn luyện trên một tập dữ liệu nhỏ (few-shot). CoOp đã chứng minh khả năng cải thiện đáng kể độ chính xác của CLIP, tuy nhiên, nghiên cứu này chưa xem xét đến khía cạnh bền vững (robustness) trước tấn công đối kháng - đây chính là khoảng trống mà đồ án này (APT) hướng tới giải quyết.
+Trong đó $\{[V]_1, ..., [V]_M\}$ là các vector ngữ cảnh được khởi tạo ngẫu nhiên hoặc từ word embedding, và được huấn luyện trên tập dữ liệu few-shot. Mặc dù CoOp cải thiện đáng kể độ chính xác của CLIP, nghiên cứu này chưa xem xét đến khía cạnh bền vững (robustness) trước tấn công đối kháng - đây chính là vấn đề mà đồ án này (APT) tập trung giải quyết.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{example-image}
+    \caption{Cơ chế học ngữ cảnh (Context Optimization) của CoOp (Nguồn: \cite{zhou2022learning})}
+    \label{fig:coop_architecture}
+\end{figure}
 
 \section{Tổng kết chương}
-Chương này đã cung cấp cái nhìn tổng quan về CLIP, cơ chế tấn công PGD và kỹ thuật CoOp. Các kiến thức này là nền tảng trực tiếp để xây dựng phương pháp Adversarial Prompt Tuning, sẽ được trình bày chi tiết trong Chương 2 (Phương pháp nghiên cứu).
+Chương này đã cung cấp cái nhìn tổng quan về CLIP, cơ chế tấn công PGD và kỹ thuật Prompt Learning với CoOp. Các kiến thức này tạo thành nền tảng lý thuyết vững chắc để xây dựng và đánh giá phương pháp Adversarial Prompt Tuning, nội dung sẽ được trình bày chi tiết trong Chương 2.
