@@ -25,7 +25,7 @@ NEW_CNAMES = {
 class EuroSAT(DatasetBase):
 
     dataset_dir = "eurosat"
-    data_temp = "data_temp"
+    data_temp = "data_temp/eurosat"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

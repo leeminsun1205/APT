@@ -20,7 +20,7 @@ NEW_CNAMES = {
 class Caltech101(DatasetBase):
 
     dataset_dir = "caltech-101"
-    data_temp = "data_temp"
+    data_temp = "data_temp/caltech101"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

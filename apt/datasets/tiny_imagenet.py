@@ -92,7 +92,7 @@ class TinyImagenet(DatasetBase):
     """
 
     dataset_dir = "tiny-imagenet-200"   # folder name under ROOT
-    data_temp = "data_temp"             # writable place for split/fewshot cache
+    data_temp = "data_temp/tiny_imagenet"             # writable place for split/fewshot cache
 
     def __init__(self, cfg):
         # base root (read-only on Kaggle if /kaggle/input)

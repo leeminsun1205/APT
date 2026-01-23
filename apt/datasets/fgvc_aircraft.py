@@ -11,7 +11,7 @@ from .oxford_pets import OxfordPets
 class FGVCAircraft(DatasetBase):
 
     dataset_dir = "fgvc-aircraft"
-    data_temp = "data_temp"
+    data_temp = "data_temp/fgvc_aircraft"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

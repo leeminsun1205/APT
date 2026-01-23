@@ -12,7 +12,7 @@ from .oxford_pets import OxfordPets
 class StanfordCars(DatasetBase):
 
     dataset_dir = "stanford-cars"
-    data_temp = "data_temp"
+    data_temp = "data_temp/stanford_cars"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))

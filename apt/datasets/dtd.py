@@ -12,7 +12,7 @@ from .oxford_pets import OxfordPets
 class DescribableTextures(DatasetBase):
 
     dataset_dir = "dtd-data"
-    data_temp = "data_temp"
+    data_temp = "data_temp/dtd"
 
     def __init__(self, cfg):
         # root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
