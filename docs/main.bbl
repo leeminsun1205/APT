@@ -19,6 +19,40 @@
 
 \refsection{0}
   \datalist[entry]{nyt/global//global/global/global}
+    \entry{goodfellow2014explaining}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=d4f74ef4c79f3bb1e51e378184d8850e}{%
+           family={Goodfellow},
+           familyi={G\bibinitperiod},
+           given={Ian\bibnamedelima J},
+           giveni={I\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=8f128e70084608a2c29c497ebd794f87}{%
+           family={Shlens},
+           familyi={S\bibinitperiod},
+           given={Jonathon},
+           giveni={J\bibinitperiod}}}%
+        {{hash=ed568d9c3bb059e6bf22899fbf170f86}{%
+           family={Szegedy},
+           familyi={S\bibinitperiod},
+           given={Christian},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{fullhash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{fullhashraw}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{bibnamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorbibnamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authornamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorfullhash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorfullhashraw}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{International Conference on Learning Representations}
+      \field{title}{Explaining and harnessing adversarial examples}
+      \field{year}{2015}
+    \endentry
     \entry{li2024apt}{inproceedings}{}{}
       \name{author}{4}{}{%
         {{hash=1df2b6f67a5a1fe41f9bc9df027cdb34}{%
@@ -225,8 +259,6 @@
       \range{pages}{12}
     \endentry
   \enddatalist
-  \missing{goodfellow2014explaining}
-  \missing{li2024one}
 \endrefsection
 \endinput
 

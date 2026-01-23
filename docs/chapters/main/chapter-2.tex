@@ -11,10 +11,10 @@ Hệ thống được xây dựng dựa trên ba thành phần chính tương t�
 Quy trình huấn luyện diễn ra như một trò chơi Min-Max (Min-Max game) giữa hai đối thủ: Prompt cố gắng học các đặc trưng ngữ nghĩa bền vững để giảm thiểu sai số dự đoán, trong khi Adversary liên tục tìm kiếm các điểm yếu của Prompt hiện tại để tối đa hóa sai số đó.
 
 \begin{figure}[h]
-    \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
-    \caption{So sánh kiến trúc giữa APT và các phương pháp thích nghi đối kháng khác (Nguồn: \cite{li2024one})}
-    \label{fig:arch_comparison}
+  \centering
+  \includegraphics[width=0.9\linewidth]{example-image}
+  \caption{So sánh kiến trúc giữa APT và các phương pháp thích nghi đối kháng khác (Nguồn: \cite{li2024apt})}
+  \label{fig:arch_comparison}
 \end{figure}
 
 \section{Biểu diễn Prompt (Prompt Parameterization)}
@@ -28,10 +28,10 @@ Một prompt $t_k$ tương ứng với lớp thứ $k$ ($CLASS_k$) được đ�
 Trong công thức này, $M$ biểu thị độ dài của ngữ cảnh (context length), ví dụ $M=16$. Tập hợp $\{[V]_1, [V]_2, ..., [V]_M\}$ bao gồm các vector ngữ cảnh có cùng số chiều $D$ với không gian word embedding của CLIP (ví dụ $D=512$ cho kiến trúc ViT-B/32). Phần tử cuối cùng $[CLASS]_k$ là word embedding cố định tương ứng với tên của lớp thứ $k$. Việc chuyển sang không gian vector liên tục giúp mô hình tìm ra các biểu diễn ngữ nghĩa tối ưu mà ngôn ngữ tự nhiên khó có thể diễn đạt được.
 
 \begin{figure}[h]
-    \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
-    \caption{Minh họa cấu trúc Soft Prompt và cách chèn vào nhánh văn bản của CLIP (Nguồn: \cite{li2024one})}
-    \label{fig:apt_overview}
+  \centering
+  \includegraphics[width=0.9\linewidth]{example-image}
+  \caption{Minh họa cấu trúc Soft Prompt và cách chèn vào nhánh văn bản của CLIP (Nguồn: \cite{li2024apt})}
+  \label{fig:apt_overview}
 \end{figure}
 
 \subsection{Biến thể: Class-Specific Context (CSC)}
@@ -44,7 +44,7 @@ Một biến thể phức tạp hơn của biểu diễn prompt là \textbf{Clas
 \subsection{Chiến lược Unified Context (UC)}
 Trong khuôn khổ đồ án này, chúng tôi ưu tiên sử dụng chiến lược \textbf{Unified Context (UC)}. Khác với CSC, UC áp dụng một ràng buộc chia sẻ trọng số: tất cả $K$ lớp trong tập dữ liệu đều sử dụng chung một tập hợp vector ngữ cảnh $\{[V]_m\}_{m=1}^M$. Điều này có nghĩa là các vector $[V]$ mang tính chất độc lập với lớp (class-agnostic).
 
-Sự lựa chọn này được củng cố bởi hai lợi ích chiến lược. Thứ nhất là \textbf{Hiệu quả tham số (Parameter Efficiency)}. Số lượng tham số cần tối ưu chỉ còn là $M \times D$, hoàn toàn độc lập với số lượng lớp $K$. Điều này đặc biệt quan trọng khi mở rộng phương pháp cho các tập dữ liệu quy mô lớn như ImageNet (1000 lớp), giúp tiết kiệm đáng kể bộ nhớ GPU. Thứ hai là khả năng \textbf{Tổng quát hóa bền vững (Robust Generalization)}. Với số lượng tham số ít hơn, mô hình bị buộc phải học các mẫu ngữ cảnh chung nhất, tránh việc "ghi nhớ" (memorization) các nhiễu đối kháng cục bộ của từng lớp. Kết quả thực nghiệm từ các nghiên cứu trước \cite{li2024one} cũng chỉ ra rằng UC hoạt động vượt trội hơn CSC trong các kịch bản few-shot và chuyển giao miền (domain transfer).
+Sự lựa chọn này được củng cố bởi hai lợi ích chiến lược. Thứ nhất là \textbf{Hiệu quả tham số (Parameter Efficiency)}. Một phát hiện quan trọng trong nghiên cứu của Li và cộng sự \cite{li2024apt} là "chỉ cần một từ là đủ" (One Word is Enough) --- nghĩa là việc tối ưu hóa dù chỉ một token ngữ cảnh duy nhất ($M=1$) cũng đã đủ để mang lại sự cải thiện đáng kể về độ bền vững. Điều này chứng minh rằng không gian prompt là một giao diện cực kỳ nhạy cảm và mạnh mẽ để điều khiển hành vi của VLM. Với UC, số lượng tham số cần tối ưu chỉ còn là $M \times D$, hoàn toàn độc lập với số lượng lớp $K$. Điều này đặc biệt quan trọng khi mở rộng phương pháp cho các tập dữ liệu quy mô lớn như ImageNet (1000 lớp), giúp tiết kiệm đáng kể bộ nhớ GPU. Thứ hai là khả năng \textbf{Tổng quát hóa bền vững (Robust Generalization)}. Với số lượng tham số ít hơn, mô hình bị buộc phải học các mẫu ngữ cảnh chung nhất, tránh việc "ghi nhớ" (memorization) các nhiễu đối kháng cục bộ của từng lớp. Kết quả thực nghiệm từ các nghiên cứu trước \cite{li2024apt} cũng chỉ ra rằng UC hoạt động vượt trội hơn CSC trong các kịch bản few-shot và chuyển giao miền (domain transfer).
 
 \section{Chiến lược tối ưu hóa (Optimization Strategy)}
 Bài toán tìm kiếm prompt tối ưu trong APT thực chất là một bài toán tối ưu hóa bền vững (robust optimization), được mô hình hóa dưới dạng bài toán Min-Max (Saddle Point Problem):
@@ -58,6 +58,7 @@ Hàm mất mát $\mathcal{L}$ được sử dụng là Cross-Entropy tiêu chu�
 \begin{equation}
   p(y | x_{adv}, P) = \frac{\exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_y)) / \tau)}{\sum_{k=1}^K \exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_k)) / \tau)}
 \end{equation}
+Về mặt trực giác, các soft prompt đã học đóng vai trò như các "điểm neo" (anchors) vững chắc trong không gian biểu diễn chung (joint embedding space). Khi ảnh bị nhiễu tấn công và bị đẩy ra xa khỏi vùng biểu diễn sạch, các prompt này giúp căn chỉnh lại (realignment) vector đặc trưng hình ảnh với các khái niệm văn bản chính xác, từ đó duy trì độ chính xác dự đoán.
 Từ đó, giá trị hàm mất mát để cập nhật prompt là:
 \begin{equation}
   \mathcal{L}(P, x_{adv}, y) = -\log p(y | x_{adv}, P)
@@ -74,13 +75,13 @@ Chiến lược thứ ba, và cũng là đề xuất của chúng tôi, là \tex
 \begin{equation}
   \delta^* = \arg \max_{\|\delta\|_\infty \leq \epsilon} \mathcal{L}(P_{\text{current}}, x + \delta, y)
 \end{equation}
-Chiến lược này tạo ra một "mục tiêu động" (dynamic target): khi prompt trở nên tốt hơn, nhiễu đối kháng cũng trở nên tinh vi hơn để "đánh lừa" chính prompt đó. Sự cùng tiến hóa (co-evolution) này buộc mô hình phải liên tục thích nghi, dẫn đến khả năng phòng thủ vượt trội mà không làm tăng chi phí tính toán quá mức như trường hợp Perturbed Strategy.
+Chiến lược này tạo ra một "mục tiêu động" (dynamic target): khi prompt trở nên tốt hơn, nhiễu đối kháng cũng trở nên tinh vi hơn để "đánh lừa" chính prompt đó. Sự cùng tiến hóa (co-evolution) này buộc mô hình phải liên tục thích nghi, dẫn đến khả năng phòng thủ vượt trội trước các kiểu tấn công thích nghi (adaptive attacks) mà không làm tăng chi phí tính toán quá mức như trường hợp Perturbed Strategy. Rationale đằng sau việc sử dụng On-the-fly là để đảm bảo prompt luôn được thử thách bởi những mẫu đối kháng "khó" nhất tương ứng với trạng thái hiện tại của nó.
 
 \begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\linewidth]{example-image}
-    \caption{Sự khác biệt giữa các chiến lược sinh nhiễu đối kháng trong quá trình huấn luyện}
-    \label{fig:scheduling_strategies}
+  \centering
+  \includegraphics[width=0.8\linewidth]{example-image}
+  \caption{Sự khác biệt giữa các chiến lược sinh nhiễu đối kháng trong quá trình huấn luyện}
+  \label{fig:scheduling_strategies}
 \end{figure}
 
 \subsection{Thuật toán huấn luyện tổng thể}
@@ -113,6 +114,14 @@ Dựa trên chiến lược On-the-fly, thuật toán huấn luyện APT đượ
 \end{algorithm}
 
 Quá trình tối ưu hóa hai cấp độ này (Bi-level Optimization) đảm bảo sự hội tụ về một điểm cân bằng Nash, nơi prompt học được khả năng trích xuất các đặc trưng ngữ nghĩa bất biến (invariant features) bất chấp sự hiện diện của nhiễu.
+
+\section{Các đặc tính nâng cao của APT}
+
+\subsection{Tính bền vững đa phương thức (Cross-modal Robustness)}
+Một trong những ưu điểm vượt trội nhất của APT được phát hiện trong \cite{li2024apt} là tính bền vững đa phương thức. Mặc dù quá trình huấn luyện đối kháng chỉ thực hiện trên nhánh hình ảnh (Visual Adversarial Training), các prompt được học lại cho thấy khả năng phòng thủ "miễn phí" đối với cả các cuộc tấn công trên nhánh văn bản (Textual Adversarial Attacks). Điều này cho thấy APT thực sự cải thiện khả năng căn chỉnh ngữ nghĩa cốt lõi của VLM, thay vì chỉ học các đặc trưng hình ảnh cục bộ.
+
+\subsection{So sánh với Adversarial Visual Prompting (AVP)}
+So với các phương pháp Adversarial Visual Prompting (vốn can thiệp vào các pixel của ảnh đầu vào), APT sở hữu những lợi thế rõ rệt. Thứ nhất, việc thay đổi "hướng dẫn" (instructions) ở phía văn bản mang tính ổn định hơn và ít làm giảm chất lượng đặc trưng tự nhiên của mô hình. Thứ hai, APT hiệu quả hơn về mặt lưu trữ và tính toán khi chỉ cần lưu một vài vector prompt nhỏ thay vì một template nhiễu có kích thước bằng ảnh đầu vào. Cuối cùng, APT tận dụng được bản chất của VLM là một mô hình dựa trên ngôn ngữ, biến giao diện văn bản thành một "lá chắn" bảo vệ linh hoạt.
 
 \section{Kết luận chương}
 Chương này đã trình bày hệ thống phương pháp luận hoàn chỉnh của APT. Thông qua việc kết hợp kiến trúc Frozen Backbone hiệu quả, chiến lược Unified Context để tối ưu hóa tham số, và quy trình huấn luyện On-the-fly năng động, APT được kỳ vọng sẽ giải quyết bài toán bền vững cho VLMs một cách toàn diện. Các giả thuyết và thiết kế này sẽ được kiểm chứng chi tiết thông qua các thực nghiệm trong chương tiếp theo.
