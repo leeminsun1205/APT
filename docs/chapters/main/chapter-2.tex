@@ -1,0 +1,118 @@
+\chapter{Phương pháp nghiên cứu (Methodology)}
+\label{chap:methodology}
+
+Chương này trình bày chi tiết về phương pháp \textbf{Adversarial Prompt Tuning (APT)}, giải pháp trọng tâm của đồ án nhằm nâng cao tính bền vững cho các mô hình Ngôn ngữ-Thị giác (VLMs). Chúng tôi sẽ đi sâu vào kiến trúc tổng thể, cách thức biểu diễn tham số prompt (Prompt Parameterization), phân  tích các chiến lược ngữ cảnh, và chiến lược tối ưu hóa "On-the-fly" để huấn luyện các prompt này.
+
+\section{Tổng quan kiến trúc (Overview)}
+Mục tiêu cốt lõi của APT là tìm ra một prompt văn bản $P$ sao cho mô hình VLM có thể phân loại đúng hình ảnh đầu vào ngay cả khi nó bị tấn công bởi nhiễu đối kháng. Khác với các phương pháp Adversarial Training truyền thống thường yêu cầu cập nhật lại toàn bộ trọng số của mô hình (Model Fine-tuning), APT tiếp cận theo hướng hiệu quả hóa tham số (parameter-efficient).
+
+Hệ thống được xây dựng dựa trên ba thành phần chính tương tác chặt chẽ với nhau. Đầu tiên là \textbf{Frozen Backbone}, sử dụng mô hình CLIP đã được huấn luyện trước làm nền tảng. Trọng số $\theta$ của cả Image Encoder ($\mathcal{I}$) và Text Encoder ($\mathcal{T}$) được giữ nguyên (đóng băng) hoàn toàn trong suốt quá trình huấn luyện, đảm bảo tận dụng được tri thức thị giác-ngôn ngữ phong phú mà CLIP đã học được từ 400 triệu cặp dữ liệu. Thành phần thứ hai là \textbf{Learnable Prompt}, một chuỗi các vector tham số liên tục $V$ được chèn vào trước tên của các lớp. Đây là thành phần duy nhất được phép cập nhật gradient, giúp giảm đáng kể chi phí tính toán so với việc fine-tune toàn bộ mô hình. Cuối cùng là module \textbf{Adversary (Kẻ tấn công)}, có nhiệm vụ sinh ra nhiễu đối kháng $\delta$ (thường sử dụng thuật toán PGD) để cộng vào ảnh đầu vào nhằm cực đại hóa hàm mất mát phân loại.
+
+Quy trình huấn luyện diễn ra như một trò chơi Min-Max (Min-Max game) giữa hai đối thủ: Prompt cố gắng học các đặc trưng ngữ nghĩa bền vững để giảm thiểu sai số dự đoán, trong khi Adversary liên tục tìm kiếm các điểm yếu của Prompt hiện tại để tối đa hóa sai số đó.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{example-image}
+    \caption{So sánh kiến trúc giữa APT và các phương pháp thích nghi đối kháng khác (Nguồn: \cite{li2024one})}
+    \label{fig:arch_comparison}
+\end{figure}
+
+\section{Biểu diễn Prompt (Prompt Parameterization)}
+Trong CLIP tiêu chuẩn, prompt thường được xây dựng từ các khuôn mẫu cứng nhắc (hard prompts) như "a photo of a [CLASS]". Phương pháp APT thay thế cách tiếp cận rời rạc này bằng các vector mềm (soft vectors) trong không gian liên tục, cho phép tối ưu hóa mượt mà hơn thông qua lan truyền ngược.
+
+\subsection{Cấu trúc Soft Prompt}
+Một prompt $t_k$ tương ứng với lớp thứ $k$ ($CLASS_k$) được định nghĩa toán học như một chuỗi nối tiếp các vector embedding. Cụ thể:
+\begin{equation}
+  t_k = [V]_1 [V]_2 ... [V]_M [CLASS]_k
+\end{equation}
+Trong công thức này, $M$ biểu thị độ dài của ngữ cảnh (context length), ví dụ $M=16$. Tập hợp $\{[V]_1, [V]_2, ..., [V]_M\}$ bao gồm các vector ngữ cảnh có cùng số chiều $D$ với không gian word embedding của CLIP (ví dụ $D=512$ cho kiến trúc ViT-B/32). Phần tử cuối cùng $[CLASS]_k$ là word embedding cố định tương ứng với tên của lớp thứ $k$. Việc chuyển sang không gian vector liên tục giúp mô hình tìm ra các biểu diễn ngữ nghĩa tối ưu mà ngôn ngữ tự nhiên khó có thể diễn đạt được.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{example-image}
+    \caption{Minh họa cấu trúc Soft Prompt và cách chèn vào nhánh văn bản của CLIP (Nguồn: \cite{li2024one})}
+    \label{fig:apt_overview}
+\end{figure}
+
+\subsection{Biến thể: Class-Specific Context (CSC)}
+Một biến thể phức tạp hơn của biểu diễn prompt là \textbf{Class-Specific Context (CSC)}. Trong cấu hình này, mỗi lớp $k$ sở hữu một tập vector ngữ cảnh riêng biệt $\{[V]_{m,k}\}_{m=1}^M$, hoàn toàn độc lập với các lớp khác. Khi đó, prompt cho lớp $k$ sẽ có dạng:
+\begin{equation}
+  t_k = [V]_{1,k} [V]_{2,k} ... [V]_{M,k} [CLASS]_k
+\end{equation}
+Ưu điểm của CSC là khả năng tùy biến cao; các vector ngữ cảnh được "may đo" riêng cho từng lớp, cho phép mô hình nắm bắt được các sắc thái ngữ nghĩa đặc thù. Tuy nhiên, nhược điểm chí mạng là sự bùng nổ về số lượng tham số cần học, tăng tuyến tính theo số lượng lớp ($K \times M \times D$). Điều này không chỉ gây tốn kém tài nguyên mà còn dễ dẫn đến hiện tượng quá khớp (overfitting) khi dữ liệu huấn luyện hạn chế.
+
+\subsection{Chiến lược Unified Context (UC)}
+Trong khuôn khổ đồ án này, chúng tôi ưu tiên sử dụng chiến lược \textbf{Unified Context (UC)}. Khác với CSC, UC áp dụng một ràng buộc chia sẻ trọng số: tất cả $K$ lớp trong tập dữ liệu đều sử dụng chung một tập hợp vector ngữ cảnh $\{[V]_m\}_{m=1}^M$. Điều này có nghĩa là các vector $[V]$ mang tính chất độc lập với lớp (class-agnostic).
+
+Sự lựa chọn này được củng cố bởi hai lợi ích chiến lược. Thứ nhất là \textbf{Hiệu quả tham số (Parameter Efficiency)}. Số lượng tham số cần tối ưu chỉ còn là $M \times D$, hoàn toàn độc lập với số lượng lớp $K$. Điều này đặc biệt quan trọng khi mở rộng phương pháp cho các tập dữ liệu quy mô lớn như ImageNet (1000 lớp), giúp tiết kiệm đáng kể bộ nhớ GPU. Thứ hai là khả năng \textbf{Tổng quát hóa bền vững (Robust Generalization)}. Với số lượng tham số ít hơn, mô hình bị buộc phải học các mẫu ngữ cảnh chung nhất, tránh việc "ghi nhớ" (memorization) các nhiễu đối kháng cục bộ của từng lớp. Kết quả thực nghiệm từ các nghiên cứu trước \cite{li2024one} cũng chỉ ra rằng UC hoạt động vượt trội hơn CSC trong các kịch bản few-shot và chuyển giao miền (domain transfer).
+
+\section{Chiến lược tối ưu hóa (Optimization Strategy)}
+Bài toán tìm kiếm prompt tối ưu trong APT thực chất là một bài toán tối ưu hóa bền vững (robust optimization), được mô hình hóa dưới dạng bài toán Min-Max (Saddle Point Problem):
+\begin{equation}
+  \min_{P} \mathbb{E}_{(x, y) \in \mathcal{D}} \left[ \max_{\|\delta\|_\infty \leq \epsilon} \mathcal{L}(P, x + \delta, y) \right]
+\end{equation}
+Mục tiêu là tìm tập tham số prompt $P = \{[V]_1, ..., [V]_M\}$ sao cho cực tiểu hóa hàm mất mát kỳ vọng, trong khi nhiễu đối kháng $\delta$ (bị giới hạn trong quả cầu chuẩn $\epsilon$) luôn cố gắng cực đại hóa hàm mất mát đó.
+
+\subsection{Hàm mất mát (Loss Function)}
+Hàm mất mát $\mathcal{L}$ được sử dụng là Cross-Entropy tiêu chuẩn, tính toán dựa trên phân phối xác suất được dự đoán bởi mô hình CLIP. Với một ảnh đối kháng $x_{adv} = x + \delta$, xác suất để ảnh này thuộc về lớp $y$ được tính bằng hàm Softmax trên độ tương đồng cosine:
+\begin{equation}
+  p(y | x_{adv}, P) = \frac{\exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_y)) / \tau)}{\sum_{k=1}^K \exp(\text{sim}(\mathcal{I}(x_{adv}), \mathcal{T}(t_k)) / \tau)}
+\end{equation}
+Từ đó, giá trị hàm mất mát để cập nhật prompt là:
+\begin{equation}
+  \mathcal{L}(P, x_{adv}, y) = -\log p(y | x_{adv}, P)
+\end{equation}
+
+\subsection{Lựa chọn Prompt cho Tấn công (Attack Prompt Selection)}
+Một vấn đề tinh tế nhưng quan trọng trong quá trình huấn luyện là việc lựa chọn prompt nào để sinh ra nhiễu đối kháng $\delta$ trong vòng lặp tối đa hóa (Inner Maximization). Chúng tôi đã phân tích ba chiến lược tiềm năng:
+
+Chiến lược đầu tiên, \textbf{Constant Strategy}, sử dụng một prompt cố định (ví dụ: "a photo of a [CLASS]") để sinh nhiễu trong suốt quá trình huấn luyện. Mặc dù phương pháp này có ưu điểm về tốc độ do có thể tái sử dụng các tính toán, nhiễu sinh ra thường không đủ mạnh vì nó không nhắm vào prompt $P$ đang thay đổi. Kết quả là tạo ra một "mục tiêu tĩnh" (static target), khiến prompt học được không đủ độ bền vững.
+
+Chiến lược thứ hai, \textbf{Perturbed Strategy}, thực hiện tấn công đa phương thức bằng cách tối ưu hóa đồng thời cả nhiễu ảnh và nhiễu trên prompt (Multimodal Attack). Về lý thuyết, cách này tạo ra mẫu đối kháng cực đại, nhưng cái giá phải trả là chi phí tính toán khổng lồ do phải lan truyền ngược (backpropagation) qua cả nhánh Text Encoder trong mỗi bước tấn công.
+
+Chiến lược thứ ba, và cũng là đề xuất của chúng tôi, là \textbf{On-the-fly Strategy}. Trong phương pháp này, nhiễu đối kháng được sinh ra dựa trên chính prompt $P$ đang được huấn luyện tại bước hiện tại:
+\begin{equation}
+  \delta^* = \arg \max_{\|\delta\|_\infty \leq \epsilon} \mathcal{L}(P_{\text{current}}, x + \delta, y)
+\end{equation}
+Chiến lược này tạo ra một "mục tiêu động" (dynamic target): khi prompt trở nên tốt hơn, nhiễu đối kháng cũng trở nên tinh vi hơn để "đánh lừa" chính prompt đó. Sự cùng tiến hóa (co-evolution) này buộc mô hình phải liên tục thích nghi, dẫn đến khả năng phòng thủ vượt trội mà không làm tăng chi phí tính toán quá mức như trường hợp Perturbed Strategy.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{example-image}
+    \caption{Sự khác biệt giữa các chiến lược sinh nhiễu đối kháng trong quá trình huấn luyện}
+    \label{fig:scheduling_strategies}
+\end{figure}
+
+\subsection{Thuật toán huấn luyện tổng thể}
+Dựa trên chiến lược On-the-fly, thuật toán huấn luyện APT được thiết kế để thực hiện xen kẽ giữa việc sinh ảnh đối kháng và cập nhật tham số prompt. Thay vì sử dụng một tập dữ liệu đối kháng cố định (offline), chúng tôi sinh nhiễu trực tiếp (online) trong mỗi batch, đảm bảo tính đa dạng và độ khó cao nhất của dữ liệu huấn luyện. Chi tiết thuật toán được trình bày trong Algorithm \ref{alg:apt}.
+
+\begin{algorithm}[H]
+  \caption{Adversarial Prompt Tuning (APT)}
+  \label{alg:apt}
+  \begin{algorithmic}[1]
+    \Require Pre-trained CLIP ($\mathcal{I}, \mathcal{T}$), Training set $\mathcal{D}$, Budget $\epsilon$, Steps $T$, Meta-steps $S$.
+    \Ensure Learned Prompt $P$.
+    \State Khởi tạo $P$ ngẫu nhiên hoặc từ prompt thủ công.
+    \For{each epoch}
+    \For{each batch $(x, y) \in \mathcal{D}$}
+    \State \textbf{// Bước 1: Sinh ảnh đối kháng (Inner Maximization)}
+    \State Khởi tạo nhiễu ngẫu nhiên: $\delta \sim \mathcal{U}(-\epsilon, \epsilon)$
+    \For{$t = 1$ to $T$}
+    \State Tính toán gradient theo đầu vào: $g_{adv} = \nabla_{x+\delta} \mathcal{L}(P, x+\delta, y)$
+    \State Cập nhật nhiễu: $\delta \leftarrow \text{clip}_{[-\epsilon, \epsilon]} (\delta + \alpha \cdot \text{sign}(g_{adv}))$
+    \EndFor
+    \State $x_{adv} = \text{clip}_{[0, 1]}(x + \delta)$
+    \State
+    \State \textbf{// Bước 2: Cập nhật Prompt (Outer Minimization)}
+    \State Tính toán loss với ảnh đối kháng: $L = \mathcal{L}(P, x_{adv}, y)$
+    \State Tính gradient theo prompt: $g_{prompt} = \nabla_P L$
+    \State Cập nhật prompt (SGD): $P \leftarrow P - \eta \cdot g_{prompt}$
+    \EndFor
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+Quá trình tối ưu hóa hai cấp độ này (Bi-level Optimization) đảm bảo sự hội tụ về một điểm cân bằng Nash, nơi prompt học được khả năng trích xuất các đặc trưng ngữ nghĩa bất biến (invariant features) bất chấp sự hiện diện của nhiễu.
+
+\section{Kết luận chương}
+Chương này đã trình bày hệ thống phương pháp luận hoàn chỉnh của APT. Thông qua việc kết hợp kiến trúc Frozen Backbone hiệu quả, chiến lược Unified Context để tối ưu hóa tham số, và quy trình huấn luyện On-the-fly năng động, APT được kỳ vọng sẽ giải quyết bài toán bền vững cho VLMs một cách toàn diện. Các giả thuyết và thiết kế này sẽ được kiểm chứng chi tiết thông qua các thực nghiệm trong chương tiếp theo.
