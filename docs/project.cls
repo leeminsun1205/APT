@@ -11,7 +11,7 @@
 \RequirePackage{tikz}
 \RequirePackage[center]{caption}
 \RequirePackage{fancyhdr,hyperref}
-\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true} 
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true}
 \RequirePackage[vietnamese,english]{babel}
 
 % Set command to provide param 
@@ -21,7 +21,7 @@
 \newcommand{\uniname}[1]{\renewcommand{\@uniname}{#1}}
 \newcommand{\@deptname}{}
 \newcommand{\deptname}[1]{\renewcommand{\@deptname}{#1}}
-\newcommand{\@reporttype}{ĐỒ ÁN CHUYÊN NGÀNH}
+\newcommand{\@reporttype}{BÁO CÁO ĐỀ TÀI NGHIÊN CỨU KHOA HỌC SINH VIÊN}
 \newcommand{\reporttype}[1]{\renewcommand{\@reporttype}{#1}}
 \newcommand{\@stumajor}{}
 \newcommand{\stumajor}[1]{\renewcommand{\@stumajor}{#1}}
