@@ -2,29 +2,29 @@
 \addcontentsline{toc}{chapter}{Kết luận \& Hướng phát triển}
 
 \section*{Tổng kết (Conclusion)}
-Trong đồ án này, chúng tôi đã đối mặt với thách thức về tính bền vững (robustness) của các mô hình Đa phương thức quy mô lớn (Large-scale Vision-Language Models) như CLIP trước các tấn công đối kháng. Thay vì đi theo lối mòn của các phương pháp Adversarial Training truyền thống - vốn đòi hỏi tài nguyên tính toán khổng lồ để cập nhật toàn bộ trọng số mô hình - chúng tôi đã đề xuất và triển khai thành công phương pháp \textbf{Adversarial Prompt Tuning (APT)}.
+Trong đồ án này, chúng tôi đã nghiên cứu về tính bền vững (robustness) của các mô hình Đa phương thức quy mô lớn (Large-scale Vision-Language Models) như CLIP trước các tấn công đối kháng. Thay vì sử dụng các phương pháp Adversarial Training truyền thống - vốn yêu cầu tài nguyên tính toán lớn để cập nhật toàn bộ trọng số mô hình - chúng tôi đã triển khai phương pháp \textbf{Adversarial Prompt Tuning (APT)}.
 
 Các kết quả nghiên cứu chính bao gồm:
 \begin{enumerate}
-  \item \textbf{Hiệu quả vượt trội:} APT đã chứng minh khả năng cải thiện đáng kể cả độ chính xác trên dữ liệu sạch và độ bền vững trước tấn công PGD. Đặc biệt, trên bộ dữ liệu CIFAR-100, APT đạt mức tăng trưởng Robust Accuracy ấn tượng (+26.4\%) so với baseline, đồng thời nâng cao Clean Accuracy thêm +6.9\%.
-  \item \textbf{Tiết kiệm tài nguyên:} Bằng cách giữ nguyên backbone và chỉ học một số lượng rất nhỏ các vector ngữ cảnh (Unified Context), APT giảm thiểu đáng kể chi phí bộ nhớ và thời gian huấn luyện. Điều này biến việc triển khai các mô hình AI an toàn trở nên khả thi hơn ngay cả trên các thiết bị phần cứng hạn chế.
-  \item \textbf{Khả năng thích nghi nhanh:} Thực nghiệm cho thấy APT có thể đạt hiệu năng cao ngay cả trong điều kiện Few-shot learning (chỉ với 1-16 mẫu mỗi lớp), chứng tỏ tính hiệu quả dữ liệu cao của phương pháp.
-  \item \textbf{Tính tổng quát hóa:} Prompt học được từ APT không chỉ hoạt động tốt trên miền dữ liệu gốc (In-Distribution) mà còn duy trì được sự ổn định khi chuyển sang các miền dữ liệu khác (Out-Of-Distribution).
+    \item \textbf{Hiệu quả thực nghiệm:} APT đã chứng minh khả năng cải thiện cả độ chính xác trên dữ liệu sạch và độ bền vững trước tấn công PGD. Đặc biệt, trên bộ dữ liệu CIFAR-100, APT đạt mức tăng trưởng Robust Accuracy đáng chú ý (+26.4\%) so với baseline, đồng thời nâng cao Clean Accuracy thêm +6.9\%.
+    \item \textbf{Tiết kiệm tài nguyên:} Bằng cách giữ nguyên backbone và chỉ học một số lượng rất nhỏ các vector ngữ cảnh (Unified Context), APT giảm thiểu đáng kể chi phí bộ nhớ và thời gian huấn luyện. Điều này biến việc triển khai các mô hình AI an toàn trở nên khả thi hơn ngay cả trên các thiết bị phần cứng hạn chế.
+    \item \textbf{Khả năng thích nghi nhanh:} Thực nghiệm cho thấy APT có thể đạt hiệu năng cao ngay cả trong điều kiện Few-shot learning (chỉ với 1-16 mẫu mỗi lớp), chứng tỏ tính hiệu quả dữ liệu cao của phương pháp.
+    \item \textbf{Tính tổng quát hóa:} Prompt học được từ APT không chỉ hoạt động tốt trên miền dữ liệu gốc (In-Distribution) mà còn duy trì được sự ổn định khi chuyển sang các miền dữ liệu khác (Out-Of-Distribution).
 \end{enumerate}
 
 \section*{Hạn chế (Limitations)}
 Mặc dù đạt được những kết quả hứa hẹn, nghiên cứu này vẫn còn tồn tại một số hạn chế khách quan:
 \begin{itemize}
-  \item \textbf{Giới hạn về quy mô thí nghiệm:} Do hạn chế về tài nguyên phần cứng cục bộ, các thí nghiệm trên các bộ dữ liệu siêu lớn (như ImageNet-1K full set) chưa được thực hiện triệt để hoặc phải sử dụng số lượng epoch ít hơn so với lý thuyết tối ưu.
-  \item \textbf{Đa dạng kiến trúc:} Hiện tại, phương pháp mới chỉ được kiểm chứng chủ yếu trên backbone ViT-B/32. Hiệu quả của APT trên các kiến trúc CNN truyền thống (như ResNet) hoặc các biến thể Transformer lớn hơn (ViT-L/14, ViT-H) cần được đánh giá thêm.
-  \item \textbf{Tính giải thích được (Explainability):} Các vector prompt học được là các vector liên tục trong không gian embedding và khó giải mã ngược lại thành ngôn ngữ tự nhiên hiểu được. Điều này làm hạn chế khả năng giải thích "tại sao" một prompt cụ thể lại giúp mô hình bền vững hơn.
+    \item \textbf{Giới hạn về quy mô thí nghiệm:} Do hạn chế về tài nguyên phần cứng cục bộ, các thí nghiệm trên các bộ dữ liệu siêu lớn (như ImageNet-1K full set) chưa được thực hiện triệt để hoặc phải sử dụng số lượng epoch ít hơn so với lý thuyết tối ưu.
+    \item \textbf{Đa dạng kiến trúc:} Hiện tại, phương pháp mới chỉ được kiểm chứng chủ yếu trên backbone ViT-B/32. Hiệu quả của APT trên các kiến trúc CNN truyền thống (như ResNet) hoặc các biến thể Transformer lớn hơn (ViT-L/14, ViT-H) cần được đánh giá thêm.
+    \item \textbf{Tính giải thích được (Explainability):} Các vector prompt học được là các vector liên tục trong không gian embedding và khó giải mã ngược lại thành ngôn ngữ tự nhiên hiểu được. Điều này làm hạn chế khả năng giải thích "tại sao" một prompt cụ thể lại giúp mô hình bền vững hơn.
 \end{itemize}
 
 \section*{Hướng phát triển (Future Work)}
 Để khắc phục các hạn chế trên và mở rộng phạm vi nghiên cứu, chúng tôi đề xuất một số hướng phát triển trong tương lai:
 \begin{enumerate}
-  \item \textbf{Mở rộng sang các mô hình VLM khác:} Áp dụng APT cho các mô hình nền tảng mới hơn như BLIP, ALIGN, hoặc Flamingo để kiểm chứng tính phổ quát của phương pháp.
-  \item \textbf{Prompt Decoding:} Nghiên cứu các kỹ thuật ánh xạ ngược từ Soft Prompt về Hard Prompt (ngôn ngữ tự nhiên) để hiểu rõ hơn về ngữ nghĩa mà mô hình đang học (ví dụ: liệu mô hình có đang học các đặc trưng về hình dáng hay kết cấu?).
-  \item \textbf{Kết hợp với Adapter:} Thử nghiệm việc kết hợp APT với các kỹ thuật tinh chỉnh tham số hiệu quả (PEFT) khác như Adapter hoặc LoRA để xem liệu việc cho phép cập nhật một phần nhỏ trọng số backbone có giúp phá vỡ các giới hạn hiện tại hay không.
-  \item \textbf{Tấn công Black-box:} Đánh giá khả năng phòng thủ của APT trước các loại tấn công Black-box (khi kẻ tấn công không biết kiến trúc mô hình), nhằm phản ánh sát thực tế hơn.
+    \item \textbf{Mở rộng sang các mô hình VLM khác:} Áp dụng APT cho các mô hình nền tảng mới hơn như BLIP, ALIGN, hoặc Flamingo để kiểm chứng tính phổ quát của phương pháp.
+    \item \textbf{Prompt Decoding:} Nghiên cứu các kỹ thuật ánh xạ ngược từ Soft Prompt về Hard Prompt (ngôn ngữ tự nhiên) để hiểu rõ hơn về ngữ nghĩa mà mô hình đang học (ví dụ: liệu mô hình có đang học các đặc trưng về hình dáng hay kết cấu?).
+    \item \textbf{Kết hợp với Adapter:} Thử nghiệm việc kết hợp APT với các kỹ thuật tinh chỉnh tham số hiệu quả (PEFT) khác như Adapter hoặc LoRA để xem liệu việc cho phép cập nhật một phần nhỏ trọng số backbone có giúp phá vỡ các giới hạn hiện tại hay không.
+    \item \textbf{Tấn công Black-box:} Đánh giá khả năng phòng thủ của APT trước các loại tấn công Black-box (khi kẻ tấn công không truy cập được kiến trúc mô hình), nhằm phản ánh chính xác hơn các kịch bản thực tiễn.
 \end{enumerate}
