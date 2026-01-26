@@ -107,7 +107,6 @@ if __name__ == '__main__':
         canonical_names = {
             'cifar10c': 'Cifar10C',
             'cifar100c': 'Cifar100C',
-            'cifar10p': 'Cifar10P',
             'imagenetr': 'ImageNetR',
             'imageneta': 'ImageNetA',
             'imagenetv2': 'ImageNetV2',
@@ -131,7 +130,7 @@ if __name__ == '__main__':
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
-        elif args.dataset in ['Cifar10C', 'Cifar10P']:
+        elif args.dataset == 'Cifar10C':
             cfg.DATASET.NAME = 'CIFAR10'
         elif args.dataset in ['Cifar100C']:
             cfg.DATASET.NAME = 'CIFAR100'
@@ -210,57 +209,6 @@ if __name__ == '__main__':
              from torchvision.datasets import CIFAR100
              dummy_ds = CIFAR100(root='./data', download=True, train=False)
              classes = dummy_ds.classes
-
-        elif args.dataset == 'Cifar10P':
-             print("Loading CIFAR-10-P (Custom Loader)...")
-             cifar10p_dir = os.path.join(data_dir, 'CIFAR-10-P') 
-
-             if not os.path.exists(cifar10p_dir):
-                 raise FileNotFoundError(f"CIFAR-10-P data not found at {cifar10p_dir}")
-
-             labels_path = os.path.join(cifar10p_dir, 'labels.npy')
-             if not os.path.exists(labels_path):
-                  raise FileNotFoundError(f"labels.npy not found at {labels_path}")
-             y_test = np.load(labels_path)
-             if y_test.dtype != np.int64:
-                 y_test = y_test.astype(np.int64)
-             y_test = torch.from_numpy(y_test)
-             
-             perturbation_files = [f for f in os.listdir(cifar10p_dir) if f.endswith('.npy') and f != 'labels.npy']
-             if not perturbation_files:
-                  raise FileNotFoundError("No perturbation .npy files found in CIFAR-10-P directory")
-             
-             perturbation_files.sort()
-             x_test_list = []
-             print(f"Found {len(perturbation_files)} perturbation files. Loading...")
-             
-             for p_file in perturbation_files:
-                 p_path = os.path.join(cifar10p_dir, p_file)
-                 print(f"Loading {p_file}...")
-                 data = np.load(p_path)
-                 if data.shape[-1] == 3: # HWC
-                     data = np.transpose(data, (0, 3, 1, 2))
-                 
-                 if data.max() > 1.0:
-                     data = data.astype(np.float32) / 255.0
-                 else:
-                     data = data.astype(np.float32)
-                 
-                 x_test_list.append(data)
-             
-             x_test = np.concatenate(x_test_list, axis=0)
-             x_test = torch.from_numpy(x_test)
-             
-             if len(y_test) != len(x_test):
-                 if len(x_test) % len(y_test) == 0:
-                     repeat_factor = len(x_test) // len(y_test)
-                     print(f"Repeating labels {repeat_factor} times to match data size.")
-                     y_test = y_test.repeat(repeat_factor)
-                 else:
-                     raise ValueError(f"Mismatch in data size ({len(x_test)}) and labels ({len(y_test)})")
-
-             num_classes = 10
-             classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
         dataset = TensorDataset(x_test, y_test)
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
