@@ -168,13 +168,10 @@ class APT_CIFAR10_1(_CIFARBase):
         train = test[:5] if len(test) >= 5 else test[:1]
         val = test[5:10] if len(test) >= 10 else test[:1]
 
-        # Đặt các thuộc tính cần thiết cho DatasetBase
-        # Lưu ý: DatasetBase cần self.train_x, self.val, self.test
         super(DatasetBase, self).__init__() # Gọi grandparent init để setup transforms cơ bản nếu có
-        # Nhưng DatasetBase của dassl thường init: super().__init__(train_x, val, test)
-        # Ở đây ta gọi trực tiếp logic gán nó (bypass _CIFARBase init)
         
         self._train_x = train
+        self._train_u = []  # No unlabeled data for CIFAR10.1
         self._val = val
         self._test = test
         self._num_classes = 10

@@ -105,8 +105,8 @@ if __name__ == '__main__':
     # Normalize dataset name to canonical case usually expected by the script
     if args.dataset:
         canonical_names = {
-            'cifar10c': 'Cifar10C',
-            'cifar100c': 'Cifar100C',
+            'cifar10c': 'CIFAR10C',
+            'cifar100c': 'CIFAR100C',
             'imagenetr': 'ImageNetR',
             'imageneta': 'ImageNetA',
             'imagenetv2': 'ImageNetV2',
