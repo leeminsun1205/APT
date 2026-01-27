@@ -131,9 +131,9 @@ if __name__ == '__main__':
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
-        elif args.dataset == 'Cifar10C':
+        elif args.dataset in ['CIFAR10C', 'Cifar10C']:
             cfg.DATASET.NAME = 'CIFAR10'
-        elif args.dataset in ['Cifar100C']:
+        elif args.dataset in ['CIFAR100C', 'Cifar100C']:
             cfg.DATASET.NAME = 'CIFAR100'
         else:
             cfg.DATASET.NAME = args.dataset
