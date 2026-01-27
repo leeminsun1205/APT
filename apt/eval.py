@@ -112,7 +112,8 @@ if __name__ == '__main__':
             'imagenetv2': 'ImageNetV2',
             'on': 'ON',
             'cifar10': 'CIFAR10',
-            'cifar100': 'CIFAR100'
+            'cifar100': 'CIFAR100',
+            'cifar10.1': 'APT_CIFAR10_1'
         }
         args.dataset = canonical_names.get(args.dataset.lower(), args.dataset)
 

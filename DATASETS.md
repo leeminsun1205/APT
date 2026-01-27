@@ -15,6 +15,7 @@ $DATA/
 If you have some datasets already installed somewhere else, you can create symbolic links in `$DATA/dataset_name` that point to the original data to avoid duplicate download.
 
 Datasets list:
+
 - [ImageNet](#imagenet)
 - [Caltech101](#caltech101)
 - [OxfordPets](#oxfordpets)
@@ -30,24 +31,47 @@ Datasets list:
 The instructions to prepare each dataset are detailed below. To ensure reproducibility and fair comparison for future work, we provide fixed train/val/test splits for all datasets except ImageNet where the validation set is used as test set. The fixed splits are either from the original datasets (if available) or created by us.
 
 ### ImageNet
+
 - Create a folder named `imagenet/` under `$DATA`.
 - Create `images/` under `imagenet/`.
 - Download the dataset from the [official website](https://image-net.org/index.php) and extract the training and validation sets to `$DATA/imagenet/images`. The directory structure should look like
+
 ```
 imagenet/
 |–– images/
 |   |–– train/ # contains 1,000 folders like n01440764, n01443537, etc.
 |   |–– val/
 ```
+
 - If you had downloaded the ImageNet dataset before, you can create symbolic links to map the training and validation sets to `$DATA/imagenet/images`.
 - Download the `classnames.txt` to `$DATA/imagenet/` from this [link](https://drive.google.com/file/d/1-61f_ol79pViBFDG_IDlUQSwoLcn2XXF/view?usp=sharing). The class names are copied from [CLIP](https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb).
 
+### CIFAR10.1
+
+- Create a folder named `cifar10.1/` under `$DATA`.
+- Create a folder named `databases/` under `$DATA/cifar10.1/`.
+- Download `cifar10.1_v6_data.npy` and `cifar10.1_v6_labels.npy` from the [official repository](https://github.com/modestyachts/CIFAR-10.1/tree/master/datasets) or direct links and place them in `$DATA/cifar10.1/databases/`.
+- **Alternatively, just run the code.** The implementation supports **automatic download** of these files from the official repository if they are missing.
+- The code will automatically extract images from `.npy` files to `$DATA/cifar10.1/images/` upon first run.
+
+The directory structure should look like:
+
+```
+cifar10.1/
+|–– databases/
+|   |–– cifar10.1_v6_data.npy
+|   |–– cifar10.1_v6_labels.npy
+|–– images/ (automatically generated)
+```
+
 ### Caltech101
+
 - Create a folder named `caltech-101/` under `$DATA`.
-- Download `101_ObjectCategories.tar.gz` from http://www.vision.caltech.edu/Image_Datasets/Caltech101/101_ObjectCategories.tar.gz and extract the file under `$DATA/caltech-101`.
-- Download `split_zhou_Caltech101.json` from this [link](https://drive.google.com/file/d/1hyarUivQE36mY6jSomru6Fjd-JzwcCzN/view?usp=sharing) and put it under `$DATA/caltech-101`. 
+- Download `101_ObjectCategories.tar.gz` from <http://www.vision.caltech.edu/Image_Datasets/Caltech101/101_ObjectCategories.tar.gz> and extract the file under `$DATA/caltech-101`.
+- Download `split_zhou_Caltech101.json` from this [link](https://drive.google.com/file/d/1hyarUivQE36mY6jSomru6Fjd-JzwcCzN/view?usp=sharing) and put it under `$DATA/caltech-101`.
 
 The directory structure should look like
+
 ```
 caltech-101/
 |–– 101_ObjectCategories/
@@ -55,12 +79,14 @@ caltech-101/
 ```
 
 ### OxfordPets
+
 - Create a folder named `oxford_pets/` under `$DATA`.
-- Download the images from https://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz.
-- Download the annotations from https://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz.
-- Download `split_zhou_OxfordPets.json` from this [link](https://drive.google.com/file/d/1501r8Ber4nNKvmlFVQZ8SeUHTcdTTEqs/view?usp=sharing). 
+- Download the images from <https://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz>.
+- Download the annotations from <https://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz>.
+- Download `split_zhou_OxfordPets.json` from this [link](https://drive.google.com/file/d/1501r8Ber4nNKvmlFVQZ8SeUHTcdTTEqs/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 oxford_pets/
 |–– images/
@@ -69,14 +95,16 @@ oxford_pets/
 ```
 
 ### StanfordCars
+
 - Create a folder named `stanford_cars/` under `$DATA`.
-- Download the train images http://ai.stanford.edu/~jkrause/car196/cars_train.tgz.
-- Download the test images http://ai.stanford.edu/~jkrause/car196/cars_test.tgz.
-- Download the train labels https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz.
-- Download the test labels http://ai.stanford.edu/~jkrause/car196/cars_test_annos_withlabels.mat.
+- Download the train images <http://ai.stanford.edu/~jkrause/car196/cars_train.tgz>.
+- Download the test images <http://ai.stanford.edu/~jkrause/car196/cars_test.tgz>.
+- Download the train labels <https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz>.
+- Download the test labels <http://ai.stanford.edu/~jkrause/car196/cars_test_annos_withlabels.mat>.
 - Download `split_zhou_StanfordCars.json` from this [link](https://drive.google.com/file/d/1ObCFbaAgVu0I-k_Au-gIUcefirdAuizT/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 stanford_cars/
 |–– cars_test\
@@ -87,12 +115,14 @@ stanford_cars/
 ```
 
 ### Flowers102
+
 - Create a folder named `oxford_flowers/` under `$DATA`.
-- Download the images and labels from https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz and https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat respectively.
-- Download `cat_to_name.json` from [here](https://drive.google.com/file/d/1AkcxCXeK_RCGCEC_GvmWxjcjaNhu-at0/view?usp=sharing). 
+- Download the images and labels from <https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz> and <https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat> respectively.
+- Download `cat_to_name.json` from [here](https://drive.google.com/file/d/1AkcxCXeK_RCGCEC_GvmWxjcjaNhu-at0/view?usp=sharing).
 - Download `split_zhou_OxfordFlowers.json` from [here](https://drive.google.com/file/d/1Pp0sRXzZFZq15zVOzKjKBu4A9i01nozT/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 oxford_flowers/
 |–– cat_to_name.json
@@ -102,10 +132,12 @@ oxford_flowers/
 ```
 
 ### Food101
-- Download the dataset from https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/ and extract the file `food-101.tar.gz` under `$DATA`, resulting in a folder named `$DATA/food-101/`.
+
+- Download the dataset from <https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/> and extract the file `food-101.tar.gz` under `$DATA`, resulting in a folder named `$DATA/food-101/`.
 - Download `split_zhou_Food101.json` from [here](https://drive.google.com/file/d/1QK0tGi096I0Ba6kggatX1ee6dJFIcEJl/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 food-101/
 |–– images/
@@ -116,11 +148,13 @@ food-101/
 ```
 
 ### FGVCAircraft
-- Download the data from https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz.
+
+- Download the data from <https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz>.
 - Extract `fgvc-aircraft-2013b.tar.gz` and keep only `data/`.
 - Move `data/` to `$DATA` and rename the folder to `fgvc_aircraft/`.
 
 The directory structure should look like
+
 ```
 fgvc_aircraft/
 |–– images/
@@ -128,13 +162,15 @@ fgvc_aircraft/
 ```
 
 ### SUN397
+
 - Create a folder named  `sun397/` under `$DATA`.
-- Download the images http://vision.princeton.edu/projects/2010/SUN/SUN397.tar.gz.
-- Download the partitions https://vision.princeton.edu/projects/2010/SUN/download/Partitions.zip.
+- Download the images <http://vision.princeton.edu/projects/2010/SUN/SUN397.tar.gz>.
+- Download the partitions <https://vision.princeton.edu/projects/2010/SUN/download/Partitions.zip>.
 - Extract these files under `$DATA/sun397/`.
 - Download `split_zhou_SUN397.json` from this [link](https://drive.google.com/file/d/1y2RD81BYuiyvebdN-JymPfyWYcd8_MUq/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 sun397/
 |–– SUN397/
@@ -143,10 +179,12 @@ sun397/
 ```
 
 ### DTD
-- Download the dataset from https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz and extract it to `$DATA`. This should lead to `$DATA/dtd/`.
+
+- Download the dataset from <https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz> and extract it to `$DATA`. This should lead to `$DATA/dtd/`.
 - Download `split_zhou_DescribableTextures.json` from this [link](https://drive.google.com/file/d/1u3_QfB467jqHgNXC00UIzbLZRQCg2S7x/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 dtd/
 |–– images/
@@ -156,11 +194,13 @@ dtd/
 ```
 
 ### EuroSAT
+
 - Create a folder named `eurosat/` under `$DATA`.
-- Download the dataset from http://madm.dfki.de/files/sentinel/EuroSAT.zip and extract it to `$DATA/eurosat/`.
+- Download the dataset from <http://madm.dfki.de/files/sentinel/EuroSAT.zip> and extract it to `$DATA/eurosat/`.
 - Download `split_zhou_EuroSAT.json` from [here](https://drive.google.com/file/d/1Ip7yaCWFi0eaOFUGga0lUdVi_DDQth1o/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 eurosat/
 |–– 2750/
@@ -168,11 +208,13 @@ eurosat/
 ```
 
 ### UCF101
+
 - Create a folder named `ucf101/` under `$DATA`.
 - Download the zip file `UCF-101-midframes.zip` from [here](https://drive.google.com/file/d/10Jqome3vtUA2keJkNanAiFpgbyC9Hc2O/view?usp=sharing) and extract it to `$DATA/ucf101/`. This zip file contains the extracted middle video frames.
 - Download `split_zhou_UCF101.json` from this [link](https://drive.google.com/file/d/1I0S0q91hJfsV9Gf4xDIjgDq4AqBNJb1y/view?usp=sharing).
 
 The directory structure should look like
+
 ```
 ucf101/
 |–– UCF-101-midframes/
@@ -181,7 +223,7 @@ ucf101/
 
 ### ImageNet-Sketch
 
-- Download the dataset from https://github.com/HaohanWang/ImageNet-Sketch.
+- Download the dataset from <https://github.com/HaohanWang/ImageNet-Sketch>.
 - Extract the dataset to `$DATA/imagenet-sketch`.
 - Copy `$DATA/imagenet/classnames.txt` to `$DATA/imagenet-sketch/`.
 
@@ -195,7 +237,7 @@ imagenet-sketch/
 
 ### ImageNet-V2
 
-- Download the dataset from https://huggingface.co/datasets/vaishaal/ImageNetV2/tree/main.
+- Download the dataset from <https://huggingface.co/datasets/vaishaal/ImageNetV2/tree/main>.
 - Extract the dataset and rename `$DATA/imagenetv2-matched-frequency-format-val`.
 
 The directory structure should look like
@@ -207,7 +249,7 @@ imagenetv2-matched-frequency-format-val/
 
 ### ImageNet-R
 
-- Download the dataset from https://people.eecs.berkeley.edu/~hendrycks/imagenet-r.tar.
+- Download the dataset from <https://people.eecs.berkeley.edu/~hendrycks/imagenet-r.tar>.
 - Extract the dataset and rename `$DATA/imagenet-r`.
 
 The directory structure should look like

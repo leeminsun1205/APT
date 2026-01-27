@@ -3,6 +3,7 @@ import os
 import pickle
 import random
 from typing import List, Tuple
+import numpy as np
 
 from PIL import Image
 from torchvision import datasets as tvds
@@ -139,3 +140,128 @@ class APT_CIFAR100(_CIFARBase):
     dataset_dir = "cifar100-data"
     tv_name = "CIFAR100"
     split_filename = "split_zhou_CIFAR100.json"
+
+
+@DATASET_REGISTRY.register()
+class APT_CIFAR10_1(_CIFARBase):
+    dataset_dir = "cifar10.1"
+
+    def __init__(self, cfg):
+        # Không gọi super().__init__ cũ vì logic khác hoàn toàn (chỉ có test set)
+        
+        # 1. Setup paths
+        self.dataset_dir = "cifar10.1"
+        root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
+        self.dataset_dir_path = os.path.join(root, self.dataset_dir)
+        self.image_dir = os.path.join(self.dataset_dir_path, "images")
+        self.db_dir = os.path.join(self.dataset_dir_path, "databases")
+        
+        # 2. Check and Extract if needed
+        self._check_and_download()
+            
+        # 3. Create splits
+        # CIFAR10.1 chỉ dùng để test/eval OOD cho CIFAR10 model
+        train = [] 
+        val = []
+        test = self._read_data()
+
+        # Đặt các thuộc tính cần thiết cho DatasetBase
+        # Lưu ý: DatasetBase cần self.train_x, self.val, self.test
+        super(DatasetBase, self).__init__() # Gọi grandparent init để setup transforms cơ bản nếu có
+        # Nhưng DatasetBase của dassl thường init: super().__init__(train_x, val, test)
+        # Ở đây ta gọi trực tiếp logic gán nó (bypass _CIFARBase init)
+        
+        self._train_x = train
+        self._val = val
+        self._test = test
+        self._num_classes = 10
+        self._lab2cname = {
+            0: "airplane", 1: "automobile", 2: "bird", 3: "cat", 4: "deer",
+            5: "dog", 6: "frog", 7: "horse", 8: "ship", 9: "truck"
+        }
+        self._classnames = [self._lab2cname[i] for i in range(10)]
+
+    def _check_and_download(self):
+        mkdir_if_missing(self.db_dir)
+        
+        # URLs for v6 dataset
+        urls = {
+            "cifar10.1_v6_data.npy": "https://github.com/modestyachts/CIFAR-10.1/raw/master/datasets/cifar10.1_v6_data.npy",
+            "cifar10.1_v6_labels.npy": "https://github.com/modestyachts/CIFAR-10.1/raw/master/datasets/cifar10.1_v6_labels.npy"
+        }
+        
+        # Check download
+        for filename, url in urls.items():
+            fpath = os.path.join(self.db_dir, filename)
+            if not os.path.exists(fpath):
+                print(f"Downloading {filename} from {url}...")
+                try:
+                    self._download_file(url, fpath)
+                    print(f"Successfully downloaded {filename}")
+                except Exception as e:
+                    raise RuntimeError(f"Failed to download {filename}: {e}")
+
+        # Check extraction
+        if not os.path.exists(self.image_dir):
+            print(f"Extracting CIFAR10.1 images to {self.image_dir}...")
+            self._extract_images()
+
+    def _download_file(self, url, fpath):
+        import requests
+        # Use requests for better handling
+        r = requests.get(url, stream=True)
+        if r.status_code == 200:
+            with open(fpath, 'wb') as f:
+                for chunk in r.iter_content(1024):
+                    f.write(chunk)
+        else:
+            raise RuntimeError(f"HTTP Error {r.status_code} for {url}")
+
+    def _extract_images(self):
+        data_path = os.path.join(self.db_dir, "cifar10.1_v6_data.npy")
+        label_path = os.path.join(self.db_dir, "cifar10.1_v6_labels.npy")
+        
+        if not os.path.exists(data_path) or not os.path.exists(label_path):
+             # Should be caught by _check_and_download, but as a safeguard
+             raise FileNotFoundError(f"Missing data files in {self.db_dir}")
+
+        data = np.load(data_path) # (2000, 32, 32, 3)
+        labels = np.load(label_path) # (2000,)
+
+        mkdir_if_missing(self.image_dir)
+        
+        # Define class names mapping (CIFAR10 order)
+        # 0: airplane, 1: automobile, 2: bird, 3: cat, 4: deer, 
+        # 5: dog, 6: frog, 7: horse, 8: ship, 9: truck
+        cifar10_classes = ["airplane", "automobile", "bird", "cat", "deer", 
+                           "dog", "frog", "horse", "ship", "truck"]
+
+        for cname in cifar10_classes:
+            mkdir_if_missing(os.path.join(self.image_dir, cname))
+
+        for i in range(len(data)):
+            img_arr = data[i]
+            label = int(labels[i])
+            cname = cifar10_classes[label]
+            
+            im = Image.fromarray(img_arr)
+            # Filename: index_label.png
+            save_path = os.path.join(self.image_dir, cname, f"{i:05d}.png")
+            im.save(save_path)
+
+    def _read_data(self):
+        items = []
+        cifar10_classes = ["airplane", "automobile", "bird", "cat", "deer", 
+                           "dog", "frog", "horse", "ship", "truck"]
+        
+        for label, cname in enumerate(cifar10_classes):
+            class_dir = os.path.join(self.image_dir, cname)
+            if not os.path.isdir(class_dir):
+                continue
+                
+            for img_name in os.listdir(class_dir):
+                impath = os.path.join(class_dir, img_name)
+                item = Datum(impath=impath, label=label, classname=cname)
+                items.append(item)
+        
+        return items
