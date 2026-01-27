@@ -160,10 +160,12 @@ if __name__ == '__main__':
     if cfg.DATASET.NUM_LABELED <= 0:
         cfg.DATASET.NUM_LABELED = 10  # Default value to bypass assertion
 
-    dm = DataManager(cfg)
-    classes = dm.dataset.classnames
-    loader = dm.test_loader
-    num_classes = dm.num_classes
+    # Skip DataManager for CIFAR-C datasets (they use robustbench)
+    if args.dataset not in ['Cifar10C', 'Cifar100C', 'CIFAR10C', 'CIFAR100C']:
+        dm = DataManager(cfg)
+        classes = dm.dataset.classnames
+        loader = dm.test_loader
+        num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
