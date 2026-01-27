@@ -161,9 +161,12 @@ class APT_CIFAR10_1(_CIFARBase):
             
         # 3. Create splits
         # CIFAR10.1 chỉ dùng để test/eval OOD cho CIFAR10 model
-        train = [] 
-        val = []
+        # Nhưng DataManager yêu cầu train không rỗng, nên ta dùng vài sample đầu làm dummy
         test = self._read_data()
+        
+        # Use first 10 samples as dummy train/val to satisfy DataManager
+        train = test[:5] if len(test) >= 5 else test[:1]
+        val = test[5:10] if len(test) >= 10 else test[:1]
 
         # Đặt các thuộc tính cần thiết cho DatasetBase
         # Lưu ý: DatasetBase cần self.train_x, self.val, self.test
