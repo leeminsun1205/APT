@@ -196,14 +196,14 @@ if __name__ == '__main__':
         n_examples = 10000 # Full test set size for CIFAR
         data_dir = './data' # Or use cfg.DATASET.ROOT if appropriate, but robustbench usually handles downloads
 
-        if args.dataset == 'Cifar10C':
+        if args.dataset in ['Cifar10C', 'CIFAR10C']:
              print(f"Loading CIFAR-10-C (Severity {severity})...")
              x_test, y_test = load_cifar10c(n_examples=n_examples, severity=severity, data_dir=data_dir)
              num_classes = 10
              classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 
-        elif args.dataset == 'Cifar100C':
+        elif args.dataset in ['Cifar100C', 'CIFAR100C']:
              print(f"Loading CIFAR-100-C (Severity {severity})...")
              x_test, y_test = load_cifar100c(n_examples=n_examples, severity=severity, data_dir=data_dir)
              num_classes = 100
