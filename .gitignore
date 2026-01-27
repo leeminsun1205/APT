@@ -185,3 +185,6 @@ documents
 *.vrb
 *.xref
 *.zip
+*.synctex
+*.bbl
+*.tar.gz

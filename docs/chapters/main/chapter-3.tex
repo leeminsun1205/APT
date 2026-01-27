@@ -17,6 +17,31 @@ Hệ thống thực nghiệm được thực hiện trên benchmark toàn diện
     \item \textbf{Out-Of-Distribution (OOD):} Sử dụng để đánh giá khả năng chuyển giao (transferability) của prompt đã học được sang các biến thể dữ liệu chưa từng gặp. Ví dụ: Prompt được học trên ImageNet sẽ được kiểm thử trên ImageNet-V2, ImageNet-Sketch, ImageNet-A, ImageNet-R.
 \end{enumerate}
 
+\begin{table}[h]
+    \centering
+    \caption{Thống kê bộ dữ liệu và các prompt tương ứng}
+    \label{tab:dataset}
+    \resizebox{0.7\columnwidth}{!}{%
+        \begin{tabular}{@{}lcl@{}}
+            \toprule
+            \multicolumn{1}{c}{Dataset} & Classes & \multicolumn{1}{c}{Hand-Engineered Prompt} \\ \midrule
+            TinyImageNet                & 1000    & a photo of a [CLASS]                       \\
+            Caltech101                  & 100     & a photo of a [CLASS]                       \\
+            OxfordPets                  & 37      & a photo of a [CLASS], a type of pet        \\
+            StanfordCars                & 196     & a photo of a [CLASS]                       \\
+            Flowers102                  & 102     & a photo of a [CLASS], a type of flower     \\
+            Food101                     & 101     & a photo of a [CLASS], a type of food       \\
+            FGVCAircraft                & 100     & a photo of a [CLASS], a type of aircraft   \\
+            DTD                         & 47      & [CLASS] texture                            \\
+            EuroSAT                     & 10      & a centered satellite photo of a [CLASS]    \\
+            UCF101                      & 101     & a photo of a person doing [CLASS]          \\ \midrule
+            CIFAR10-C                   & 10      & a photo of a [CLASS]                       \\
+            CIFAR10.1                   & 10      & a photo of a [CLASS]                       \\
+            CIFAR100-C                  & 100     & a photo of a [CLASS]                       \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
 \subsection{Cài đặt huấn luyện (Implementation Details)}
 Tất cả các thí nghiệm được thực hiện với các thiết lập sau:
 \begin{itemize}

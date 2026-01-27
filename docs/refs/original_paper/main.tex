@@ -1,0 +1,82 @@
+% CVPR 2024 Paper Template; see https://github.com/cvpr-org/author-kit
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
+% \usepackage{cvpr}              % To produce the CAMERA-READY version
+% \usepackage[review]{cvpr}      % To produce the REVIEW version
+\usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
+
+\usepackage{comment}
+
+
+
+% Import additional packages in the preamble file, before hyperref
+\input{preamble}
+
+\usepackage{bm}
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+% Please disable hyperref *only* if you encounter grave issues, 
+% e.g. with the file validation for the camera-ready version.
+%
+% If you comment hyperref and then uncomment it, you should delete *.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you should be clear).
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,citecolor=cvprblue]{hyperref}
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\paperID{7387} % *** Enter the Paper ID here
+\def\confName{CVPR}
+\def\confYear{2024}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+% \title{Learning to Prompt Vision-Language Models for Adversarial Robustness}
+\title{One Prompt Word is Enough to Boost Adversarial Robustness for Pre-trained Vision-Language Models}
+
+%%%%%%%%% AUTHORS - PLEASE UPDATE
+\author{Lin Li\textsuperscript{1}\thanks{equal contribution}, Haoyan Guan\textsuperscript{1}\footnotemark[1], Jianing Qiu\textsuperscript{2}, Michael Spratling\textsuperscript{1}\\
+\textsuperscript{1}King's College London, \textsuperscript{2}Imperial College London\\
+{\tt\small \{lin.3.li, haoyan.guan, michael.spratling\}@kcl.ac.uk, jianing.qiu17@imperial.ac.uk}
+% For a paper whose authors are all at the same institution,
+% omit the following lines up until the closing ``}''.
+% Additional authors and addresses can be added with ``\and'',
+% just like the second author.
+% To save space, use either the email address or home page, not both
+% \and
+% Second Author\\
+% Institution2\\
+% First line of institution2 address\\
+% {\tt\small secondauthor@i2.org}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+Large pre-trained Vision-Language Models (VLMs) like CLIP, despite having remarkable generalization ability, are highly vulnerable to adversarial examples. 
+% Compared to vision models VLMs have a unique component, the text prompt, which can be optimized for adversarial robustness, although this has been rarely explored before.
+This work studies the adversarial robustness of VLMs from the novel perspective of the text prompt instead of the extensively studied model weights (frozen in this work). 
+We first show that the effectiveness of both adversarial attack and defense are sensitive to the used text prompt.
+% context, \ie, the text in the prompt other than the class label. 
+Inspired by this, we propose a method to improve resilience to adversarial attacks by learning a robust text prompt for VLMs. 
+The proposed method, named Adversarial Prompt Tuning (APT), is effective while being both computationally and data efficient.
+Extensive experiments are conducted across 15 datasets and 4 data sparsity schemes (from 1-shot to full training data settings) to show APT's superiority over hand-engineered prompts and other state-of-the-art adaption methods. APT demonstrated excellent abilities in terms of the in-distribution performance and the generalization under input distribution shift and across datasets.
+Surprisingly, by simply adding one learned word to the prompts, APT can significantly boost the accuracy and robustness ($\epsilon=4/255$) over the hand-engineered prompts by +13\% and +8.5\% on average respectively. 
+The improvement further increases, in our most effective setting, to +26.4\% for accuracy and +16.7\% for robustness. Code is available at \url{https://github.com/TreeLLi/APT}.
+\end{abstract}
+
+\input{sec/main}
+
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{reference,references}
+}
+
+% WARNING: do not forget to delete the supplementary pages from your submission 
+\input{sec/appendix}
+
+\end{document}

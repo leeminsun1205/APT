@@ -1,0 +1,33 @@
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+
+% \usepackage[ruled]{algorithm2e, algorithmic}
+\usepackage{algorithm,algpseudocode}
+% \usepackage[capitalize]{cleveref}
+% \crefname{section}{Sec.}{Secs.}
+% \Crefname{section}{Section}{Sections}
+% \Crefname{table}{Table}{Tables}
+% \crefname{table}{Tab.}{Tabs.}
+
+\usepackage{xspace}
+\def \linf {$\ell_{\infty}$\xspace}
+\def \lt {$\ell_2$\xspace}
+\def \lp {$\ell_p$\xspace}
+\def \pnorm {$p$-norm\xspace}
+
+%
+% --- inline annotations
+%
+\usepackage[dvipsnames]{xcolor}
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\todo}[1]{{\color{red}#1}}
+\newcommand{\TODO}[1]{\textbf{\color{red}[TODO: #1]}}
+% --- disable by uncommenting  
+% \renewcommand{\TODO}[1]{}
+% \renewcommand{\todo}[1]{#1}
+
+\newcommand{\lin}[1]{{\color{blue}[Lin: #1]}}
+\newcommand{\haoyan}[1]{{\color{brown}[Haoyan: #1]}}

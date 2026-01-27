@@ -92,50 +92,6 @@
       \field{title}{One Prompt Word is Enough to Boost Adversarial Robustness for Pre-trained Vision-Language Models}
       \field{year}{2024}
     \endentry
-    \entry{madry2017towards}{inproceedings}{}{}
-      \name{author}{5}{}{%
-        {{hash=155359c985c7d112498d27d32ad89bfe}{%
-           family={Madry},
-           familyi={M\bibinitperiod},
-           given={Aleksander},
-           giveni={A\bibinitperiod}}}%
-        {{hash=0cbd9bf3ec2c5306948fe3da351748fc}{%
-           family={Makelov},
-           familyi={M\bibinitperiod},
-           given={Aleksandar},
-           giveni={A\bibinitperiod}}}%
-        {{hash=bca2cf46e9eed1a3bcc54f4286b4e013}{%
-           family={Schmidt},
-           familyi={S\bibinitperiod},
-           given={Ludwig},
-           giveni={L\bibinitperiod}}}%
-        {{hash=240422b4c9d0d047da2b6f51d9220b59}{%
-           family={Tsipras},
-           familyi={T\bibinitperiod},
-           given={Dimitris},
-           giveni={D\bibinitperiod}}}%
-        {{hash=097451a2aff1de6e5880f0cb1d8b6030}{%
-           family={Vladu},
-           familyi={V\bibinitperiod},
-           given={Adrian},
-           giveni={A\bibinitperiod}}}%
-      }
-      \strng{namehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{fullhash}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{fullhashraw}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{bibnamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authorbibnamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authornamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authorfullhash}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{authorfullhashraw}{e33786bf52938f374c7e70f07a5fd7fb}
-      \field{sortinit}{M}
-      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{International Conference on Learning Representations}
-      \field{title}{Towards deep learning models resistant to adversarial attacks}
-      \field{year}{2018}
-    \endentry
     \entry{radford2021learning}{inproceedings}{}{}
       \true{moreauthor}
       \true{morelabelname}

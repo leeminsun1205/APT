@@ -12,7 +12,7 @@ Quy trình huấn luyện diễn ra như một bài toán tối ưu hóa Min-Max
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
+    \includegraphics[width=0.9\linewidth]{graphics/chapter-2/chapter-2-apt-vs-others.pdf}
     \caption{So sánh kiến trúc giữa APT và các phương pháp thích nghi đối kháng khác (Nguồn: \cite{li2024apt})}
     \label{fig:arch_comparison}
 \end{figure}
@@ -29,7 +29,7 @@ Trong công thức này, $M$ biểu thị độ dài của ngữ cảnh (context
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
+    \includegraphics[width=0.9\linewidth]{graphics/chapter-2/chapter-2-algo-overview.pdf}
     \caption{Minh họa cấu trúc Soft Prompt và cách chèn vào nhánh văn bản của CLIP (Nguồn: \cite{li2024apt})}
     \label{fig:apt_overview}
 \end{figure}
@@ -56,19 +56,12 @@ Sự lựa chọn này được củng cố bởi hai lợi ích chiến lược
     \item \textbf{Robust Accuracy ($Acc_{robust}$):} Độ chính xác của mô hình khi phải đối mặt với các mẫu ảnh đối kháng được sinh ra bởi thuật toán PGD với ngân sách nhiễu $\epsilon$. Đây là chỉ số quan trọng nhất để đánh giá khả năng phòng thủ của APT.
 \end{itemize}
 
-\subsection{Chỉ số về Độ bền vững (Robustness Gap)}
-Nhằm đánh giá mức độ nhạy cảm của mô hình đối với nhiễu, chúng tôi xem xét \textbf{Accuracy Drop ($\Delta$)}:
-\begin{equation}
-    \Delta = Acc_{clean} - Acc_{robust}
-\end{equation}
-Giá trị $\Delta$ càng nhỏ chứng tỏ mô hình càng có độ ổn định cao, nghĩa là tính bền vững của nó không phụ thuộc quá nhiều vào sự hiện diện của nhiễu đối kháng.
-
-\subsection{Hiệu quả tham số (Parameter Efficiency)}
-Chúng tôi đánh giá tính kinh tế của phương pháp thông qua tỷ lệ tham số học được ($P_{learnable}$) so với tổng số tham số của backbone ($P_{total}$):
-\begin{equation}
-    \text{Efficiency Ratio} = \frac{M \times D}{P_{total}}
-\end{equation}
-Trong đó $M$ là độ dài ngữ cảnh và $D$ là số chiều embedding. Với APT, tỷ lệ này thường cực kỳ nhỏ (vài nghìn tham số so với hàng trăm triệu tham số của CLIP), thể hiện ưu điểm vượt trội về mặt tài nguyên so với các phương pháp Adversarial Fine-tuning truyền thống.
+% \subsection{Chỉ số về Độ bền vững (Robustness Gap)}
+% Nhằm đánh giá mức độ nhạy cảm của mô hình đối với nhiễu, chúng tôi xem xét \textbf{Accuracy Drop ($\Delta$)}:
+% \begin{equation}
+%     \Delta = Acc_{clean} - Acc_{robust}
+% \end{equation}
+% Giá trị $\Delta$ càng nhỏ chứng tỏ mô hình càng có độ ổn định cao, nghĩa là tính bền vững của nó không phụ thuộc quá nhiều vào sự hiện diện của nhiễu đối kháng.
 
 \section{Chiến lược tối ưu hóa (Optimization Strategy)}
 Bài toán tìm kiếm prompt tối ưu trong APT thực chất là một bài toán tối ưu hóa bền vững (robust optimization), được mô hình hóa dưới dạng bài toán Min-Max (Saddle Point Problem):
@@ -100,13 +93,6 @@ Chiến lược thứ ba, và cũng là đề xuất của chúng tôi, là \tex
     \delta^* = \arg \max_{\|\delta\|_\infty \leq \epsilon} \mathcal{L}(P_{\text{current}}, x + \delta, y)
 \end{equation}
 Chiến lược này tạo ra một "mục tiêu động" (dynamic target): khi prompt trở nên tốt hơn, nhiễu đối kháng cũng trở nên tinh vi hơn để "đánh lừa" chính prompt đó. Sự cùng tiến hóa (co-evolution) này buộc mô hình phải liên tục thích nghi, dẫn đến khả năng phòng thủ vượt trội trước các kiểu tấn công thích nghi (adaptive attacks) mà không làm tăng chi phí tính toán quá mức như trường hợp Perturbed Strategy. Rationale đằng sau việc sử dụng On-the-fly là để đảm bảo prompt luôn được thử thách bởi những mẫu đối kháng "khó" nhất tương ứng với trạng thái hiện tại của nó.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\linewidth]{example-image}
-    \caption{Sự khác biệt giữa các chiến lược sinh nhiễu đối kháng trong quá trình huấn luyện}
-    \label{fig:scheduling_strategies}
-\end{figure}
 
 \subsection{Thuật toán huấn luyện tổng thể}
 Dựa trên chiến lược On-the-fly, thuật toán huấn luyện APT được thiết kế để thực hiện xen kẽ giữa việc sinh ảnh đối kháng và cập nhật tham số prompt. Thay vì sử dụng một tập dữ liệu đối kháng cố định (offline), chúng tôi sinh nhiễu trực tiếp (online) trong mỗi batch, đảm bảo tính đa dạng và độ khó cao nhất của dữ liệu huấn luyện. Chi tiết thuật toán được trình bày trong Algorithm \ref{alg:apt}.

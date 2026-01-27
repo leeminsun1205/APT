@@ -14,7 +14,7 @@ CLIP sử dụng kiến trúc hai tháp (two-tower architecture), trong đó hai
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
+    \includegraphics[width=0.9\linewidth]{graphics/chapter-1/chapter-1-clip-architecture.png}
     \caption{Kiến trúc tổng quan của mô hình CLIP (Nguồn: \cite{radford2021learning})}
     \label{fig:clip_architecture}
 \end{figure}
@@ -68,7 +68,7 @@ Trong lĩnh vực học sâu, sự tồn tại của các mẫu đối kháng (a
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\linewidth]{example-image}
+    \includegraphics[width=0.8\linewidth]{graphics/chapter-1/chapter-1-adversarial-example.png}
     \caption{Minh họa tấn công đối kháng: thêm nhiễu vào ảnh gấu trúc khiến mô hình nhận diện sai thành vượn (Nguồn: \cite{goodfellow2014explaining})}
     \label{fig:adversarial_example}
 \end{figure}
@@ -83,13 +83,13 @@ Mục tiêu của kẻ tấn công là tìm ra nhiễu loạn $\delta$ sao cho t
 \end{equation}
 Trong đó $\mathcal{S} = \{ \delta : \|\delta\|_p \le \epsilon \}$ là tập hợp các nhiễu cho phép trong quả cầu $L_p$ bán kính $\epsilon$. Chuẩn $L_\infty$ (khoảng cách Chebyshev) là chuẩn phổ biến nhất trong các nghiên cứu về ảnh đối kháng, giúp giới hạn sự thay đổi tối đa trên từng điểm ảnh.
 
-\subsection{Thuật toán Projected Gradient Descent (PGD)}
-Projected Gradient Descent (PGD) \cite{madry2017towards} được xem là thuật toán tấn công hộp trắng tiêu chuẩn và mạnh mẽ nhất hiện nay. PGD giải bài toán tối ưu trên bằng phương pháp lặp (iterative method), cập nhật mẫu đối kháng theo công thức:
-\begin{equation}
-    x^{t+1}_{adv} = \Pi_{\mathcal{B}(x, \epsilon)} \left( x^t_{adv} + \alpha \cdot \text{sign}(\nabla_x \mathcal{L}(f_\theta(x^t_{adv}), y)) \right)
-\end{equation}
+% \subsection{Thuật toán Projected Gradient Descent (PGD)}
+% Projected Gradient Descent (PGD) \cite{madry2017towards} được xem là thuật toán tấn công hộp trắng tiêu chuẩn và mạnh mẽ nhất hiện nay. PGD giải bài toán tối ưu trên bằng phương pháp lặp (iterative method), cập nhật mẫu đối kháng theo công thức:
+% \begin{equation}
+%     x^{t+1}_{adv} = \Pi_{\mathcal{B}(x, \epsilon)} \left( x^t_{adv} + \alpha \cdot \text{sign}(\nabla_x \mathcal{L}(f_\theta(x^t_{adv}), y)) \right)
+% \end{equation}
 
-Quy trình thực hiện bao gồm ba bước chính lặp đi lặp lại. Đầu tiên, quá trình \textbf{Khởi tạo} bắt đầu từ một điểm ngẫu nhiên trong vùng lân cận $\epsilon$ của $x$ (Random Start) để tránh rơi vào các tối ưu địa phương. Tiếp theo, bước \textbf{Cập nhật} di chuyển điểm dữ liệu theo hướng gradient của hàm mất mát với bước nhảy $\alpha$. Cuối cùng, bước \textbf{Chiếu (Project)} đảm bảo nếu $x^{t+1}_{adv}$ vượt ra ngoài giới hạn $\epsilon$, nó sẽ được chiếu ngược trở lại biên của vùng cho phép, đồng thời đảm bảo giá trị pixel nằm trong khoảng hợp lệ $[0, 1]$. PGD với $N$ bước lặp (PGD-$N$) tạo ra các mẫu đối kháng có độ phức tạp cao hơn nhiều so với phương pháp FGSM (chỉ 1 bước), do đó là thước đo tin cậy để đánh giá tính bền vững (robustness).
+% Quy trình thực hiện bao gồm ba bước chính lặp đi lặp lại. Đầu tiên, quá trình \textbf{Khởi tạo} bắt đầu từ một điểm ngẫu nhiên trong vùng lân cận $\epsilon$ của $x$ (Random Start) để tránh rơi vào các tối ưu địa phương. Tiếp theo, bước \textbf{Cập nhật} di chuyển điểm dữ liệu theo hướng gradient của hàm mất mát với bước nhảy $\alpha$. Cuối cùng, bước \textbf{Chiếu (Project)} đảm bảo nếu $x^{t+1}_{adv}$ vượt ra ngoài giới hạn $\epsilon$, nó sẽ được chiếu ngược trở lại biên của vùng cho phép, đồng thời đảm bảo giá trị pixel nằm trong khoảng hợp lệ $[0, 1]$. PGD với $N$ bước lặp (PGD-$N$) tạo ra các mẫu đối kháng có độ phức tạp cao hơn nhiều so với phương pháp FGSM (chỉ 1 bước), do đó là thước đo tin cậy để đánh giá tính bền vững (robustness).
 
 \section{Prompt Learning}
 Prompt Learning là phương pháp thích nghi (adaptation) mới được đề xuất cho các mô hình ngôn ngữ lớn, thay đổi cách tiếp cận truyền thống bằng việc tối ưu hóa đầu vào thay vì tinh chỉnh toàn bộ tham số mô hình (fine-tuning).
@@ -106,7 +106,7 @@ Trong đó $\{[V]_1, ..., [V]_M\}$ là các vector ngữ cảnh được khởi 
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{example-image}
+    \includegraphics[width=0.9\linewidth]{graphics/chapter-1/chapter-1-CoOp.png}
     \caption{Cơ chế học ngữ cảnh (Context Optimization) của CoOp (Nguồn: \cite{zhou2022learning})}
     \label{fig:coop_architecture}
 \end{figure}
