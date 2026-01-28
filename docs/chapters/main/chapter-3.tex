@@ -57,9 +57,8 @@ Temp
 \section{Đánh giá chuyên sâu (Ablation Study \& Analysis)}
 
 \subsection{Hiệu quả dữ liệu (Few-shot Efficiency)}
-Chúng tôi đánh giá hiệu năng của APT khi số lượng mẫu/lớp (shots) thay đổi: 1, 2, 4, 8, 16.
+Chúng tôi đánh giá hiệu năng của APT khi số lượng mẫu/lớp (shots) thay đổi: 1, 4, 8, 16, allshots.
 Kết quả cho thấy APT hội tụ rất nhanh. Chỉ với \textbf{1 shot} (1 ảnh cho mỗi lớp), APT đã có thể cải thiện Robustness đáng kể so với baseline. Hiệu năng tăng dần và bão hòa quanh mức 16 shots, chứng tỏ phương pháp không đòi hỏi lượng dữ liệu lớn như việc fine-tune toàn bộ mô hình.
 
 \subsection{Khả năng tổng quát hóa OOD (OOD Generalization)}
-Khi đưa mô hình đã học trên ImageNet sang kiểm thử trên các tập dữ liệu OOD (như ImageNet-Sketch - ảnh phác thảo), APT vẫn duy trì được độ chính xác cao hơn đáng kể so với CoOp. Điều này gợi ý rằng prompt học được bởi các phương pháp thông thường (CoOp) có xu hướng overfit vào các chi tiết bề mặt (texture, màu sắc) của tập train, trong khi prompt của APT (nhờ quá trình đối kháng) đã học được các khái niệm trừu tượng (hình dáng, cấu trúc) bất biến hơn.
-
+[Placeholder]
