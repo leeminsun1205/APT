@@ -215,11 +215,10 @@ if __name__ == '__main__':
              classes = dummy_ds.classes
 
         # CIFAR-C data is 32x32, need to resize to 224x224 for CLIP
-        from torchvision.transforms import Resize, InterpolateMode
-        resize_transform = Resize(224, interpolation=InterpolateMode.BICUBIC)
+        import torch.nn.functional as F
         
-        # Apply resize to all images
-        x_test_resized = torch.stack([resize_transform(img) for img in x_test])
+        # Apply resize to all images using F.interpolate
+        x_test_resized = F.interpolate(x_test, size=224, mode='bicubic', align_corners=False)
         
         dataset = TensorDataset(x_test_resized, y_test)
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
