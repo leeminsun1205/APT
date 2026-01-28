@@ -19,6 +19,142 @@
 
 \refsection{0}
   \datalist[entry]{nyt/global//global/global/global}
+    \entry{chen_visual_2023}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=4c1df8c74759b8ed0cac2fd2b02831db}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Aochuan},
+           giveni={A\bibinitperiod}}}%
+        {{hash=64b2eaba1deff2a1fe2942348e4f98e3}{%
+           family={Lorenz},
+           familyi={L\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod}}}%
+        {{hash=0581510329cb4e77bf8db54480452c7d}{%
+           family={Yao},
+           familyi={Y\bibinitperiod},
+           given={Yuguang},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=daec437b50b9f8311081b5f018781ff7}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Pin-Yu},
+           giveni={P\bibinithyphendelim Y\bibinitperiod}}}%
+        {{hash=e2940590786980e144a198f1fa09253c}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Sijia},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{5a5d8d9e23a26b64280afe7ca0c47659}
+      \strng{fullhash}{fba4134a3ffb8ebfd931dc82e9303f54}
+      \strng{fullhashraw}{fba4134a3ffb8ebfd931dc82e9303f54}
+      \strng{bibnamehash}{5a5d8d9e23a26b64280afe7ca0c47659}
+      \strng{authorbibnamehash}{5a5d8d9e23a26b64280afe7ca0c47659}
+      \strng{authornamehash}{5a5d8d9e23a26b64280afe7ca0c47659}
+      \strng{authorfullhash}{fba4134a3ffb8ebfd931dc82e9303f54}
+      \strng{authorfullhashraw}{fba4134a3ffb8ebfd931dc82e9303f54}
+      \field{extraname}{1}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{{ICASSP} 2023 - 2023 {IEEE} {International} {Conference} on {Acoustics}, {Speech} and {Signal} {Processing} ({ICASSP})}
+      \field{title}{Visual {Prompting} for {Adversarial} {Robustness}}
+      \field{year}{2023}
+      \field{pages}{1\bibrangedash 5}
+      \range{pages}{5}
+      \verb{doi}
+      \verb 10.1109/ICASSP49357.2023.10097245
+      \endverb
+    \endentry
+    \entry{chen_adversarial_2020}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=d30571882fcf746c466a57da914b08ad}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Tianlong},
+           giveni={T\bibinitperiod}}}%
+        {{hash=e2940590786980e144a198f1fa09253c}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Sijia},
+           giveni={S\bibinitperiod}}}%
+        {{hash=e26307dd1558d6395344d7a9b14c2a4c}{%
+           family={Chang},
+           familyi={C\bibinitperiod},
+           given={Shiyu},
+           giveni={S\bibinitperiod}}}%
+        {{hash=f90fa099ce585c3d1d009abdb2ccf07c}{%
+           family={Cheng},
+           familyi={C\bibinitperiod},
+           given={Yu},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=7294c85d809dd1d6eb0acadff8f73a97}{%
+           family={Amini},
+           familyi={A\bibinitperiod},
+           given={Lisa},
+           giveni={L\bibinitperiod}}}%
+        {{hash=4f87ba962b43f4d664922e1f3c38c9c0}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Zhangyang},
+           giveni={Z\bibinitperiod}}}%
+      }
+      \strng{namehash}{7dcb8f2f4be2b72aef2a5e0bf21b5ecf}
+      \strng{fullhash}{7c7ebe42c2794e9b053df50d64387079}
+      \strng{fullhashraw}{7c7ebe42c2794e9b053df50d64387079}
+      \strng{bibnamehash}{7dcb8f2f4be2b72aef2a5e0bf21b5ecf}
+      \strng{authorbibnamehash}{7dcb8f2f4be2b72aef2a5e0bf21b5ecf}
+      \strng{authornamehash}{7dcb8f2f4be2b72aef2a5e0bf21b5ecf}
+      \strng{authorfullhash}{7c7ebe42c2794e9b053df50d64387079}
+      \strng{authorfullhashraw}{7c7ebe42c2794e9b053df50d64387079}
+      \field{extraname}{2}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the {IEEE}/{CVF} {Conference} on {Computer} {Vision} and {Pattern} {Recognition}}
+      \field{title}{Adversarial {Robustness}: {From} {Self}-{Supervised} {Pre}-{Training} to {Fine}-{Tuning}}
+      \field{year}{2020}
+      \field{pages}{699\bibrangedash 708}
+      \range{pages}{10}
+    \endentry
+    \entry{goodfellow2014explaining}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=d4f74ef4c79f3bb1e51e378184d8850e}{%
+           family={Goodfellow},
+           familyi={G\bibinitperiod},
+           given={Ian\bibnamedelima J},
+           giveni={I\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=8f128e70084608a2c29c497ebd794f87}{%
+           family={Shlens},
+           familyi={S\bibinitperiod},
+           given={Jonathon},
+           giveni={J\bibinitperiod}}}%
+        {{hash=ed568d9c3bb059e6bf22899fbf170f86}{%
+           family={Szegedy},
+           familyi={S\bibinitperiod},
+           given={Christian},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{fullhash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{fullhashraw}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{bibnamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorbibnamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authornamehash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorfullhash}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \strng{authorfullhashraw}{07b2928cf9addb6cf2d09332e9d7ce18}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{International Conference on Learning Representations}
+      \field{title}{Explaining and harnessing adversarial examples}
+      \field{year}{2015}
+    \endentry
     \entry{li2024apt}{inproceedings}{}{}
       \name{author}{4}{}{%
         {{hash=1df2b6f67a5a1fe41f9bc9df027cdb34}{%
@@ -57,50 +193,6 @@
       \field{booktitle}{IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}
       \field{title}{One Prompt Word is Enough to Boost Adversarial Robustness for Pre-trained Vision-Language Models}
       \field{year}{2024}
-    \endentry
-    \entry{madry2017towards}{inproceedings}{}{}
-      \name{author}{5}{}{%
-        {{hash=155359c985c7d112498d27d32ad89bfe}{%
-           family={Madry},
-           familyi={M\bibinitperiod},
-           given={Aleksander},
-           giveni={A\bibinitperiod}}}%
-        {{hash=0cbd9bf3ec2c5306948fe3da351748fc}{%
-           family={Makelov},
-           familyi={M\bibinitperiod},
-           given={Aleksandar},
-           giveni={A\bibinitperiod}}}%
-        {{hash=bca2cf46e9eed1a3bcc54f4286b4e013}{%
-           family={Schmidt},
-           familyi={S\bibinitperiod},
-           given={Ludwig},
-           giveni={L\bibinitperiod}}}%
-        {{hash=240422b4c9d0d047da2b6f51d9220b59}{%
-           family={Tsipras},
-           familyi={T\bibinitperiod},
-           given={Dimitris},
-           giveni={D\bibinitperiod}}}%
-        {{hash=097451a2aff1de6e5880f0cb1d8b6030}{%
-           family={Vladu},
-           familyi={V\bibinitperiod},
-           given={Adrian},
-           giveni={A\bibinitperiod}}}%
-      }
-      \strng{namehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{fullhash}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{fullhashraw}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{bibnamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authorbibnamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authornamehash}{4530e2a23ee0240ba27644964b0d760f}
-      \strng{authorfullhash}{e33786bf52938f374c7e70f07a5fd7fb}
-      \strng{authorfullhashraw}{e33786bf52938f374c7e70f07a5fd7fb}
-      \field{sortinit}{M}
-      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{International Conference on Learning Representations}
-      \field{title}{Towards deep learning models resistant to adversarial attacks}
-      \field{year}{2018}
     \endentry
     \entry{radford2021learning}{inproceedings}{}{}
       \true{moreauthor}
@@ -225,8 +317,6 @@
       \range{pages}{12}
     \endentry
   \enddatalist
-  \missing{goodfellow2014explaining}
-  \missing{li2024one}
 \endrefsection
 \endinput
 

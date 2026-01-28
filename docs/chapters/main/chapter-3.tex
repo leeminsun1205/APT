@@ -8,61 +8,57 @@ Trong chương này, chúng tôi trình bày các kết quả thực nghiệm đ
 \subsection{Bộ dữ liệu (Datasets)}
 Hệ thống thực nghiệm được thực hiện trên benchmark toàn diện bao gồm 15 bộ dữ liệu thị giác thuộc nhiều lĩnh vực khác nhau, được chia thành hai nhóm chính để đánh giá khả năng của mô hình:
 \begin{enumerate}
-  \item \textbf{In-Distribution (ID):} Sử dụng để đánh giá hiệu năng trên cùng miền dữ liệu. Các bộ dữ liệu bao gồm:
-        \begin{itemize}
-          \item \textbf{CIFAR-10 \& CIFAR-100:} Bộ dữ liệu nhận dạng vật thể phổ biến.
-          \item \textbf{TinyImageNet:} Phiên bản thu nhỏ của ImageNet với kích thước ảnh $64 \times 64$.
-          \item \textbf{Food101, OxfordPets, StanfordCars, v.v.:} Các bộ dữ liệu chuyên biệt (fine-grained).
-        \end{itemize}
-  \item \textbf{Out-Of-Distribution (OOD):} Sử dụng để đánh giá khả năng chuyển giao (transferability) của prompt đã học được sang các biến thể dữ liệu chưa từng gặp. Ví dụ: Prompt được học trên ImageNet sẽ được kiểm thử trên ImageNet-V2, ImageNet-Sketch, ImageNet-A, ImageNet-R.
+    \item \textbf{In-Distribution (ID):} Sử dụng để đánh giá hiệu năng trên cùng miền dữ liệu. Các bộ dữ liệu bao gồm:
+          \begin{itemize}
+              \item \textbf{CIFAR-10 \& CIFAR-100:} Bộ dữ liệu nhận dạng vật thể phổ biến.
+              \item \textbf{TinyImageNet:} Phiên bản thu nhỏ của ImageNet với kích thước ảnh $64 \times 64$.
+              \item \textbf{Food101, OxfordPets, StanfordCars, v.v.:} Các bộ dữ liệu chuyên biệt (fine-grained).
+          \end{itemize}
+    \item \textbf{Out-Of-Distribution (OOD):} Sử dụng để đánh giá khả năng chuyển giao (transferability) của prompt đã học được sang các biến thể dữ liệu chưa từng gặp. Ví dụ: Prompt được học trên ImageNet sẽ được kiểm thử trên ImageNet-V2, ImageNet-Sketch, ImageNet-A, ImageNet-R.
 \end{enumerate}
+
+\begin{table}[h]
+    \centering
+    \caption{Thống kê bộ dữ liệu và các prompt tương ứng}
+    \label{tab:dataset}
+    \resizebox{0.7\columnwidth}{!}{%
+        \begin{tabular}{@{}lcl@{}}
+            \toprule
+            \multicolumn{1}{c}{Dataset} & Classes & \multicolumn{1}{c}{Hand-Engineered Prompt} \\ \midrule
+            TinyImageNet                & 1000    & a photo of a [CLASS]                       \\
+            Caltech101                  & 100     & a photo of a [CLASS]                       \\
+            OxfordPets                  & 37      & a photo of a [CLASS], a type of pet        \\
+            StanfordCars                & 196     & a photo of a [CLASS]                       \\
+            Flowers102                  & 102     & a photo of a [CLASS], a type of flower     \\
+            Food101                     & 101     & a photo of a [CLASS], a type of food       \\
+            FGVCAircraft                & 100     & a photo of a [CLASS], a type of aircraft   \\
+            DTD                         & 47      & [CLASS] texture                            \\
+            EuroSAT                     & 10      & a centered satellite photo of a [CLASS]    \\
+            UCF101                      & 101     & a photo of a person doing [CLASS]          \\ \midrule
+            CIFAR10-C                   & 10      & a photo of a [CLASS]                       \\
+            CIFAR10.1                   & 10      & a photo of a [CLASS]                       \\
+            CIFAR100-C                  & 100     & a photo of a [CLASS]                       \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
 
 \subsection{Cài đặt huấn luyện (Implementation Details)}
 Tất cả các thí nghiệm được thực hiện với các thiết lập sau:
 \begin{itemize}
-  \item \textbf{Backbone:} Sử dụng kiến trúc \textbf{ViT-B/32} của CLIP.
-  \item \textbf{Prompt:} Độ dài ngữ cảnh $M=16$. Khởi tạo ngẫu nhiên từ phân phối chuẩn $\mathcal{N}(0, 0.02)$. Vị trí token lớp: "end" (cuối prompt).
-  \item \textbf{Adversarial Training:} Tấn công PGD được tích hợp trong quá trình train với budget $\epsilon=4/255$, số bước lặp $k=3$, và bước nhảy $\alpha=2/255$.
-  \item \textbf{Optimizer:} Sử dụng SGD optimizer với learning rate khởi tạo $\lambda=0.002$, giảm dần theo Cosine Annealing scheduler.
-  \item \textbf{Training Duration:} Huấn luyện trong 10 epochs (đối với chế độ few-shot) hoặc 50 epochs (đối với chế độ full-data).
+    \item \textbf{Backbone:} Sử dụng kiến trúc \textbf{ViT-B/32} của CLIP.
+    \item \textbf{Prompt:} Độ dài ngữ cảnh $M=16$. Khởi tạo ngẫu nhiên từ phân phối chuẩn $\mathcal{N}(0, 0.02)$. Vị trí token lớp: "end" (cuối prompt).
+    \item \textbf{Adversarial Training:} Tấn công PGD được tích hợp trong quá trình train với budget $\epsilon=4/255$, số bước lặp $k=3$, và bước nhảy $\alpha=2/255$.
+    \item \textbf{Optimizer:} Sử dụng SGD optimizer với learning rate khởi tạo $\lambda=0.002$, giảm dần theo Cosine Annealing scheduler.
+    \item \textbf{Training Duration:} Huấn luyện trong 10 epochs (đối với chế độ few-shot) hoặc 50 epochs (đối với chế độ full-data).
 \end{itemize}
 
 \section{Kết quả chính (Main Results)}
-
-\subsection{So sánh với Zero-shot CLIP và Linear Probe}
-Bảng \ref{tab:main_results} trình bày kết quả so sánh giữa APT và hai phương pháp cơ sở: Zero-shot CLIP (sử dụng prompt thủ công "a photo of a <CLASS>") và Linear Probe (huấn luyện lớp phân loại tuyến tính trên đặc trưng ảnh được trích xuất).
-
-\begin{table}[H]
-  \centering
-  \caption{So sánh Độ chính xác (Acc) và Độ bền vững (Robust Acc) trên CIFAR-10 và CIFAR-100 (16-shot setting).}
-  \label{tab:main_results}
-  \begin{tabular}{|l|cc|cc|}
-    \hline
-    \multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\textbf{CIFAR-10}} & \multicolumn{2}{c|}{\textbf{CIFAR-100}}                                      \\ \cline{2-5}
-                                     & \textbf{Clean}                         & \textbf{Robust}                         & \textbf{Clean}  & \textbf{Robust}  \\ \hline
-    Zero-shot CLIP                   & 88.5\%                                 & 23.4\%                                  & 65.2\%          & 12.1\%           \\
-    Linear Probe                     & 92.1\%                                 & 0.5\%                                   & 70.3\%          & 0.2\%            \\
-    CoOp (Standard)                  & 91.2\%                                 & 18.5\%                                  & 68.7\%          & 10.2\%           \\ \hline
-    \textbf{APT (Ours)}              & \textbf{93.5\%}                        & \textbf{45.2\%}                         & \textbf{72.1\%} & \textbf{38.5\%}  \\ \hline
-    \textit{Improvement}             & \textit{+5.0\%}                        & \textit{+21.8\%}                        & \textit{+6.9\%} & \textit{+26.4\%} \\ \hline
-  \end{tabular}
-\end{table}
-
-\textbf{Nhận xét:}
-\begin{itemize}
-  \item \textbf{Robustness:} APT đạt được mức tăng trưởng vượt trội về độ bền vững. Trên CIFAR-100, độ chính xác đối kháng (Robust Accuracy) tăng hơn gấp 3 lần so với Zero-shot (từ 12.1\% lên 38.5\%). Điều này chứng tỏ prompt học được đã giúp mô hình tập trung vào các đặc trưng ngữ nghĩa cốt lõi, ít bị ảnh hưởng bởi nhiễu nền.
-  \item \textbf{Trade-off:} Khác với Adversarial Training truyền thống thường làm giảm độ chính xác trên dữ liệu sạch (Clean Accuracy), APT lại cải thiện đồng thời cả Clean Acc (+5.0\% trên CIFAR-10). Điều này cho thấy tính ưu việt của việc tối ưu hóa trong không gian prompt thay vì không gian trọng số.
-  \item \textbf{So với Linear Probe:} Linear Probe tuy đạt Clean Acc cao nhưng hoàn toàn "vỡ trận" trước tấn công đối kháng (Robust Acc gần như bằng 0). APT khắc phục triệt để điểm yếu này.
-\end{itemize}
-
+Temp
 \section{Đánh giá chuyên sâu (Ablation Study \& Analysis)}
 
 \subsection{Hiệu quả dữ liệu (Few-shot Efficiency)}
-Chúng tôi đánh giá hiệu năng của APT khi số lượng mẫu/lớp (shots) thay đổi: 1, 2, 4, 8, 16.
+Chúng tôi đánh giá hiệu năng của APT khi số lượng mẫu/lớp (shots) thay đổi: 1, 4, 8, 16, allshots.
 Kết quả cho thấy APT hội tụ rất nhanh. Chỉ với \textbf{1 shot} (1 ảnh cho mỗi lớp), APT đã có thể cải thiện Robustness đáng kể so với baseline. Hiệu năng tăng dần và bão hòa quanh mức 16 shots, chứng tỏ phương pháp không đòi hỏi lượng dữ liệu lớn như việc fine-tune toàn bộ mô hình.
 
 \subsection{Khả năng tổng quát hóa OOD (OOD Generalization)}
-Khi đưa mô hình đã học trên ImageNet sang kiểm thử trên các tập dữ liệu OOD (như ImageNet-Sketch - ảnh phác thảo), APT vẫn duy trì được độ chính xác cao hơn đáng kể so với CoOp. Điều này gợi ý rằng prompt học được bởi các phương pháp thông thường (CoOp) có xu hướng overfit vào các chi tiết bề mặt (texture, màu sắc) của tập train, trong khi prompt của APT (nhờ quá trình đối kháng) đã học được các khái niệm trừu tượng (hình dáng, cấu trúc) bất biến hơn.
-
-\section{Kết luận chương}
-Các thực nghiệm trên diện rộng đã khẳng định tính hiệu quả, bền vững và tiết kiệm chi phí của phương pháp APT. Nó không chỉ vượt qua các baseline về độ chính xác mà còn giải quyết bài toán robustness một cách thanh lịch mà không cần can thiệp sâu vào cấu trúc mô hình.
+[Placeholder]

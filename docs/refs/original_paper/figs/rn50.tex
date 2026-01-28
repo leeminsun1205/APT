@@ -1,0 +1,18 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+\begin{table}[]
+\centering
+\caption{The average performance for ResNet50 with $\epsilon=1/255$. $M=16$ and16 shots.}
+\label{tab: rn50}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\multicolumn{1}{c}{Method} & Accuracy             & Robustness           \\ \midrule
+HEP                      & 37.44                & 22.35                \\
+AVP                    & 37.62                & 25.04                \\
+PAFT                    & 50.14          & \uline{39.14}       \\
+APT-UC                     & \uline{58.38}       & 38.32          \\
+APT-CSC                   & \textbf{60.21} &  \textbf{39.26} \\ \bottomrule
+\end{tabular}
+\end{table}

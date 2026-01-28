@@ -1,0 +1,32 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table}[]
+\centering
+\caption{The nearest word for each unified context vector learned by our method with 16 shots on different datasets. N/A means non-Latin characters.}
+\label{tab: context vis}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+\multirow{2}{*}{No.} & \multicolumn{2}{c}{ImageNet} & \multicolumn{2}{c}{Food101} & \multicolumn{2}{c}{DTD} \\ \cmidrule(l){2-7} 
+   & Word         & Distance & Word       & Distance & Word         & Distance \\ \midrule
+1  & optimizing   & 1.30     & yourselves & 1.18     & vid          & 0.82     \\
+2  & dent         & 1.63     & aux        & 0.91     & N/A          & 0.96     \\
+3  & daisies      & 1.07     & ester      & 0.94     & industries   & 0.67     \\
+4  & hashtags     & 1.06     & blocker    & 0.82     & lala         & 0.98     \\
+5  & ents         & 1.01     & obe        & 1.26     & tice         & 0.97     \\
+6  & sph          & 1.14     & each       & 0.94     & met          & 1.02     \\
+7  & swirl        & 1.04     & legally    & 1.24     & stan         & 1.27     \\
+8  & ridge        & 1.20     & frock      & 1.21     & washingtondc & 1.33     \\
+9  & respectively & 1.10     & notte      & 0.92     & press        & 1.31     \\
+10 & stigma       & 1.02     & ur         & 0.91     & ely          & 1.52     \\
+11 & spike        & 1.09     & offic      & 1.17     & Ĺ            & 1.18     \\
+12 & pas          & 0.83     & councillor & 1.17     & soil         & 0.85     \\
+13 & conquering   & 1.40     & dgers      & 1.17     & popefrancis  & 2.21     \\
+14 & turk         & 1.19     & charging   & 1.35     & honourable   & 1.49     \\
+15 & compares     & 1.21     & sk         & 1.09     & perth        & 1.50     \\
+16 & artillery    & 1.39     & mindy      & 1.38     & methodology  & 1.76     \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

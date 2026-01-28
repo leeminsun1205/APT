@@ -1,0 +1,134 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+\begin{table}[]
+\centering
+\caption{The average performance for different $\epsilon$ and shots. The context length, $M$, for our methods is 16. The \textbf{best} and {\ul second best} results are highlighted under each metric. HEP are manually tuned on the target dataset so no strict control on the number of shots used. The results of HEP are copied under different shots in the table for the convenience of comparison.}
+\vspace{-3mm}
+\label{tab: average performance}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}llcccccccc@{}}
+\toprule
+\multicolumn{1}{c}{\multirow{2}{*}{$\epsilon$}} &
+  \multicolumn{1}{c}{\multirow{2}{*}{Method}} &
+  \multicolumn{2}{c}{1 shot} &
+  \multicolumn{2}{c}{4 shots} &
+  \multicolumn{2}{c}{16 shots} &
+  \multicolumn{2}{c}{All} \\ \cmidrule(l){3-10} 
+\multicolumn{1}{c}{} &
+  \multicolumn{1}{c}{} &
+  Acc. &
+  Rob. &
+  Acc. &
+  Rob. &
+  Acc. &
+  Rob. &
+  Acc. &
+  Rob. \\ \midrule
+\multirow{5}{*}{1/255} &
+  HEP \citep{radford_learning_2021} &
+  {\ul 45.2} &
+  {\ul 32.1} &
+  45.2 &
+  32.1 &
+  45.2 &
+  32.1 &
+  45.2 &
+  32.1 \\ %\cmidrule(l){2-10} 
+ &
+  AVP \citep{chen_visual_2023} &
+  44.6 &
+  31.6 &
+  45.0 &
+  32.4 &
+  45.7 &
+  33.6 &
+  50.6 &
+  39.0 \\
+ &
+  PAFT \citep{chen_adversarial_2020} &
+  30.6 &
+  21.7 &
+  46.9 &
+  34.4 &
+  66.4 &
+  \textbf{51.0} &
+  {\ul 71.1} &
+  {\ul 56.9} \\ \cmidrule(l){2-10} 
+ &
+  APT-UC &
+  \textbf{51.3} &
+  \textbf{35.1} &
+  \textbf{58.2} &
+  \textbf{40.8} &
+  {\ul 66.5} &
+  49.0 &
+  70.9 &
+  54.3 \\
+ &
+  APT-CSC &
+  39.9 &
+  26.2 &
+  {\ul 54.3} &
+  {\ul 37.8} &
+  \textbf{66.6} &
+  {\ul 49.1} &
+  \textbf{73.5} &
+  \textbf{57.1} \\ \midrule
+\multirow{5}{*}{4/255} &
+  HEP \citep{radford_learning_2021} &
+  {\ul 33.0} &
+  10.3 &
+  33.0 &
+  10.3 &
+  33.0 &
+  10.3 &
+  33.0 &
+  10.3 \\ %\cmidrule(l){2-10} 
+ &
+  AVP \citep{chen_visual_2023} &
+  32.2 &
+  {\ul 10.5} &
+  32.4 &
+  10.8 &
+  32.7 &
+  11.3 &
+  34.4 &
+  13.1 \\
+ &
+  PAFT \citep{chen_adversarial_2020} &
+  19.2 &
+  8.5 &
+  32.4 &
+  13.9 &
+  {\ul 51.5} &
+  \textbf{22.9} &
+  {\ul 54.9} &
+  \textbf{27.5} \\ \cmidrule(l){2-10} 
+ &
+  APT-UC &
+  \textbf{33.1} &
+  \textbf{11.4} &
+  {\ul 41.8} &
+  \textbf{15.2} &
+  51.1 &
+  20.2 &
+  {\ul 54.9} &
+  24.8 \\
+ &
+  APT-CSC &
+  28.1 &
+  8.1 &
+  \textbf{41.9} &
+  {\ul 14.4} &
+  \textbf{54.2} &
+  {\ul 20.7} &
+  \textbf{59.4} &
+  {\ul 27.0} \\ \bottomrule
+\end{tabular}%
+}
+\vspace{-3mm}
+\end{table}

@@ -3,6 +3,9 @@ import sys
 import argparse
 import torch
 
+# Add parent directory to path so clip module can be found
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from clip.simple_tokenizer import SimpleTokenizer
 from clip import clip
 
@@ -59,5 +62,18 @@ if ctx.dim() == 2:
         print(f"{m+1}: {words} {dist}")
 
 elif ctx.dim() == 3:
-    # Class-specific context
-    raise NotImplementedError
+    # Class-specific context: shape [num_classes, n_ctx, dim]
+    num_classes, n_ctx, dim = ctx.shape
+    print(f"Class-specific context detected: {num_classes} classes, {n_ctx} tokens each")
+    
+    for cls_idx in range(num_classes):
+        cls_ctx = ctx[cls_idx]  # [n_ctx, dim]
+        distance = torch.cdist(cls_ctx, token_embedding)
+        sorted_idxs = torch.argsort(distance, dim=1)
+        sorted_idxs = sorted_idxs[:, :topk]
+        
+        print(f"\n=== Class {cls_idx} ===")
+        for m, idxs in enumerate(sorted_idxs):
+            words = [tokenizer.decoder[idx.item()] for idx in idxs]
+            dist = [f"{distance[m, idx].item():.4f}" for idx in idxs]
+            print(f"  Token {m+1}: {words} {dist}")

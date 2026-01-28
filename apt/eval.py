@@ -97,6 +97,7 @@ parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
 parser.add_argument('--subset', type=int, default=None, help="Test on a subset of the dataset (first N samples)")
 parser.add_argument('-atk_e', '--atk_eps', type=int, default = None)
+parser.add_argument('--data-dir', type=str, default='./data', help="Data directory for CIFAR-C datasets")
 
 if __name__ == '__main__':
 
@@ -105,15 +106,15 @@ if __name__ == '__main__':
     # Normalize dataset name to canonical case usually expected by the script
     if args.dataset:
         canonical_names = {
-            'cifar10c': 'Cifar10C',
-            'cifar100c': 'Cifar100C',
-            'cifar10p': 'Cifar10P',
+            'cifar10c': 'CIFAR10C',
+            'cifar100c': 'CIFAR100C',
             'imagenetr': 'ImageNetR',
             'imageneta': 'ImageNetA',
             'imagenetv2': 'ImageNetV2',
             'on': 'ON',
             'cifar10': 'CIFAR10',
-            'cifar100': 'CIFAR100'
+            'cifar100': 'CIFAR100',
+            'cifar10.1': 'APT_CIFAR10_1'
         }
         args.dataset = canonical_names.get(args.dataset.lower(), args.dataset)
 
@@ -131,9 +132,9 @@ if __name__ == '__main__':
     if args.dataset:
         if args.dataset in ['ImageNetR', 'ImageNetA', 'ON']:
             cfg.DATASET.NAME = 'ImageNet'
-        elif args.dataset in ['Cifar10C', 'Cifar10P']:
+        elif args.dataset in ['CIFAR10C', 'Cifar10C']:
             cfg.DATASET.NAME = 'CIFAR10'
-        elif args.dataset in ['Cifar100C']:
+        elif args.dataset in ['CIFAR100C', 'Cifar100C']:
             cfg.DATASET.NAME = 'CIFAR100'
         else:
             cfg.DATASET.NAME = args.dataset
@@ -160,10 +161,12 @@ if __name__ == '__main__':
     if cfg.DATASET.NUM_LABELED <= 0:
         cfg.DATASET.NUM_LABELED = 10  # Default value to bypass assertion
 
-    dm = DataManager(cfg)
-    classes = dm.dataset.classnames
-    loader = dm.test_loader
-    num_classes = dm.num_classes
+    # Skip DataManager for CIFAR-C datasets (they use robustbench)
+    if args.dataset not in ['Cifar10C', 'Cifar100C', 'CIFAR10C', 'CIFAR100C']:
+        dm = DataManager(cfg)
+        classes = dm.dataset.classnames
+        loader = dm.test_loader
+        num_classes = dm.num_classes
     
     if args.dataset in ['ImageNetR', 'ImageNetA', 'ON'] or (train_dataset == 'ImageNet' and args.dataset is None and args.attack == 'aa'):
         from OODRB.imagenet import ImageNet
@@ -194,16 +197,16 @@ if __name__ == '__main__':
         # Default to severity 5 as standard benchmark, or make it configurable if needed
         severity = 5
         n_examples = 10000 # Full test set size for CIFAR
-        data_dir = './data' # Or use cfg.DATASET.ROOT if appropriate, but robustbench usually handles downloads
+        data_dir = args.data_dir
 
-        if args.dataset == 'Cifar10C':
+        if args.dataset in ['Cifar10C', 'CIFAR10C']:
              print(f"Loading CIFAR-10-C (Severity {severity})...")
              x_test, y_test = load_cifar10c(n_examples=n_examples, severity=severity, data_dir=data_dir)
              num_classes = 10
              classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 
-        elif args.dataset == 'Cifar100C':
+        elif args.dataset in ['Cifar100C', 'CIFAR100C']:
              print(f"Loading CIFAR-100-C (Severity {severity})...")
              x_test, y_test = load_cifar100c(n_examples=n_examples, severity=severity, data_dir=data_dir)
              num_classes = 100
@@ -211,58 +214,13 @@ if __name__ == '__main__':
              dummy_ds = CIFAR100(root='./data', download=True, train=False)
              classes = dummy_ds.classes
 
-        elif args.dataset == 'Cifar10P':
-             print("Loading CIFAR-10-P (Custom Loader)...")
-             cifar10p_dir = os.path.join(data_dir, 'CIFAR-10-P') 
-
-             if not os.path.exists(cifar10p_dir):
-                 raise FileNotFoundError(f"CIFAR-10-P data not found at {cifar10p_dir}")
-
-             labels_path = os.path.join(cifar10p_dir, 'labels.npy')
-             if not os.path.exists(labels_path):
-                  raise FileNotFoundError(f"labels.npy not found at {labels_path}")
-             y_test = np.load(labels_path)
-             if y_test.dtype != np.int64:
-                 y_test = y_test.astype(np.int64)
-             y_test = torch.from_numpy(y_test)
-             
-             perturbation_files = [f for f in os.listdir(cifar10p_dir) if f.endswith('.npy') and f != 'labels.npy']
-             if not perturbation_files:
-                  raise FileNotFoundError("No perturbation .npy files found in CIFAR-10-P directory")
-             
-             perturbation_files.sort()
-             x_test_list = []
-             print(f"Found {len(perturbation_files)} perturbation files. Loading...")
-             
-             for p_file in perturbation_files:
-                 p_path = os.path.join(cifar10p_dir, p_file)
-                 print(f"Loading {p_file}...")
-                 data = np.load(p_path)
-                 if data.shape[-1] == 3: # HWC
-                     data = np.transpose(data, (0, 3, 1, 2))
-                 
-                 if data.max() > 1.0:
-                     data = data.astype(np.float32) / 255.0
-                 else:
-                     data = data.astype(np.float32)
-                 
-                 x_test_list.append(data)
-             
-             x_test = np.concatenate(x_test_list, axis=0)
-             x_test = torch.from_numpy(x_test)
-             
-             if len(y_test) != len(x_test):
-                 if len(x_test) % len(y_test) == 0:
-                     repeat_factor = len(x_test) // len(y_test)
-                     print(f"Repeating labels {repeat_factor} times to match data size.")
-                     y_test = y_test.repeat(repeat_factor)
-                 else:
-                     raise ValueError(f"Mismatch in data size ({len(x_test)}) and labels ({len(y_test)})")
-
-             num_classes = 10
-             classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-
-        dataset = TensorDataset(x_test, y_test)
+        # CIFAR-C data is 32x32, need to resize to 224x224 for CLIP
+        import torch.nn.functional as F
+        
+        # Apply resize to all images using F.interpolate
+        x_test_resized = F.interpolate(x_test, size=224, mode='bicubic', align_corners=False)
+        
+        dataset = TensorDataset(x_test_resized, y_test)
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
     if args.subset:
