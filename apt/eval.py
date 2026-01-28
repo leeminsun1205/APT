@@ -402,7 +402,7 @@ if __name__ == '__main__':
         eps = cfg.AT.EPS
         
     else:
-        eps = args.atk_eps
+        eps = args.atk_eps/255.0
     alpha = eps / 4.0
     steps = 100
         
