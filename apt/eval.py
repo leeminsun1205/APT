@@ -97,6 +97,7 @@ parser.add_argument('-at', '--pre_AT', action='store_true')
 parser.add_argument('-bs', '--batch-size', type=int, default=100)
 parser.add_argument('--subset', type=int, default=None, help="Test on a subset of the dataset (first N samples)")
 parser.add_argument('-atk_e', '--atk_eps', type=int, default = None)
+parser.add_argument('--data-dir', type=str, default='./data', help="Data directory for CIFAR-C datasets")
 
 if __name__ == '__main__':
 
@@ -196,7 +197,7 @@ if __name__ == '__main__':
         # Default to severity 5 as standard benchmark, or make it configurable if needed
         severity = 5
         n_examples = 10000 # Full test set size for CIFAR
-        data_dir = './data' # Or use cfg.DATASET.ROOT if appropriate, but robustbench usually handles downloads
+        data_dir = args.data_dir
 
         if args.dataset in ['Cifar10C', 'CIFAR10C']:
              print(f"Loading CIFAR-10-C (Severity {severity})...")
