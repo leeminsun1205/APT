@@ -3,6 +3,9 @@ import sys
 import argparse
 import torch
 
+# Add parent directory to path so clip module can be found
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from clip.simple_tokenizer import SimpleTokenizer
 from clip import clip
 
