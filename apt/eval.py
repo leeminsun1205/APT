@@ -214,7 +214,14 @@ if __name__ == '__main__':
              dummy_ds = CIFAR100(root='./data', download=True, train=False)
              classes = dummy_ds.classes
 
-        dataset = TensorDataset(x_test, y_test)
+        # CIFAR-C data is 32x32, need to resize to 224x224 for CLIP
+        from torchvision.transforms import Resize, InterpolateMode
+        resize_transform = Resize(224, interpolation=InterpolateMode.BICUBIC)
+        
+        # Apply resize to all images
+        x_test_resized = torch.stack([resize_transform(img) for img in x_test])
+        
+        dataset = TensorDataset(x_test_resized, y_test)
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
     if args.subset:
