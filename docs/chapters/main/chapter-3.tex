@@ -10,34 +10,34 @@ Hệ thống thực nghiệm được thực hiện trên benchmark toàn diện
 \begin{enumerate}
     \item \textbf{In-Distribution (ID):} Sử dụng để đánh giá hiệu năng trên cùng miền dữ liệu. Các bộ dữ liệu bao gồm:
           \begin{itemize}
-              \item \textbf{CIFAR-10 \& CIFAR-100:} Bộ dữ liệu nhận dạng vật thể phổ biến.
-              \item \textbf{TinyImageNet:} Phiên bản thu nhỏ của ImageNet với kích thước ảnh $64 \times 64$.
-              \item \textbf{Food101, OxfordPets, StanfordCars, v.v.:} Các bộ dữ liệu chuyên biệt (fine-grained).
+              \item \textbf{CIFAR-10 \& CIFAR-100} \cite{krizhevsky2009learning}: Bộ dữ liệu nhận dạng vật thể phổ biến với 10 và 100 lớp.
+              \item \textbf{TinyImageNet} \cite{le2015tiny}: Phiên bản thu nhỏ của ImageNet \cite{russakovsky2015imagenet} với kích thước ảnh $64 \times 64$.
+              \item \textbf{Fine-grained datasets:} Food101 \cite{bossard2014food}, OxfordPets \cite{parkhi2012cats}, StanfordCars \cite{krause2013stanford}, Flowers102 \cite{nilsback2008automated}, FGVCAircraft \cite{maji2013aircraft}, DTD \cite{cimpoi2014describing}, EuroSAT \cite{helber2019eurosat}, UCF101 \cite{soomro2012ucf101}, và Caltech101 \cite{feifei2004learning}.
           \end{itemize}
-    \item \textbf{Out-Of-Distribution (OOD):} Sử dụng để đánh giá khả năng chuyển giao (transferability) của prompt đã học được sang các biến thể dữ liệu chưa từng gặp. Ví dụ: Prompt được học trên ImageNet sẽ được kiểm thử trên ImageNet-V2, ImageNet-Sketch, ImageNet-A, ImageNet-R.
+    \item \textbf{Out-Of-Distribution (OOD):} Sử dụng để đánh giá khả năng chuyển giao (transferability) của prompt đã học được sang các biến thể dữ liệu chưa từng gặp. Ví dụ: Prompt được học trên ImageNet sẽ được kiểm thử trên CIFAR10.1, CIFAR10-C.
 \end{enumerate}
 
 \begin{table}[h]
     \centering
     \caption{Thống kê bộ dữ liệu và các prompt tương ứng}
     \label{tab:dataset}
-    \resizebox{0.7\columnwidth}{!}{%
+    \resizebox{0.65\columnwidth}{!}{%
         \begin{tabular}{@{}lcl@{}}
             \toprule
-            \multicolumn{1}{c}{Dataset} & Classes & \multicolumn{1}{c}{Hand-Engineered Prompt} \\ \midrule
-            TinyImageNet                & 1000    & a photo of a [CLASS]                       \\
-            Caltech101                  & 100     & a photo of a [CLASS]                       \\
-            OxfordPets                  & 37      & a photo of a [CLASS], a type of pet        \\
-            StanfordCars                & 196     & a photo of a [CLASS]                       \\
-            Flowers102                  & 102     & a photo of a [CLASS], a type of flower     \\
-            Food101                     & 101     & a photo of a [CLASS], a type of food       \\
-            FGVCAircraft                & 100     & a photo of a [CLASS], a type of aircraft   \\
-            DTD                         & 47      & [CLASS] texture                            \\
-            EuroSAT                     & 10      & a centered satellite photo of a [CLASS]    \\
-            UCF101                      & 101     & a photo of a person doing [CLASS]          \\ \midrule
-            CIFAR10-C                   & 10      & a photo of a [CLASS]                       \\
-            CIFAR10.1                   & 10      & a photo of a [CLASS]                       \\
-            CIFAR100-C                  & 100     & a photo of a [CLASS]                       \\ \bottomrule
+            \multicolumn{1}{c}{Dataset}                 & Classes & \multicolumn{1}{c}{Hand-Engineered Prompt} \\ \midrule
+            TinyImageNet \cite{le2015tiny}              & 1000    & a photo of a [CLASS]                       \\
+            Caltech101 \cite{feifei2004learning}        & 100     & a photo of a [CLASS]                       \\
+            OxfordPets \cite{parkhi2012cats}            & 37      & a photo of a [CLASS], a type of pet        \\
+            StanfordCars \cite{krause2013stanford}      & 196     & a photo of a [CLASS]                       \\
+            Flowers102 \cite{nilsback2008automated}     & 102     & a photo of a [CLASS], a type of flower     \\
+            Food101 \cite{bossard2014food}              & 101     & a photo of a [CLASS], a type of food       \\
+            FGVCAircraft \cite{maji2013aircraft}        & 100     & a photo of a [CLASS], a type of aircraft   \\
+            DTD \cite{cimpoi2014describing}             & 47      & [CLASS] texture                            \\
+            EuroSAT \cite{helber2019eurosat}            & 10      & a centered satellite photo of a [CLASS]    \\
+            UCF101 \cite{soomro2012ucf101}              & 101     & a photo of a person doing [CLASS]          \\ \midrule
+            CIFAR10-C \cite{hendrycks2019benchmarking}  & 10      & a photo of a [CLASS]                       \\
+            CIFAR10.1 \cite{recht2018cifar}             & 10      & a photo of a [CLASS]                       \\
+            CIFAR100-C \cite{hendrycks2019benchmarking} & 100     & a photo of a [CLASS]                       \\ \bottomrule
         \end{tabular}%
     }
 \end{table}
@@ -61,4 +61,138 @@ Chúng tôi đánh giá hiệu năng của APT khi số lượng mẫu/lớp (sh
 Kết quả cho thấy APT hội tụ rất nhanh. Chỉ với \textbf{1 shot} (1 ảnh cho mỗi lớp), APT đã có thể cải thiện Robustness đáng kể so với baseline. Hiệu năng tăng dần và bão hòa quanh mức 16 shots, chứng tỏ phương pháp không đòi hỏi lượng dữ liệu lớn như việc fine-tune toàn bộ mô hình.
 
 \subsection{Khả năng tổng quát hóa OOD (OOD Generalization)}
-[Placeholder]
+Chúng tôi đánh giá khả năng tổng quát hóa của APT khi prompt được huấn luyện trên một dataset nguồn (source) và kiểm thử trên các biến thể dữ liệu chưa từng gặp (target). Bảng \ref{tab:ood_results} so sánh hiệu năng giữa hai chiến lược: Unified Context (UC) và Class-Specific Context (CSC).
+
+\begin{table}[h]
+    \centering
+    \caption{Kết quả OOD Generalization. HEP-No OOD: Hand-Engineered Prompt không huấn luyện trên OOD data. OOD: APT với dữ liệu OOD. Giá trị trong ngoặc là Robust Accuracy (\%).}
+    \label{tab:ood_results}
+    \resizebox{0.75\columnwidth}{!}{%
+        \begin{tabular}{@{}llccc@{}}
+            \toprule
+            \textbf{Types}       & \textbf{Source $\rightarrow$ Target} & \textbf{HEP-No OOD (clean/rob)} & \textbf{APT (clean/rob)} \\ \midrule
+            \multirow{3}{*}{UC}  & CIFAR10 $\rightarrow$ CIFAR10-C      & 35.56 (7.69)                    & 48.63 (29.44)            \\
+                                 & CIFAR10 $\rightarrow$ CIFAR10.1      & 47.00 (8.00)                    & 54.70 (34.70)            \\
+                                 & CIFAR100 $\rightarrow$ CIFAR100-C    & 14.28 (2.94)                    & 27.33 (12.79)            \\ \midrule
+            \multirow{3}{*}{CSC} & CIFAR10 $\rightarrow$ CIFAR10-C      & 35.56 (7.69)                    & 53.18 (33.11)            \\
+                                 & CIFAR10 $\rightarrow$ CIFAR10.1      & 47.00 (8.00)                    & 55.55 (35.60)            \\
+                                 & CIFAR100 $\rightarrow$ CIFAR100-C    & 14.28 (2.94)                    & 24.63 (12.33)            \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+Kết quả cho thấy APT cải thiện đáng kể so với Hand-Engineered Prompt trên cả Clean và Robust Accuracy. Đặc biệt, CSC cho kết quả tốt hơn UC trên CIFAR10-C (53.18\% vs 48.63\% clean, 33.11\% vs 29.44\% robust), trong khi UC lại tốt hơn trên CIFAR100-C.
+
+Chúng tôi cũng đánh giá khả năng chuyển giao xuyên dataset (cross-dataset transfer), khi prompt được huấn luyện trên một dataset nguồn và kiểm thử trên các dataset hoàn toàn khác. Bảng \ref{tab:cross_dataset} trình bày kết quả chi tiết.
+
+\begin{table}[h]
+    \centering
+    \caption{Kết quả Cross-Dataset Transfer. Prompt được huấn luyện trên dataset nguồn (Source - Cột) và đánh giá zero-shot trên dataset đích (Target - Hàng). Giá trị là Acc clean (Acc robust \%).}
+    \label{tab:cross_dataset}
+    \resizebox{0.8\columnwidth}{!}{%
+        \begin{tabular}{@{}lccc@{}}
+            \toprule
+            \textbf{Target \textbackslash \ Source} & \textbf{CIFAR10} & \textbf{CIFAR100} & \textbf{TinyImageNet} \\ \midrule
+            Caltech101                              & 54.89 (35.33)    & 59.43 (39.31)     & 63.69 (39.27)         \\
+            EuroSAT                                 & 14.54 (11.26)    & 25.79 (14.52)     & 13.05 (3.93)          \\
+            FGVCAircraft                            & 2.10 (1.62)      & 1.20 (0.72)       & 2.10 (1.86)           \\
+            OxfordPets                              & 46.52 (17.01)    & 24.48 (11.47)     & 40.39 (16.57)         \\
+            DTD                                     & 10.28 (5.44)     & 10.22 (5.38)      & 13.89 (8.81)          \\
+            Flowers102                              & 11.37 (5.93)     & 14.90 (6.98)      & 15.27 (6.46)          \\
+            UCF101                                  & 21.57 (7.67)     & 17.63 (6.37)      & 20.99 (6.24)          \\
+            StanfordCars                            & 5.88 (2.04)      & 9.14 (2.18)       & 6.17 (2.16)           \\
+            Food101                                 & 11.51 (2.95)     & 10.80 (2.57)      & 14.63 (2.92)          \\
+            TinyImageNet                            & 23.44 (6.67)     & 27.63 (8.42)      & -                     \\
+            CIFAR10                                 & -                & 43.97 (23.08)     & 57.85 (18.44)         \\
+            CIFAR100                                & 17.17 (5.99)     & -                 & 23.10 (6.90)          \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+Kết quả cho thấy prompt học được có khả năng chuyển giao nhất định sang các dataset khác, đặc biệt tốt với Caltech101 (đạt tới 63.69\% khi train từ TinyImageNet). Điều này chứng minh rằng APT học được các đặc trưng tổng quát thay vì chỉ overfitting trên dataset nguồn.
+
+\subsection{Trực quan hóa Context Vectors (Context Vector Visualization)}
+Để hiểu rõ hơn về những gì prompt đã học, chúng tôi tìm từ gần nhất (nearest word) trong không gian embedding của CLIP cho mỗi context vector. Bảng \ref{tab:context_vis} trình bày kết quả với 16 shots trên một số bộ dữ liệu tiêu biểu.
+
+\begin{table}[h]
+    \centering
+    \caption{Từ gần nhất cho mỗi unified context vector được học bởi APT với 16 shots trên các bộ dữ liệu khác nhau. N/A biểu thị các ký tự không thuộc bảng chữ cái Latin.}
+    \label{tab:context_vis}
+    \resizebox{0.9\columnwidth}{!}{%
+        \begin{tabular}{@{}ccccccccc@{}}
+            \toprule
+            \multirow{2}{*}{No.} & \multicolumn{2}{c}{CIFAR10} & \multicolumn{2}{c}{EuroSAT} & \multicolumn{2}{c}{OxfordPets} & \multicolumn{2}{c}{DTD}                                          \\ \cmidrule(l){2-9}
+                                 & Word                        & Distance                    & Word                           & Distance                & Word   & Distance & Word    & Distance \\ \midrule
+            1                    & shots                       & 0.57                        & loving                         & 0.68                    & mod    & 0.83     & rever   & 1.01     \\
+            2                    & tested                      & 0.66                        & portray                        & 0.58                    & esh    & 0.95     & move    & 1.11     \\
+            3                    & los                         & 0.58                        & thats                          & 0.58                    & efc    & 1.08     & cla     & 1.40     \\
+            4                    & zy                          & 0.53                        & progression                    & 0.63                    & areas  & 0.76     & mick    & 0.99     \\
+            5                    & net                         & 0.64                        & marchmadness                   & 0.56                    & it     & 0.89     & penetr  & 1.10     \\
+            6                    & concept                     & 0.59                        & aka                            & 0.57                    & staged & 1.06     & mast    & 0.71     \\
+            7                    & draf                        & 0.63                        & su                             & 0.56                    & fl     & 0.89     & flori   & 0.91     \\
+            8                    & moto                        & 0.73                        & inus                           & 0.56                    & erm    & 0.72     & balsam  & 1.49     \\
+            9                    & N/A                         & 0.55                        & few                            & 0.67                    & (...   & 0.76     & flu     & 0.65     \\
+            10                   & denver                      & 0.62                        & ids                            & 0.78                    & joined & 0.79     & kerson  & 0.82     \\
+            11                   & ados                        & 0.56                        & bil                            & 0.73                    & wie    & 1.14     & pent    & 1.17     \\
+            12                   & bets                        & 0.57                        & ones                           & 0.55                    & hawk   & 0.72     & alex    & 1.10     \\
+            13                   & players                     & 0.60                        & style                          & 0.66                    & away   & 0.82     & N/A     & 1.37     \\
+            14                   & vs                          & 0.63                        & tho                            & 0.62                    & four   & 0.70     & emerald & 1.36     \\
+            15                   & heres                       & 0.63                        & tue                            & 0.70                    & bund   & 1.15     & viz     & 0.82     \\
+            16                   & go                          & 0.88                        & love                           & 0.78                    & kins   & 0.82     & goddess & 1.70     \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+Các từ gần nhất thường là các từ phụ (subwords) hoặc từ viết tắt với khoảng cách nhỏ, cho thấy các context vectors học được không nhất thiết phải tương ứng với các từ có nghĩa trong ngôn ngữ tự nhiên, mà là các điểm tối ưu trong không gian embedding phục vụ cho task phân loại.
+
+\subsection{Ảnh hưởng của Perturbation Budget (Epsilon Analysis)}
+Chúng tôi khảo sát ảnh hưởng của perturbation budget $\epsilon$ trong quá trình huấn luyện và kiểm thử. Bảng \ref{tab:epsilon_uc} và \ref{tab:epsilon_csc} trình bày kết quả với các giá trị $\epsilon$ khác nhau.
+
+\begin{table}[h]
+    \centering
+    \caption{Ảnh hưởng của $\epsilon$ với Unified Context (UC). Giá trị trong ngoặc là Robust Accuracy (\%).}
+    \label{tab:epsilon_uc}
+    \resizebox{0.95\columnwidth}{!}{%
+        \footnotesize
+        \begin{tabular}{@{}cc|cccccccccccc@{}}
+            \toprule
+            \textbf{Train $\epsilon$} & \textbf{Test $\epsilon$} & \textbf{Caltech101} & \textbf{EuroSAT} & \textbf{Food101} & \textbf{FGVCAircraft} & \textbf{OxfordPets} & \textbf{DTD}  & \textbf{Flowers102} & \textbf{UCF101} & \textbf{StanfordCars} & \textbf{TinyImageNet} & \textbf{CIFAR10} & \textbf{CIFAR100} \\ \midrule
+            \multirow{3}{*}{1/255}
+                                      & 1/255                    & 93.43 (87.34)       & 69.53 (65.36)    & 55.11 (39.95)    & 28.05 (21.30)         & 83.65 (72.01)       & 53.78 (47.10) & 87.66 (81.85)       & 35.13 (32.04)   & 60.58 (47.82)         & 62.99 (46.05)         & 77.08 (62.27)    & 56.32 (42.15)     \\
+                                      & 2/255                    & 93.43 (77.65)       & 69.53 (57.43)    & 55.11 (24.77)    & 28.05 (14.88)         & 83.65 (54.46)       & 53.78 (38.36) & 87.66 (71.46)       & 35.13 (26.78)   & 60.58 (34.29)         & 62.99 (26.92)         & 77.08 (43.93)    & 56.32 (27.31)     \\
+                                      & 4/255                    & 93.43 (49.01)       & 69.53 (32.78)    & 55.11 (5.19)     & 28.05 (4.50)          & 83.65 (15.02)       & 53.78 (21.22) & 87.66 (42.87)       & 35.13 (13.43)   & 60.58 (9.69)          & 62.99 (4.35)          & 77.08 (10.15)    & 56.32 (7.43)      \\ \midrule
+            \multirow{3}{*}{4/255}
+                                      & 1/255                    & 85.31 (82.27)       & 63.36 (62.81)    & 29.41 (25.31)    & 17.40 (16.62)         & 69.77 (62.41)       & 45.21 (42.02) & 76.90 (73.57)       & 54.30 (50.30)   & 33.68 (29.08)         & 46.70 (39.13)         & 59.38 (53.86)    & 40.35 (35.03)     \\
+                                      & 2/255                    & 85.31 (78.30)       & 63.36 (62.25)    & 29.41 (20.94)    & 17.40 (15.45)         & 69.77 (52.98)       & 45.21 (37.94) & 76.90 (69.55)       & 54.30 (45.23)   & 33.68 (24.24)         & 46.70 (31.14)         & 59.38 (47.96)    & 40.35 (29.47)     \\
+                                      & 4/255                    & 85.31 (65.03)       & 63.36 (60.26)    & 29.41 (13.18)    & 17.40 (11.55)         & 69.77 (34.01)       & 45.21 (30.26) & 76.90 (59.97)       & 54.30 (31.83)   & 33.68 (14.82)         & 46.70 (16.70)         & 59.38 (35.71)    & 40.35 (19.04)     \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \caption{Ảnh hưởng của $\epsilon$ với Class-Specific Context (CSC). Giá trị trong ngoặc là Robust Accuracy (\%).}
+    \label{tab:epsilon_csc}
+    \resizebox{0.95\columnwidth}{!}{%
+        \footnotesize
+        \begin{tabular}{@{}cc|cccccccccccc@{}}
+            \toprule
+            \textbf{Train $\epsilon$} & \textbf{Test $\epsilon$} & \textbf{Caltech101} & \textbf{EuroSAT} & \textbf{Food101} & \textbf{FGVCAircraft} & \textbf{OxfordPets} & \textbf{DTD}  & \textbf{Flowers102} & \textbf{UCF101} & \textbf{StanfordCars} & \textbf{TinyImageNet} & \textbf{CIFAR10} & \textbf{CIFAR100} \\ \midrule
+            \multirow{3}{*}{1/255}
+                                      & 1/255                    & 91.08 (85.80)       & 74.05 (70.47)    & 52.07 (39.53)    & 36.99 (32.01)         & 78.93 (68.71)       & 57.27 (51.42) & 89.85 (87.01)       & 70.47 (63.92)   & 66.65 (58.74)         & 60.20 (46.02)         & 75.29 (61.68)    & 54.97 (42.93)     \\
+                                      & 2/255                    & 91.08 (78.62)       & 74.05 (64.54)    & 52.07 (26.73)    & 36.99 (25.95)         & 78.93 (54.29)       & 57.27 (43.20) & 89.85 (80.76)       & 70.47 (53.45)   & 66.65 (47.73)         & 60.20 (29.28)         & 75.29 (45.03)    & 54.97 (30.94)     \\
+                                      & 4/255                    & 91.08 (54.69)       & 74.05 (38.67)    & 52.07 (7.60)     & 36.99 (12.03)         & 78.93 (19.49)       & 57.27 (26.54) & 89.85 (60.09)       & 70.47 (26.72)   & 66.65 (20.84)         & 60.20 (7.30)          & 75.29 (11.20)    & 54.97 (10.00)     \\ \midrule
+            \multirow{3}{*}{4/255}
+                                      & 1/255                    & 85.31 (82.31)       & 65.80 (65.40)    & 32.70 (28.36)    & 27.33 (25.59)         & 67.08 (60.81)       & 46.99 (44.15) & 83.11 (80.67)       & 57.68 (54.48)   & 43.15 (39.12)         & 45.98 (39.50)         & 57.86 (53.11)    & 41.82 (37.24)     \\
+                                      & 2/255                    & 85.31 (79.27)       & 65.80 (64.53)    & 32.70 (23.69)    & 27.33 (23.10)         & 67.08 (52.96)       & 46.99 (40.72) & 83.11 (78.08)       & 57.68 (50.15)   & 43.15 (34.57)         & 45.98 (33.50)         & 57.86 (48.56)    & 41.82 (32.53)     \\
+                                      & 4/255                    & 85.31 (69.49)       & 65.80 (61.51)    & 32.70 (15.89)    & 27.33 (18.90)         & 67.08 (36.17)       & 46.99 (34.63) & 83.11 (72.68)       & 57.68 (40.15)   & 43.15 (24.28)         & 45.98 (20.81)         & 57.86 (37.58)    & 41.82 (22.47)     \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+Kết quả cho thấy:
+\begin{itemize}
+    \item Huấn luyện với $\epsilon$ nhỏ (1/255) cho Clean Accuracy cao hơn nhưng Robust Accuracy giảm nhanh khi test với $\epsilon$ lớn.
+    \item Huấn luyện với $\epsilon$ lớn (4/255) giúp mô hình bền vững hơn ở các mức $\epsilon$ test khác nhau, nhưng Clean Accuracy giảm.
+    \item CSC thường cho kết quả tốt hơn UC trên các dataset fine-grained như UCF101, StanfordCars, và FGVCAircraft.
+\end{itemize}
