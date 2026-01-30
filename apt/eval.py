@@ -37,7 +37,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
-
+import time
+import thop
 from utils import *
 
 def CWLoss(output, target, confidence=0):
@@ -98,6 +99,7 @@ parser.add_argument('-bs', '--batch-size', type=int, default=100)
 parser.add_argument('--subset', type=int, default=None, help="Test on a subset of the dataset (first N samples)")
 parser.add_argument('-atk_e', '--atk_eps', type=int, default = None)
 parser.add_argument('--data-dir', type=str, default='./data', help="Data directory for CIFAR-C datasets")
+parser.add_argument('--save-images', action='store_true', help="Save images where model is robust")
 
 if __name__ == '__main__':
 
@@ -375,6 +377,30 @@ if __name__ == '__main__':
         attack = PGD(model, eps=eps, alpha=alpha, steps=steps)
     elif args.attack == 'tpgd':
         attack = TPGD(model, eps=eps, alpha=alpha, steps=steps)
+
+    # --- FLOPs Calculation ---
+    try:
+        # Create a dummy input (1 sample)
+        dummy_input = torch.randn(1, 3, 224, 224).cuda()
+        if args.model == 'ALIGN':
+             # ALIGN needs special handling or we skip FLOPs for it for now as it uses huggingface Dict input widely
+             print("Skipping FLOPs calculation for ALIGN (complex input structure)")
+             flop_str = "N/A"
+        elif args.model == 'BLIP':
+             print("Skipping FLOPs calculation for BLIP")
+             flop_str = "N/A"
+        else:
+             # Basic CLIP: forward takes just image
+             macs, params = thop.profile(model, inputs=(dummy_input,), verbose=False)
+             flops = 2 * macs # GFLOPs usually counted as 2 * MACs
+             flop_str = f"{flops / 1e9:.2f} GFLOPs"
+             print(f"Model FLOPs: {flop_str}")
+             print(f"Model Params: {params / 1e6:.2f} M")
+    except Exception as e:
+        print(f"Warning: Failed to calculate FLOPs: {e}")
+        flop_str = "Error"
+
+    start_time = time.time()
         
     for i, data in enumerate(loader, start=1):
         if i < start_batch:
@@ -393,6 +419,7 @@ if __name__ == '__main__':
             image_inputs = {k: v.cuda() for k, v in image_inputs.items()}
         with torch.no_grad():
             output = model(image_inputs)
+            clean_output = output
         acc = accuracy(output, tgts)
         meters.acc.update(acc[0].item(), bs)
         if args.rob:
@@ -429,6 +456,55 @@ if __name__ == '__main__':
             rob = accuracy(output, tgts)
             meters.rob.update(rob[0].item(), bs)
 
+            # --- SAVE IMAGES LOGIC ---
+            if args.save_path and args.save_images:
+                save_img_dir = os.path.join(args.save_path, 'saved_images')
+                os.makedirs(save_img_dir, exist_ok=True)
+                
+                # Get predictions
+                _, clean_pred = clean_output.topk(1, 1, True, True)
+                clean_pred = clean_pred.t().view(-1)
+                
+                _, adv_pred = output.topk(1, 1, True, True)
+                adv_pred = adv_pred.t().view(-1)
+                
+                # Condition 1: Robust Success (Adv Correct) BUT Clean Fail (Unknown/No Defense Fail)
+                # "phòng thủ robustness thành công mà không phòng thủ thì thất bại"
+                mask_robust_clean_fail = (adv_pred == tgts) & (clean_pred != tgts)
+                
+                # Condition 2: Robust Success AND Clean Success (Total Success)
+                mask_robust_clean_success = (adv_pred == tgts) & (clean_pred == tgts)
+
+                from torchvision.utils import save_image
+                
+                max_save = 50 # Limit saving to avoid flooding disk
+                
+                # Save Robust Clean Fail
+                idxs_fail = torch.where(mask_robust_clean_fail)[0]
+                n_saved_fail = len(os.listdir(os.path.join(save_img_dir, 'robust_clean_fail'))) if os.path.exists(os.path.join(save_img_dir, 'robust_clean_fail')) else 0
+                
+                if len(idxs_fail) > 0 and n_saved_fail < max_save:
+                    fail_dir = os.path.join(save_img_dir, 'robust_clean_fail')
+                    os.makedirs(fail_dir, exist_ok=True)
+                    for idx in idxs_fail:
+                        if n_saved_fail >= max_save: break
+                        # Save Clean (Original) and Adv (Perturbed)
+                        save_image(imgs[idx], os.path.join(fail_dir, f'batch{i}_idx{idx}_clean_fail_targ{tgts[idx]}_pred{clean_pred[idx]}.png'))
+                        save_image(advs[idx], os.path.join(fail_dir, f'batch{i}_idx{idx}_adv_correct_targ{tgts[idx]}_pred{adv_pred[idx]}.png'))
+                        n_saved_fail += 1
+
+                # Save Robust Clean Success (Optional, but useful context)
+                idxs_success = torch.where(mask_robust_clean_success)[0]
+                n_saved_success = len(os.listdir(os.path.join(save_img_dir, 'robust_clean_success'))) if os.path.exists(os.path.join(save_img_dir, 'robust_clean_success')) else 0
+                
+                if len(idxs_success) > 0 and n_saved_success < max_save:
+                    success_dir = os.path.join(save_img_dir, 'robust_clean_success')
+                    os.makedirs(success_dir, exist_ok=True)
+                    for idx in idxs_success:
+                        if n_saved_success >= max_save: break
+                        save_image(advs[idx], os.path.join(success_dir, f'batch{i}_idx{idx}_adv_correct.png'))
+                        n_saved_success += 1
+
         if i == 1 or i % 10 == 0 or i == len(loader):
             progress.display(i)
 
@@ -462,6 +538,11 @@ if __name__ == '__main__':
         yaml.dump(result.to_dict(), f)
     
     print(f'result saved at: {save_path}')
+
+    total_time = time.time() - start_time
+    print(f"Total Inference Time: {total_time:.2f} seconds")
+    if len(loader) > 0:
+        print(f"Average Inference Time per Batch: {total_time / len(loader):.4f} seconds")
 
     # --- CLEANUP PROGRESS FILE ---
     if os.path.exists(progress_file_path):

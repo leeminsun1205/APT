@@ -105,6 +105,9 @@ def reset_cfg(cfg, args):
     cfg.AT.PROMPT = args.adv_prompt
     cfg.AT.PALPHA = args.prompt_alpha
     
+    if args.max_epoch:
+        cfg.OPTIM.MAX_EPOCH = args.max_epoch
+
 def extend_cfg(cfg):
     """
     Add new config variables.
@@ -239,6 +242,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--no-backbone", action="store_true", help="Do not use a pre-trained backbone"
+    )
+    parser.add_argument(
+        "--max-epoch", type=int, default=None, help="override MAX_EPOCH from config"
     )
     parser.add_argument(
         "opts",

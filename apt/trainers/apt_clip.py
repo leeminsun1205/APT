@@ -16,7 +16,8 @@ from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 from torchattacks import PGD
-
+import time
+import thop
 
 _tokenizer = _Tokenizer()
 
@@ -305,7 +306,28 @@ class CoOp(TrainerX):
         if device_count > 1:
             print(f"Multiple GPUs detected (n_gpus={device_count}), use all of them!")
             self.model = nn.DataParallel(self.model)
-            
+
+    def before_train(self):
+        super().before_train()
+        # Calculate FLOPs
+        try:
+             dummy_input = torch.randn(1, 3, 224, 224).to(self.device)
+             # Note: thop might not handle CustomCLIP perfectly if it expects text inputs internally
+             # We assume standard forward path for FLOPs estimation
+             macs, params = thop.profile(self.model, inputs=(dummy_input,), verbose=False)
+             print(f"Training Model FLOPs: {2 * macs / 1e9:.2f} GFLOPs")
+             print(f"Training Model Params: {params / 1e6:.2f} M")
+        except Exception as e:
+             print(f"Warning: Failed to calculate FLOPs in trainer: {e}")
+
+    def before_epoch(self):
+        super().before_epoch()
+        self.epoch_start_time = time.time()
+
+    def after_epoch(self):
+        super().after_epoch()
+        elapsed = time.time() - self.epoch_start_time
+        print(f"Epoch {self.epoch + 1} Training Time: {elapsed:.2f} seconds")
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)
         
