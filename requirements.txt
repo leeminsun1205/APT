@@ -3,3 +3,4 @@ git+https://github.com/fra31/auto-attack
 PyYAML
 yacs
 git+https://github.com/KaiyangZhou/Dassl.pytorch.git
+thop
