@@ -6,6 +6,11 @@ except RuntimeError:
 
 import torch
 import torchvision
+# Hack to fix torchvision::nms error
+try:
+    torchvision.disable_beta_transforms_warning()
+except:
+    pass
 import os
 import torch
 from yacs.config import CfgNode
