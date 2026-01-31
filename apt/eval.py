@@ -387,7 +387,7 @@ if __name__ == '__main__':
     try:
         # Create a dummy input (1 sample)
         dummy_input = torch.randn(1, 3, 224, 224).cuda()
-        if args.model == 'ALIGN':
+        if args.model == 'ALIGN':ga 
              # ALIGN needs special handling or we skip FLOPs for it for now as it uses huggingface Dict input widely
              print("Skipping FLOPs calculation for ALIGN (complex input structure)")
              flop_str = "N/A"
@@ -396,6 +396,7 @@ if __name__ == '__main__':
              flop_str = "N/A"
         else:
              # Basic CLIP: forward takes just image
+             import thop
              macs, params = thop.profile(model, inputs=(dummy_input,), verbose=False)
              flops = 2 * macs # GFLOPs usually counted as 2 * MACs
              flop_str = f"{flops / 1e9:.2f} GFLOPs ({int(flops):,} FLOPS)"

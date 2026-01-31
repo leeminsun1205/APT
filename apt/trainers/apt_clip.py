@@ -17,7 +17,6 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 from torchattacks import PGD
 import time
-import thop
 
 _tokenizer = _Tokenizer()
 
@@ -314,6 +313,7 @@ class CoOp(TrainerX):
              dummy_input = torch.randn(1, 3, 224, 224).to(self.device)
              # Note: thop might not handle CustomCLIP perfectly if it expects text inputs internally
              # We assume standard forward path for FLOPs estimation
+             import thop
              macs, params = thop.profile(self.model, inputs=(dummy_input,), verbose=False)
              ram_flops = 2 * macs
              print(f"Training Model FLOPs: {ram_flops / 1e9:.2f} GFLOPs ({int(ram_flops):,} FLOPS)")
