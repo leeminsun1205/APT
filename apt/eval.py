@@ -41,11 +41,9 @@ from torch.utils.data import TensorDataset
 
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 from torchattacks import PGD, TPGD
 from autoattack import AutoAttack
 import time
-import thop
 from utils import *
 
 def CWLoss(output, target, confidence=0):
