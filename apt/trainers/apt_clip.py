@@ -315,7 +315,8 @@ class CoOp(TrainerX):
              # Note: thop might not handle CustomCLIP perfectly if it expects text inputs internally
              # We assume standard forward path for FLOPs estimation
              macs, params = thop.profile(self.model, inputs=(dummy_input,), verbose=False)
-             print(f"Training Model FLOPs: {2 * macs / 1e9:.2f} GFLOPs")
+             ram_flops = 2 * macs
+             print(f"Training Model FLOPs: {ram_flops / 1e9:.2f} GFLOPs ({int(ram_flops):,} FLOPS)")
              print(f"Training Model Params: {params / 1e6:.2f} M")
         except Exception as e:
              print(f"Warning: Failed to calculate FLOPs in trainer: {e}")

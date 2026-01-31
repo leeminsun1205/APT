@@ -393,7 +393,7 @@ if __name__ == '__main__':
              # Basic CLIP: forward takes just image
              macs, params = thop.profile(model, inputs=(dummy_input,), verbose=False)
              flops = 2 * macs # GFLOPs usually counted as 2 * MACs
-             flop_str = f"{flops / 1e9:.2f} GFLOPs"
+             flop_str = f"{flops / 1e9:.2f} GFLOPs ({int(flops):,} FLOPS)"
              print(f"Model FLOPs: {flop_str}")
              print(f"Model Params: {params / 1e6:.2f} M")
     except Exception as e:
