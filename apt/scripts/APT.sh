@@ -18,7 +18,22 @@ SEED=${10}
 ATP=${11}
 PALPHA=${12}
 RUN_MODE=${13} # $13 là "resume" hoặc "train"
-EXTRA_ARGS="${@:14}" # $14 trở đi là --no-backbone
+
+EPOCHS=""
+# Check if $14 is an integer (for EPOCHS)
+if [[ "${14}" =~ ^[0-9]+$ ]]; then
+    EPOCHS=${14}
+    EXTRA_ARGS="${@:15}"
+else
+    # If $14 is not an integer (e.g. empty or starts with --), assume it's part of EXTRA_ARGS
+    EXTRA_ARGS="${@:14}"
+fi
+
+# Prepare EPOCH_FLAG
+EPOCH_FLAG=""
+if [ ! -z "$EPOCHS" ]; then
+    EPOCH_FLAG="--max-epoch ${EPOCHS}"
+fi
 
 # 3. Tạo đường dẫn DIR (Một lần duy nhất)
 if [ ${ATP} == 'perturbed' ]
@@ -56,6 +71,7 @@ else
     --steps ${STEPS} \
     --adv-prompt ${ATP} \
     --prompt-alpha ${PALPHA} \
+    ${EPOCH_FLAG} \
     ${RESUME_FLAG} \
     ${EXTRA_ARGS} \
     TRAINER.COOP.N_CTX ${NCTX} \
