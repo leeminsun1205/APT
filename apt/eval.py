@@ -4,6 +4,8 @@ try:
 except RuntimeError:
     pass
 
+import torch
+import torchvision
 import os
 import torch
 from yacs.config import CfgNode
