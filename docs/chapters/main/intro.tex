@@ -2,41 +2,41 @@
 \addcontentsline{toc}{chapter}{Mở đầu}
 
 \section*{Đặt vấn đề}
-Trong những năm gần đây, cộng đồng trí tuệ nhân tạo đã chứng kiến sự phát triển nhanh chóng của các Mô hình Đa phương thức Ngôn ngữ-Thị giác (Vision-Language Models - VLMs). Điển hình là CLIP (Contrastive Language-Image Pre-training) \cite{radford2021learning}, một mô hình được huấn luyện trên 400 triệu cặp ảnh-văn bản thu thập từ internet. CLIP và các biến thể của nó đã chứng minh khả năng tổng quát hóa (generalization) vượt trội, cho phép thực hiện các tác vụ nhận dạng ảnh zero-shot (không cần huấn luyện lại) trên nhiều miền dữ liệu khác nhau với độ chính xác cao.
+Trong những năm gần đây, các mô hình thị giác--ngôn ngữ (Vision--Language Models -- VLMs) phát triển nhanh chóng và đạt hiệu năng cao trên nhiều tác vụ nhận dạng và hiểu nội dung hình ảnh. Một đại diện tiêu biểu là CLIP (Contrastive Language--Image Pre-training) \cite{radford2021learning}, được huấn luyện trên quy mô dữ liệu lớn gồm các cặp ảnh--văn bản thu thập từ Internet, cho phép thực hiện phân loại ảnh theo hướng zero-shot (không cần huấn luyện lại) trên nhiều miền dữ liệu.
 
-Tuy nhiên, cùng với những tiến bộ đó là những lo ngại về tính an toàn và bảo mật của các mô hình này. Các nghiên cứu gần đây đã chỉ ra rằng, mặc dù VLMs rất mạnh mẽ trên dữ liệu sạch, chúng lại cực kỳ nhạy cảm với các \textit{tấn công đối kháng} (adversarial attacks). Các hình ảnh đối kháng - được tạo ra bằng cách thêm các nhiễu loạn nhỏ vô hình với mắt người vào ảnh gốc - có khả năng gây ra sai lệch trong kết quả phân loại của mô hình với độ tin cậy rất cao. Sự thiếu vững chắc (robustness) này đặt ra thách thức đáng kể cho việc triển khai VLMs trong các ứng dụng thực tế đòi hỏi độ tin cậy cao, như hệ thống nhận diện khuôn mặt, xe tự lái, hay kiểm duyệt nội dung y tế.
+Tuy nhiên, song song với hiệu năng trên dữ liệu sạch là những lo ngại về độ tin cậy và an toàn khi triển khai. Nhiều nghiên cứu cho thấy các VLM có thể nhạy cảm trước các tấn công đối kháng (adversarial attacks), trong đó ảnh đầu vào bị nhiễu nhẹ nhưng có thể làm thay đổi dự đoán của mô hình. Điều này đặt ra thách thức đáng kể đối với các kịch bản ứng dụng cần độ tin cậy cao như xe tự lái, hệ thống nhận diện, hay các bài toán liên quan đến y tế và kiểm duyệt nội dung.
 
 \section*{Lý do chọn đề tài}
-Để giải quyết vấn đề trên, phương pháp truyền thống và hiệu quả nhất hiện nay là \textit{Adversarial Training} (Huấn luyện đối kháng). Phương pháp này bao gồm việc huấn luyện mô hình trên các mẫu ảnh đối kháng được sinh ra liên tục trong quá trình học. Tuy nhiên, việc áp dụng Adversarial Training trực tiếp cho các mô hình VLM khổng lồ như CLIP gặp phải hai thách thức lớn:
+Một hướng tiếp cận phổ biến để tăng độ bền vững là huấn luyện đối kháng (adversarial training), tức đưa các mẫu đối kháng vào quá trình huấn luyện. Tuy nhiên, khi áp dụng trực tiếp cho các mô hình VLM quy mô lớn như CLIP, cách tiếp cận này thường gặp các hạn chế thực tiễn:
 
 \begin{enumerate}
-    \item \textbf{Chi phí tính toán khổng lồ:} Các mô hình VLM thường chứa hàng trăm triệu đến hàng tỷ tham số. Việc fine-tune toàn bộ các tham số này đòi hỏi tài nguyên phần cứng (GPU/TPU) cực lớn và thời gian huấn luyện dài ngày, khiến nó trở nên bất khả thi đối với phần lớn các nhà nghiên cứu và kỹ sư trong điều kiện phòng thí nghiệm hoặc doanh nghiệp vừa và nhỏ.
-    \item \textbf{Yêu cầu dữ liệu lớn:} Để tránh hiện tượng overfitting (học vẹt) khi tinh chỉnh toàn bộ mô hình, cần phải có một lượng dữ liệu huấn luyện rất lớn. Tuy nhiên, trong nhiều bài toán thực tế (downstream tasks), dữ liệu được gán nhãn thường khan hiếm (few-shot scenarios), làm giảm hiệu quả của các phương pháp fine-Tuning truyền thống.
+    \item \textbf{Chi phí tính toán lớn:} Fine-tune toàn bộ mô hình đòi hỏi tài nguyên phần cứng đáng kể và thời gian huấn luyện dài, không phù hợp với nhiều điều kiện triển khai thực tế.
+    \item \textbf{Rủi ro quá khớp trong thiết lập ít dữ liệu:} Trong nhiều bài toán downstream, dữ liệu gán nhãn thường hạn chế (few-shot), làm tăng nguy cơ overfitting khi tinh chỉnh nhiều tham số.
 \end{enumerate}
 
-Xuất phát từ những thách thức thực tế đó, đề tài này tập trung nghiên cứu chi tiết một hướng tiếp cận hiệu quả đã được giới thiệu gần đây: \textbf{Prompt Tuning}. Thay vì thay đổi trọng số của mô hình (Model Weights), chúng ta sẽ giữ nguyên chúng và chỉ tối ưu hóa đầu vào văn bản (Text Prompt). Cụ thể, đề tài nghiên cứu việc tái cài đặt và đánh giá phương pháp \textbf{Adversarial Prompt Tuning (APT)} - kỹ thuật học một prompt tối ưu giúp mô hình CLIP chống lại các tấn công đối kháng.
+Xuất phát từ các hạn chế trên, đề tài lựa chọn hướng tiếp cận \textbf{prompt tuning}, trong đó giữ cố định trọng số mô hình và chỉ tối ưu hoá phần đầu vào văn bản (text prompt). Cụ thể, đồ án tập trung triển khai và đánh giá \textbf{Adversarial Prompt Tuning (APT)} \cite{li2024apt}, một kỹ thuật học prompt dưới huấn luyện đối kháng nhằm cải thiện độ bền vững cho CLIP với số tham số cần học nhỏ.
 
 \section*{Mục tiêu \& Phạm vi}
 \subsection*{Mục tiêu}
-Mục tiêu chính của đồ án là xây dựng và đánh giá một giải pháp phòng thủ đối kháng cho mô hình CLIP dựa trên kỹ thuật Prompt Tuning. Các mục tiêu cụ thể bao gồm:
+Mục tiêu của đồ án là triển khai và đánh giá một hướng phòng thủ đối kháng cho CLIP dựa trên prompt tuning. Các mục tiêu cụ thể gồm:
 \begin{enumerate}
-    \item Nghiên cứu cơ sở lý thuyết về CLIP, tấn công đối kháng (Adversarial Attacks), và Prompt Learning.
-    \item Tái cài đặt và triển khai thuật toán APT để tìm kiếm các vector ngữ cảnh (context vectors) tối ưu dựa trên nghiên cứu gốc.
-    \item Đánh giá hiệu quả của phương pháp trên nhiều bộ dữ liệu chuẩn (Benchmark), so sánh với các phương pháp Baseline về cả độ chính xác (Clean Accuracy) và độ bền vững (Robust Accuracy).
-    \item Phân tích tính hiệu quả về mặt dữ liệu (Data efficiency) và chi phí tính toán (Computational cost).
+    \item Hệ thống hoá cơ sở lý thuyết về CLIP, tấn công đối kháng và prompt learning.
+    \item Triển khai thuật toán APT để học các vector ngữ cảnh (context vectors) theo bài toán tối ưu hoá cực đại--cực tiểu, trong đó chỉ prompt được cập nhật còn các encoder được giữ cố định.
+    \item Đánh giá hiệu quả trên các bộ dữ liệu chuẩn (benchmark), so sánh với các thiết lập baseline dựa trên prompt thủ công theo các độ đo: độ chính xác trên ảnh sạch (clean accuracy) và độ chính xác dưới tấn công đối kháng (robust accuracy) trong cùng threat model.
+    \item Phân tích các khía cạnh liên quan đến khả năng khái quát (generalization), bao gồm rủi ro overfitting trong few-shot, đánh giá ngoài phân phối (OOD) khi khả thi, và chi phí tính toán (computational cost).
 \end{enumerate}
 
 \subsection*{Phạm vi nghiên cứu}
 \begin{itemize}
-    \item \textbf{Mô hình:} Tập trung nghiên cứu trên kiến trúc \textbf{CLIP ViT-B/32} làm backbone chính. Các trọng số của Image Encoder và Text Encoder sẽ được đóng băng (frozen) hoàn toàn.
-    \item \textbf{Tấn công:} Sử dụng thuật toán \textbf{PGD} (Projected Gradient Descent) dưới chuẩn $L_\infty$ để sinh ảnh đối kháng trong cả quá trình huấn luyện và đánh giá.
-    \item \textbf{Dữ liệu:} Đánh giá trên bộ benchmark gồm 15 datasets từ OODRobustBench \cite{li2024apt}, bao gồm các tập dữ liệu phổ biến như CIFAR-10, CIFAR-100, và các tập chuyên biệt như EuroSAT (ảnh vệ tinh), OxfordPets (động vật). Do giới hạn về tài nguyên, các thực nghiệm trên các tập dữ liệu lớn như ImageNet hay SUN397 có thể được thực hiện trên các tập con (subset) hoặc ở chế độ Few-shot (16-shot).
+    \item \textbf{Mô hình:} Sử dụng \textbf{CLIP ViT-B/32} làm backbone. Trọng số của Image Encoder và Text Encoder được đóng băng (frozen); chỉ các tham số prompt (context vectors) được tối ưu.
+    \item \textbf{Tấn công:} Sử dụng PGD (Projected Gradient Descent) dưới chuẩn $L_\infty$ để sinh mẫu đối kháng trong quá trình huấn luyện và đánh giá.
+    \item \textbf{Dữ liệu:} Đánh giá trên benchmark gồm 15 bộ dữ liệu theo OODRobustBench \cite{li2024apt}. Do giới hạn tài nguyên, các tập dữ liệu lớn (ví dụ ImageNet, SUN397) có thể được thực hiện trên tập con (subset) hoặc trong thiết lập few-shot (ví dụ 16-shot).
 \end{itemize}
 
 \section*{Đóng góp của đề tài}
-Những đóng góp chính của đồ án có thể được tóm tắt như sau:
+Các đóng góp chính của đồ án được tóm tắt như sau:
 \begin{enumerate}
-    \item \textbf{Khẳng định vai trò của Prompt:} Chúng tôi chứng minh thực nghiệm rằng sự lựa chọn prompt có ảnh hưởng sâu sắc đến tính bền vững của mô hình VLM. Một prompt tốt không chỉ cải thiện độ chính xác mà còn giúp mô hình chống chịu tốt hơn trước nhiễu loạn.
-    \item \textbf{Thực nghiệm phương pháp APT:} Chúng tôi tái hiện và đánh giá chi tiết quy trình Adversarial Prompt Tuning. Phương pháp này chỉ cần học một số lượng tham số rất nhỏ (vài nghìn tham số) so với việc fine-tune toàn bộ mô hình (hàng trăm triệu tham số), nhưng lại mang lại hiệu quả vượt trội.
-    \item \textbf{Kết quả thực nghiệm khả quan:} Trên các thử nghiệm rộng rãi với 15 bộ dữ liệu, APT cho thấy khả năng cải thiện trung bình $+13\%$ độ chính xác trên ảnh sạch và $+8.5\%$ độ chính xác trên ảnh đối kháng so với baseline sử dụng các prompt thủ công (hand-crafted prompts). Kết quả này khẳng định triển vọng cho việc triển khai các mô hình AI an toàn với chi phí phù hợp.
+    \item \textbf{Tổng hợp và hệ thống hoá:} Trình bày có hệ thống các khái niệm nền tảng liên quan đến VLM/CLIP, prompt learning và tấn công đối kháng, làm cơ sở cho việc triển khai và đánh giá.
+    \item \textbf{Triển khai và tái hiện APT:} Xây dựng quy trình huấn luyện đối kháng ở mức prompt (frozen encoders, chỉ học context vectors) theo công trình gốc, nhằm tạo tiền đề cho các phân tích thực nghiệm về độ bền vững.
+    \item \textbf{Đánh giá và phân tích:} Thực hiện đánh giá trên các bộ dữ liệu benchmark trong cùng threat model; phân tích đánh đổi giữa clean accuracy và robust accuracy, đồng thời thảo luận các yếu tố ảnh hưởng đến khả năng khái quát, đánh giá OOD và chi phí tính toán trong phạm vi tài nguyên cho phép.
 \end{enumerate}
