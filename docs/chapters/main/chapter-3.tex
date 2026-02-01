@@ -196,3 +196,52 @@ Kết quả cho thấy:
     \item Huấn luyện với $\epsilon$ lớn (4/255) giúp mô hình bền vững hơn ở các mức $\epsilon$ test khác nhau, nhưng Clean Accuracy giảm.
     \item CSC thường cho kết quả tốt hơn UC trên các dataset fine-grained như UCF101, StanfordCars, và FGVCAircraft.
 \end{itemize}
+
+\subsection{Đánh giá với các loại tấn công khác nhau (Attack Type Comparison)}
+Chúng tôi đánh giá độ bền vững của APT với nhiều loại tấn công đối kháng khác nhau: PGD, Targeted PGD (TPGD), CW, và AutoAttack. Bảng \ref{tab:attack_comparison} trình bày kết quả chi tiết.
+
+\begin{table}[h]
+    \centering
+    \caption{So sánh hiệu năng của APT với các loại tấn công khác nhau. Giá trị là Acc clean (Acc robust \%). Train với $\epsilon=4/255$.}
+    \label{tab:attack_comparison}
+    \resizebox{0.9\columnwidth}{!}{%
+        \footnotesize
+        \begin{tabular}{@{}llcccc@{}}
+            \toprule
+            \textbf{Type} & \textbf{Dataset} & \textbf{PGD} & \textbf{TPGD} & \textbf{CW}   & \textbf{AutoAttack} \\ \midrule
+            \multirow{12}{*}{UC}
+                          & Caltech101       & -            & 85.31 (75.94) & 85.31 (78.50) & 89.49 (4.95)        \\
+                          & EuroSAT          & -            & 63.36 (61.57) & 63.36 (62.47) & 43.81 (26.17)       \\
+                          & Food101          & -            & 22.84 (18.30) & 22.84 (21.24) & 37.92 (4.06)        \\
+                          & FGVCAircraft     & -            & 17.40 (14.25) & 17.40 (17.01) & 15.42 (9.75)        \\
+                          & OxfordPets       & -            & 69.77 (50.56) & 69.77 (57.05) & 81.71 (13.38)       \\
+                          & DTD              & -            & 44.30 (38.70) & 44.30 (41.30) & 49.40 (20.10)       \\
+                          & Flowers102       & -            & 76.90 (68.25) & 76.90 (75.03) & 77.63 (23.59)       \\
+                          & UCF101           & -            & 54.30 (43.46) & 54.30 (50.28) & 57.92 (14.72)       \\
+                          & StanfordCars     & -            & 33.68 (23.19) & 33.68 (32.77) & 48.15 (11.22)       \\
+                          & TinyImageNet     & -            & 46.56 (35.38) & 46.56 (36.44) & 57.88 (10.62)       \\
+                          & CIFAR10          & -            & 51.52 (48.88) & 51.52 (41.16) & 70.44 (3.60)        \\
+                          & CIFAR100         & -            & 40.50 (34.60) & 40.50 (35.98) & 48.44 (6.78)        \\ \midrule
+            \multirow{12}{*}{CSC}
+                          & Caltech101       & -            & 85.31 (78.50) & 85.31 (79.96) & 89.49 (5.31)        \\
+                          & EuroSAT          & -            & 65.80 (62.84) & 65.80 (64.33) & 35.48 (20.94)       \\
+                          & Food101          & -            & 25.96 (21.62) & 25.96 (24.52) & 44.46 (3.72)        \\
+                          & FGVCAircraft     & -            & 27.33 (22.62) & 27.33 (27.18) & 22.17 (15.54)       \\
+                          & OxfordPets       & -            & 67.08 (25.38) & 67.08 (56.04) & 72.69 (11.80)       \\
+                          & DTD              & -            & 45.60 (41.20) & 45.60 (43.60) & 42.00 (15.20)       \\
+                          & Flowers102       & -            & 83.11 (79.29) & 83.11 (81.89) & 78.36 (23.71)       \\
+                          & UCF101           & -            & 57.68 (48.67) & 57.68 (54.67) & 50.86 (12.87)       \\
+                          & StanfordCars     & -            & 43.15 (33.19) & 43.15 (42.67) & 55.24 (15.98)       \\
+                          & TinyImageNet     & -            & 46.22 (38.44) & 46.22 (38.64) & 44.90 (9.44)        \\
+                          & CIFAR10          & -            & 48.78 (49.88) & 48.78 (40.08) & 65.04 (4.22)        \\
+                          & CIFAR100         & -            & 41.54 (37.50) & 41.54 (37.62) & 39.86 (6.38)        \\ \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+Kết quả cho thấy:
+\begin{itemize}
+    \item APT duy trì độ bền vững tốt với TPGD và CW, với Robust Accuracy tương đương hoặc cao hơn so với PGD.
+    \item AutoAttack là phương pháp tấn công mạnh nhất, làm giảm đáng kể Robust Accuracy trên hầu hết các dataset.
+    \item CSC thường cho kết quả tốt hơn UC với CW attack, đặc biệt trên các dataset fine-grained.
+\end{itemize}
